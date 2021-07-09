@@ -1,0 +1,34 @@
+package DalaranMerchant
+import Assets
+import ObjectIdGenerator
+import UnitObjEditing
+import ItemShopPreset
+
+import ClosureForGroups
+import MapBounds
+
+
+let shopId = compiletime(UNIT_ID_GEN.next())
+let originalShopId = 'n00X'
+
+public ItemShopPreset dalaranMerchant
+
+
+@compiletime function build()
+	dalaranMerchant = new ItemShopPreset(shopId, Icons.bTNHeroArchMage, "Dalaran Merchant", Soundsets.heroArchMage, Units.heroArchMage)
+	..setArmorType(ArmorType.Normal)
+	..setGroundTexture("")
+	..setCollisionSize(0)
+	..setMovementType(MovementType.Fly)
+	..setPathingMap("")
+	..setScalingValue(1.1)
+	..setSelectionScale(2.0)
+
+
+init
+	forUnitsInRect(playableMapRect) (unit u) ->
+		if u.getTypeId() == originalShopId
+			u..addAbility('Aloc')
+			..setVertexColor(255, 255, 255, 0)
+			createUnit(players[PLAYER_NEUTRAL_PASSIVE], shopId, u.getPos(), u.getFacingAngle())
+			..setColor(21 .toPlayerColor())

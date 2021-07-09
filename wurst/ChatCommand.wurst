@@ -1,0 +1,78 @@
+package ChatCommand
+
+import HashMap
+import StringUtils
+import LinkedList
+import ErrorHandling
+import ClosureEvents
+
+
+/** Allows to register chat commands (case insensitive).
+Example:
+
+	ChatCommand.register("aBc  dEF     gHi") ->
+		print("Hello, World!")
+
+The callback above will be called when a player types "-abc def ghi"
+in the chat).
+The number of spaces doesn't matter, all spaces are just
+ignored (except the very first character of a chat message).
+You don't need to register a chat command with the character the
+command must start with when it's typed in the chat, the initial
+character is defined in "STARTS_WITH" constant below.
+If a command typed by a player is longer than the actual command,
+the rest words separated by a space will be passe to the callback,
+keeping original case. Example:
+
+	ChatCommand.register("    aBc  dEF     gHi   ") ->
+		print("Hello, World!")
+
+	And the player's message: "-abc def   ghi    kZuJO 123     456   "
+
+	"abc def ghi" string command will be processed as a command
+	"kZuJO 123 456" string will be passed to the callback. */
+
+
+@configurable constant STARTS_WITH = "-"
+
+
+abstract class ChatCommand
+	private static let map = new HashMap<string, ChatCommand>
+
+	protected abstract function call(string subcommand)
+
+	static function register(string command, ChatCommand callback) returns ChatCommand
+		let list = command.toLowerCase().split(" ")
+		..removeIf((string t) -> t == "" or t == null)
+		if list.isEmpty()
+			error("Can't register an empty chat command or a command that contains spaces only.")
+		let s = list.joinBy(" ")
+		if map.has(s.substring(0, s.length() - 1))
+			error("\"{0}\" chat command already exists, remove it first.".format(s))
+		map.put(s, callback)
+		destroy list
+		return callback
+
+	protected static function execute(string s, string subcommand) returns bool
+		if map.has(s)
+			map.get(s).call(subcommand)
+			return true
+		return false
+
+
+init
+	EventListener.add(EVENT_PLAYER_CHAT_FILTER) ->
+		let msg = EventData.getChatMessage()
+		let startsWith = STARTS_WITH.toLowerCase()
+		if msg.substring(0, STARTS_WITH.length()).toLowerCase() == startsWith
+			let list = msg.substring(startsWith.length()).split(" ")
+			..removeIf((string t) -> t == "")
+			if not list.isEmpty()
+				var subcommand = ""
+				while not list.isEmpty()
+					let cmd = list.joinBy(" ").toLowerCase()
+					if ChatCommand.execute(cmd, subcommand)
+						list.clear()
+					else
+						subcommand = list.pop() + " " + subcommand
+				destroy list

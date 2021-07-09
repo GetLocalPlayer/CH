@@ -1,0 +1,309 @@
+package HeroList
+import ObjectIdGenerator
+import ClosureTimers
+import ClosureEvents
+import Assets
+import CustomHero
+
+
+@compiletime function buildFirelord()
+	CustomHero.build() (def, isMelee) ->
+		def..setModelFile(Units.heroFlameLord)
+		..setUnitSoundSet("HeroFireLord")
+		..setProperNames("Lindemann")
+		..setName("Firelord")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.1)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNHeroAvatarOfFlame)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.MetalHeavySlice)
+		else
+			def..setAttack1ProjectileArt(Abilities.lordofFlameMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+
+
+@compiletime function buildNortherner()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.heroPaladin)
+		..setProperNames("Elon Tusk")
+		..setName("Northerner")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.1)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNTuskaarGold)
+		if isMelee
+			def..setModelFile(Units.tuskar)
+			..setAttack1WeaponSound(WeaponSound.MetalMediumChop)
+		else
+			def..setModelFile(Units.tuskarRanged)
+			..setAttack1ProjectileArt(Abilities.tuskarSpear)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+
+
+@compiletime function buildMadPoet()
+	CustomHero.build() (def, isMelee) ->
+		def..setModelFile(Units.orcWarlockRed1)
+		..setUnitSoundSet("Grom")
+		..setProperNames("Abdul Alhazred")
+		..setName("Mad Poet")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.4)
+		..setSelectionScale(1.6)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNOrcWarlockRed)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.MetalLightSlice)
+		else
+			def..setAttack1ProjectileArt(Abilities.makuraMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0)
+
+
+@compiletime function buildEredarSorcerer()
+	CustomHero.build() (def, isMelee) ->
+		def..setModelFile(Units.eredarWarlockPurple)
+		..setUnitSoundSet(Soundsets.varimathras)
+		..setProperNames("Mozenrath")
+		..setName("Eredar-Sorcerer")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.2)
+		..setSelectionScale(1.6)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNEredarWarlockPurple)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.WoodMediumBash)
+		else
+			def..setAttack1ProjectileArt(Abilities.voidWalkerMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0.05)
+			..setProjectileLaunchZ(70)
+
+
+@compiletime function buildDreadlord()
+	CustomHero.build() (def, isMelee) ->
+		def..setModelFile(Units.heroDreadLord)
+		..setUnitSoundSet(Soundsets.heroDreadLord)
+		..setProperNames("Doctor Moreau")
+		..setName("Dreadlord")
+		..setProperNamesUsed(1)
+		..setScalingValue(1)
+		..setSelectionScale(1.5)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNHeroDreadLord)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.WoodHeavyBash)
+		else
+			def..setAttack1ProjectileArt(Abilities.avengerMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0)
+
+
+@compiletime function buildSpiritWalker()
+	CustomHero.build() (def, isMelee) ->
+		def..setModelFile(Units.spiritWalker)
+		..setUnitSoundSet(Soundsets.spiritWalker)
+		..setProperNames("Mogambo")
+		..setName("Spirit Walker")
+		..setProperNamesUsed(1)
+		..setScalingValue(1)
+		..setSelectionScale(1.5)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNSpiritWalker)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.MetalMediumChop)
+		else
+			def..setAttack1ProjectileArt(Abilities.witchDoctorMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+
+
+@compiletime function buildBandit()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.bandit)
+		..setProperNames("Michael ''The Pot''")
+		..setName("Bandit")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.4)
+		..setSelectionScale(1.3)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNBandit)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.MetalMediumChop)
+			..setModelFile(Units.bandit1)
+		else
+			def..setAttack1ProjectileArt(Abilities.huntermissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setModelFile(Units.banditSpearThrower)
+
+
+@compiletime function buildBanshee()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.banshee)
+		..setProperNames("Karen Braineater")
+		..setName("Banshee")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.4)
+		..setSelectionScale(1.3)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNBanshee)
+		..setModelFile(Units.banshee1)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.WoodLightBash)
+		else
+			def..setAttack1ProjectileArt(Abilities.bansheeMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0)
+			..setProjectileLaunchZ(50)
+
+
+@compiletime function buildTrollingHunter()
+	let meleeId = compiletime(HERO_ID_GEN.next())
+	let rangerId = compiletime(HERO_ID_GEN.next())
+	if compiletime
+		CustomHero.build(meleeId, rangerId) (def, isMelee) ->
+			def..setUnitSoundSet(Soundsets.headHunter)
+			..setProperNames("Zul'Chuk")
+			..setName("Trollin' Hunter")
+			..setProperNamesUsed(1)
+			..setSelectionScale(1.4)
+			..setScaleProjectiles(false)
+			..setIconGameInterface(Icons.bTNIceTroll)
+			if isMelee
+				def..setAttack1WeaponSound(WeaponSound.MetalMediumChop)
+				..setModelFile(Units.iceTroll1)
+				..setScalingValue(1.5)
+			else
+				def..setAttack1ProjectileArt(Abilities.murgulMagicMissile)
+				..setAttack1WeaponSound(WeaponSound.Nothing)
+				..setAttack1ProjectileArc(0.1)
+				..setModelFile(Units.iceTrollShadowPriest1)
+				..setScalingValue(1.4)
+	else
+		CustomHero.onAttackSwitch() (unit u, boolean isMelee) ->
+			if u.getTypeId() == meleeId
+				nullTimer() () ->
+					u.setProperName("Zul'Gek")
+			if u.getTypeId() == rangerId
+				nullTimer() () ->
+					u.setProperName("Zul'Chuk")
+
+init
+	buildTrollingHunter()
+
+
+@compiletime function buildAncientOfLore()
+	let meleeId = compiletime(HERO_ID_GEN.next())
+	let rangerId = compiletime(HERO_ID_GEN.next())
+	if compiletime
+		CustomHero.build(meleeId, rangerId) (def, isMelee) ->
+			def..setModelFile(Buildings.ancientofLore)
+			..setUnitSoundSet(Soundsets.ancientOfLore)
+			..setProperNames("Dagda")
+			..setName("Ancient of Lore")
+			..setProperNamesUsed(1)
+			..setScalingValue(0.85)
+			..setSelectionScale(2)
+			..setScaleProjectiles(false)
+			..setIconGameInterface(Icons.bTNAncientOfLore)
+			..setRequiredAnimationNames("")
+			..setRequiredAnimationNamesAttachments("")
+			..setRequiredAttachmentLinkNames("")
+			..setRequiredBoneNames("")
+			if isMelee
+				def..setAttack1WeaponSound(WeaponSound.WoodMediumBash)
+			else
+				def..setAttack1ProjectileArt(Units.snowOwl1)
+				..setAttack1WeaponSound(WeaponSound.Nothing)
+				..setAttack1ProjectileArc(0.05)
+	else
+		EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
+			let u = EventData.getTriggerUnit()
+			let id = u.getTypeId()
+			if id == meleeId or id == rangerId
+				nullTimer() () ->
+					AddUnitAnimationProperties(u, "alternate", false) 
+			
+init
+	buildAncientOfLore()
+
+
+@compiletime function buildTentacleMonster()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.sludgeMonster)
+		..setProperNames("Weeb")
+		..setName("Tentacle Monster")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.6)
+		..setSelectionScale(2.1)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNSludgeCreature)
+		..setModelFile(Units.sludgeMonster)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.WoodLightBash)
+		else
+			def..setAttack1ProjectileArt(Abilities.cryptFiendMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0)
+			..setProjectileLaunchZ(0)
+	
+
+
+@compiletime function buildDeathKnight()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.heroDeathKnight)
+		..setProperNames("Azazello")
+		..setName("Death Knight")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.)
+		..setSelectionScale(1.4)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNHeroDeathKnight)
+		..setModelFile(Units.heroDeathKnight)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.MetalHeavySlice)
+		else
+			def..setAttack1ProjectileArt(Abilities.deathCoilMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0)
+			..setProjectileLaunchZ(100)
+
+
+@compiletime function buildKeeperOfTheGrove()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.heroKeeperOfTheGrove)
+		..setModelFile(Units.heroKeeperoftheGrove)
+		..setProperNames("Bambi")
+		..setName("Keeper of the Grove")
+		..setProperNamesUsed(1)
+		..setScalingValue(1.)
+		..setSelectionScale(1.9)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNKeeperOfTheGrove)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.MetalLightChop)
+		else
+			def..setAttack1ProjectileArt(Abilities.keeperGroveMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0.1)
+			..setProjectileLaunchZ(70)
+
+
+@compiletime function buildZombie()
+	CustomHero.build() (def, isMelee) ->
+		def..setUnitSoundSet(Soundsets.zombie)
+		..setModelFile(Units.zombie)
+		..setProperNames("Rob")
+		..setName("Zombie")
+		..setProperNamesUsed(1)
+		..setScalingValue(2.)
+		..setSelectionScale(1.5)
+		..setScaleProjectiles(false)
+		..setIconGameInterface(Icons.bTNZombie)
+		if isMelee
+			def..setAttack1WeaponSound(WeaponSound.WoodMediumBash)
+		else
+			def..setAttack1ProjectileArt(Abilities.skeletalMageMissile)
+			..setAttack1WeaponSound(WeaponSound.Nothing)
+			..setAttack1ProjectileArc(0.1)
+			..setProjectileLaunchZ(70)
+	

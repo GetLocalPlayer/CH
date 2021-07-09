@@ -1,0 +1,104 @@
+package PlateHelm
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import RareMerchant
+import HelmOfIronWill
+import RingOfRegeneration
+import GemOfHealth
+
+import LinkedList
+import ItemCombine
+
+
+public class PlateHelm
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Plate Helm"
+	static constant ICON = "ReplaceableTextures\\CommandButtons\\BTNPlateHelm.blp"
+	static constant int GOLD_COST = GemOfHealth.GOLD_COST + RingOfRegeneration.GOLD_COST + HelmOfIronWill.GOLD_COST + PlateHelmRecipe.GOLD_COST
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	static constant int DEFENSE = 5
+	static constant int HIT_POINTS = 125
+	static constant int HP_PER_SECOND = 8
+	
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+			
+	@compiletime protected static function build()
+		let defenseDef = buildDefenseBonus(NAME, ICON, DEFENSE, tooltipGenerator)
+		let hitPointsDef = buildHitPointsBonus(NAME, ICON, HIT_POINTS, tooltipGenerator)
+		let hpRegDef = buildLifeRegenerationBonus(NAME, ICON, HP_PER_SECOND, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities("{0},{1},{2}".format(defenseDef.getNewId().toRawCode(), hitPointsDef.getNewId().toRawCode(), hpRegDef.getNewId().toRawCode()))
+
+
+public class PlateHelmRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(PlateHelm.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant ALIAS_ICON = PlateHelm.ICON
+	static constant int SHOP_X = 2
+	static constant int SHOP_Y = 1
+	static constant int GOLD_COST = 250
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = PlateHelm.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(GemOfHealth.NAME, GemOfHealth.GOLD_COST)
+		..addRecipeRequirement(RingOfRegeneration.NAME, RingOfRegeneration.GOLD_COST)
+		..addRecipeRequirement(HelmOfIronWill.NAME, HelmOfIronWill.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? ALIAS_ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				rareMerchant.addItemSold(def.getNewId())
+
+
+init
+	new ItemCombine(PlateHelm.ID, asList<int>(RingOfRegeneration.ID, GemOfHealth.ID, HelmOfIronWill.ID, PlateHelmRecipe.ID))

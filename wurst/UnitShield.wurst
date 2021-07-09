@@ -1,0 +1,117 @@
+package UnitShield
+import HashMap
+import ClosureEvents
+import ErrorHandling
+
+
+/** Allows to create a shield that prevents damage taken by
+a unit. The system uses EventListener, manually placing its
+listener at the end of EventListener's callback sequence so
+the user can be sure any other "DAMAGED" event listener will
+be called before damage absorbing.
+The latest created shield will absorb first (LIFO). */
+
+
+public function unit.addShield(real amount, real blockFactor, UnitShield cb) returns UnitShield
+	return UnitShield.add(this, amount, blockFactor, cb)
+
+
+public abstract class UnitShield
+	protected unit target
+	protected real amount
+	protected real factor
+	protected bool isBroken = false
+	protected UnitShield next = null
+	protected UnitShield prev = null
+
+	protected static let firstMap = new HashMap<unit, UnitShield>
+
+	abstract function onAbsorb(UnitShield shield, real takenDamage, real absorbedDamage)
+
+	static function add(unit target, real amount, real factor, UnitShield absorbCb) returns UnitShield
+		absorbCb.target = target
+		absorbCb.setAmount(amount)
+		absorbCb.setFactor(factor)
+		if firstMap.has(target)
+			let first = firstMap.get(target)
+			first.prev = absorbCb
+			absorbCb.next = first
+		firstMap.put(target, absorbCb)
+		return absorbCb
+
+	ondestroy
+		let first = firstMap.get(target)
+		if first == this
+			if next != null
+				firstMap.put(target, next)
+			else
+				firstMap.remove(target)
+		else
+			prev.next = next
+		if next != null
+			next.prev = prev
+
+	function setAmount(real amount)
+		if amount < 0
+			error("Shield cannot absorb less than 0 damage")
+		this.amount = amount
+		isBroken = not amount > 0
+
+	/** A part of the taken damage that will be absorbed. 1.0 - the shield absorbs all the damage. */
+	function setFactor(real factor)
+		if factor <= 0
+			error("Shield cannot absorb 0% of damage or less")
+		this.factor = factor
+
+	function getRemaining() returns real
+		return amount
+
+	function getFactor() returns real
+		return factor
+
+	function isBroken() returns bool
+		return isBroken
+
+	/** Returns amount of absorbed damage. */
+	protected function absorb(real damage) returns real
+		if not isBroken()
+			let maxAbsorb = damage * factor
+			real absorbedDamage
+			if amount > maxAbsorb
+				amount -= maxAbsorb
+				absorbedDamage = maxAbsorb
+			else
+				absorbedDamage = amount
+				amount = 0
+				isBroken = true
+			onAbsorb(this, damage, absorbedDamage)
+			return absorbedDamage
+		return 0
+
+
+init
+	let listener = EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) ->
+		let target = EventData.getTriggerUnit()
+		if UnitShield.firstMap.has(target)
+			var shield = UnitShield.firstMap.get(target)
+			while shield != null
+				if not shield.isBroken()
+					let damage = EventData.getEventDamage()
+					let absorbedDamage = shield.absorb(damage)
+					if absorbedDamage >= damage
+						EventData.setDamage(0)
+						break
+					else
+						EventData.setDamage(damage - absorbedDamage)
+				shield = shield.next
+
+	if listener.next != null
+		var lastListener = listener.next
+		while lastListener.next != null
+			lastListener = lastListener.next
+		let eventId = EVENT_PLAYER_UNIT_DAMAGED.toIntId()
+		EventListener.generalListenersFirsts[eventId] = listener.next
+		EventListener.generalListenersFirsts[eventId].prev = null
+		lastListener.next = listener
+		listener.prev = lastListener
+		listener.next = null 

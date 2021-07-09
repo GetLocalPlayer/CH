@@ -1,0 +1,79 @@
+package CursedTalisman
+import Assets
+import ChannelAbilityPreset
+import FleaMarket
+import ItemAlias
+import ItemTooltipGenerator
+import ItemAbilityPreset
+
+import ClosureEvents
+
+
+public class CursedTalisman
+	static constant int GOLD_COST = 225
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Cursed Talisman"
+	static constant ICON = Icons.bTNBoneChimes
+	static constant int SHOP_X = 2
+	static constant int SHOP_Y = 0
+	static constant int DEFENCE = -3
+	static constant real ATTACK_RATE = -0.1
+	static constant int RESTORED_MANA = 100
+	static constant real COOLDOWN = 25
+	static constant ART_CASTER = Abilities.aIreTarget
+	static constant ACTIVE_DESCRIPTION = "Restores {0} mana ({1} sec. cooldown).".format(RESTORED_MANA.toString(), COOLDOWN.toInt().toString())
+	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	@compiletime protected static function build()
+		let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..setActiveEffect(ACTIVE_DESCRIPTION)
+		let armorDef = buildDefenseBonus(NAME, ICON, DEFENCE, tooltipGenerator)
+		let attackRateDef = buildAttackSpeedBonus(NAME, ICON, ATTACK_RATE, tooltipGenerator)
+		let restoreManaDef = new ChannelAbilityPreset(ABIL_ID, 1, true)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..setEditorSuffix("Active")
+		..setRace(ITEM_ABILITY_RACE)
+		..setHeroAbility(false)
+		..setItemAbility(true)
+		..setArtCaster(ART_CASTER)
+		..presetCooldown((int lvl) -> COOLDOWN)
+		..presetFollowThroughTime((int lvl) -> 0.1)
+		..presetArtDuration((int lvl) -> 5) 
+		..presetTargetType((int lvl) -> Targettype.NONE castTo int)
+		ItemAlias.build(ID, ALIAS_ID) (def, isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(true)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setCooldownGroup(ABIL_ID.toRawCode())
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if isAlias
+				fleaMarket.addItemSold(def.getNewId())
+			else
+				def.setAbilities("{0},{1},{2}".format(restoreManaDef.getNewId().toRawCode(), armorDef.getNewId().toRawCode(), attackRateDef.getNewId().toRawCode()))
+
+
+init
+	EventListener.add(EVENT_PLAYER_UNIT_USE_ITEM) ->
+		let usedItem = EventData.getManipulatedItem()
+		if usedItem.getTypeId() == CursedTalisman.ID
+			let caster = EventData.getTriggerUnit()
+			caster.setMana(caster.getMana() + CursedTalisman.RESTORED_MANA)
+		

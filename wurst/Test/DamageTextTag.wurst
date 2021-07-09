@@ -1,0 +1,45 @@
+package DamageTextTag
+
+import ClosureEvents
+import ChatCommand
+
+constant real ANGLE = 60
+constant real VELOCITY = 0.05
+constant real SIZE = 10
+constant real DURATION = 1.5
+constant real FADEPOINT = 0.5
+
+constant DAMAGING_MODE_STR = "dmg show pre"
+constant DAMAGED_MODE_STR = "dmg show post"
+constant NONE_MODE_STR = "dmg hide"
+
+
+enum Mode
+	DAMAGING
+	DAMAGED
+	NONE
+
+var currMode = Mode.DAMAGING
+
+
+init
+	EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) -> 
+		let dmg = EventData.getEventDamage().toInt()
+		if currMode == Mode.DAMAGING and dmg > 0
+			let u = EventData.getTriggerUnit()
+			createTTEx(u.getPos3Real(), GetRandomReal(90 - ANGLE/2, 90 + ANGLE/2).asAngleDegrees().toVec(VELOCITY), dmg.toString(), SIZE, DURATION, colorA(255, 255, 255, 255))
+			..setFadepoint(FADEPOINT)
+
+	EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) -> 
+		let dmg = EventData.getEventDamage().toInt()
+		if currMode == Mode.DAMAGED and dmg > 0
+			let u = EventData.getTriggerUnit()
+			createTTEx(u.getPos3Real(), GetRandomReal(90 - ANGLE/2, 90 + ANGLE/2).asAngleDegrees().toVec(VELOCITY), dmg.toString(), SIZE, DURATION, colorA(255, 255, 255, 255))
+			..setFadepoint(FADEPOINT)
+	
+	ChatCommand.register(DAMAGING_MODE_STR) (string subcommand) ->
+		currMode = Mode.DAMAGING
+	ChatCommand.register(DAMAGED_MODE_STR) (string subcommand) ->
+		currMode = Mode.DAMAGED
+	ChatCommand.register(NONE_MODE_STR) (string subcommand) ->
+		currMode = Mode.NONE

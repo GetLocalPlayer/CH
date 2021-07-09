@@ -1,0 +1,104 @@
+package ShamanClaws
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import RareMerchant
+import GauntletsOfOgre
+import SlippersOfAgility
+import ClawsOfAttack
+
+import LinkedList
+import ItemCombine
+
+
+public class ShamanClaws
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Shaman Claws"
+	static constant ICON = Icons.bTNShamanAdept
+	static constant int GOLD_COST = GauntletsOfOgre.GOLD_COST + SlippersOfAgility.GOLD_COST + ClawsOfAttack.GOLD_COST + ShamanClawsRecipe.GOLD_COST
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	static constant int STRENGTH = 5
+	static constant int AGILITY = 5
+	static constant int ATTACK_DAMAGE = 10
+	
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+			
+	@compiletime protected static function build()
+		let strDef = buildStrengthBonus(NAME, ICON, STRENGTH, tooltipGenerator)
+		let agiDef = buildAgilityBonus(NAME, ICON, AGILITY, tooltipGenerator)
+		let attackDamageDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities("{0},{1},{2}".format(strDef.getNewId().toRawCode(), agiDef.getNewId().toRawCode(), attackDamageDef.getNewId().toRawCode()))
+
+
+public class ShamanClawsRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(ShamanClaws.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant ALIAS_ICON = ShamanClaws.ICON
+	static constant int SHOP_X = 1
+	static constant int SHOP_Y = 2
+	static constant int GOLD_COST = 200
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = ShamanClaws.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(GauntletsOfOgre.NAME, GauntletsOfOgre.GOLD_COST)
+		..addRecipeRequirement(SlippersOfAgility.NAME, SlippersOfAgility.GOLD_COST)
+		..addRecipeRequirement(ClawsOfAttack.NAME, ClawsOfAttack.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? ALIAS_ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				rareMerchant.addItemSold(def.getNewId())
+
+
+init
+	new ItemCombine(ShamanClaws.ID, asList<int>(GauntletsOfOgre.ID, SlippersOfAgility.ID, ClawsOfAttack.ID, ShamanClawsRecipe.ID))

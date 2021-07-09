@@ -1,0 +1,100 @@
+package ArcaniteShield
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import RareMerchant
+import RingOfProtection
+import GemOfHealth
+
+import LinkedList
+import ItemCombine
+
+
+public class ArcaniteShield
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Arcanite Shield"
+	static constant ICON = Icons.bTNThoriumArmor
+	static constant int GOLD_COST = RingOfProtection.GOLD_COST + GemOfHealth.GOLD_COST + ArcaniteShieldRecipe.GOLD_COST
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	static constant int DEFENSE = 4
+	static constant int HIT_POINTS = 150
+	
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+			
+	@compiletime protected static function build()
+		let defenseDef = buildDefenseBonus(NAME, ICON, DEFENSE, tooltipGenerator)
+		let hitPointsDef = buildHitPointsBonus(NAME, ICON, HIT_POINTS, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities("{0},{1}".format(defenseDef.getNewId().toRawCode(), hitPointsDef.getNewId().toRawCode()))
+
+
+public class ArcaniteShieldRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(ArcaniteShield.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant ALIAS_ICON = ArcaniteShield.ICON
+	static constant int SHOP_X = 0
+	static constant int SHOP_Y = 1
+	static constant int GOLD_COST = 200
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = ArcaniteShield.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(RingOfProtection.NAME, RingOfProtection.GOLD_COST)
+		..addRecipeRequirement(GemOfHealth.NAME, GemOfHealth.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? ALIAS_ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				rareMerchant.addItemSold(def.getNewId())
+
+
+init
+	new ItemCombine(ArcaniteShield.ID, asList<int>(RingOfProtection.ID, GemOfHealth.ID, ArcaniteShieldRecipe.ID))
