@@ -3,9 +3,9 @@ projectName: "Vagrants"
 dependencies:
 - "https://github.com/wurstscript/wurstStdlib2"
 buildMapData:
-  name: "CH (test)"
-  fileName: "CH (test)"
+  name: "CH (test) 09.07.21"
+  fileName: "CH (test) 09.07.21"
   author: "GetLocalPlayer"
   playerCount: 2-8
   scenarioData:
-    description: LF a landsape designer.
+    description: LF a landscape designer.

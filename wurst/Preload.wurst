@@ -1,0 +1,19 @@
+package Preload
+
+import MapBounds
+import DummyRecycler
+
+
+let dummy = DummyRecycler.get(boundCenter, angle(0))
+
+/** Preloads the ability. */
+public function preload(int abilId) returns bool
+	return dummy.addAbility(abilId)
+
+/** Preloads the model. */
+public function preload(string path)
+	Preload(path)
+
+
+init
+	dummy.pause()

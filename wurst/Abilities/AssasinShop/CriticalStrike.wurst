@@ -6,33 +6,33 @@ import AbilityTooltipGenerator
 import AssasinShop
 
 
-constant SHOP_COST = 1
-constant LEVELS = 5
-constant ICON = Icons.pASBTNCriticalStrike
-constant NAME = "Critical Strike"
-constant DESCRIPTION = "Gives a chance to deal increased damage on an attack."
-constant CHANCE = 15
-constant DAMAGE_MULTIPLIER = [1.75, 2.1, 2.45, 2.85, 3.25]
-constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
-
-constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
-
-
-@compiletime function build()
-	let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
-	new AbilityDefinitionBladeMasterCriticalStrike(ABIL_ID)
-	..setIconNormal(ICON)
-	..setHeroAbility(true)
-	..setRequirements("")
-	..setRace(Race.Human)
-	..setName(NAME)
-	..registerTooltipGenerator(tooltipGen)
-	..tooltipStartListen()
-	..setLevels(LEVELS)
-	..addTooltipProperty("Chance", (int lvl) -> CHANCE.toString() + "%")
-	..addTooltipProperty("Damage increased to", (int lvl) -> (DAMAGE_MULTIPLIER[lvl - 1] * 100).toInt().toString() + "%")
-	..tooltipStopListen()
-	..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
-	..presetChancetoCriticalStrike((int lvl) -> CHANCE.toReal())
-	..presetDamageMultiplier((int lvl) -> DAMAGE_MULTIPLIER[lvl - 1])
-	assasinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+class CriticalStire
+	static constant SHOP_COST = 1
+	static constant LEVELS = 5
+	static constant ICON = Icons.pASBTNCriticalStrike
+	static constant NAME = "Critical Strike"
+	static constant DESCRIPTION = "Gives a chance to deal increased damage on an attack."
+	static constant CHANCE = 15
+	static constant DAMAGE_MULTIPLIER = [1.75, 2.1, 2.45, 2.85, 3.25]
+	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
+	
+	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	
+	@compiletime private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		new AbilityDefinitionBladeMasterCriticalStrike(ABIL_ID)
+		..setIconNormal(ICON)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setName(NAME)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..addTooltipProperty("Chance", (int lvl) -> CHANCE.toString() + "%")
+		..addTooltipProperty("Damage increased to", (int lvl) -> (DAMAGE_MULTIPLIER[lvl - 1] * 100).toInt().toString() + "%")
+		..tooltipStopListen()
+		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
+		..presetChancetoCriticalStrike((int lvl) -> CHANCE.toReal())
+		..presetDamageMultiplier((int lvl) -> DAMAGE_MULTIPLIER[lvl - 1])
+		assasinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
