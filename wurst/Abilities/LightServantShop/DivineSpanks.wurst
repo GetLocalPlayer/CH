@@ -41,6 +41,7 @@ class DivineSpanks
 
 	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
 	static constant BUFF_TUPLE = compiletime(createDummyBuffObject(BUFF_NAME, BUFF_DESCRIPTION, ICON, FX_BUFF_TARGET, "chest"))
+	// This orb abil needs only to change the owner's attack missile
 	static constant ORB_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 	static constant ORB_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
@@ -86,6 +87,8 @@ class DivineSpanks
 
 	protected static function _init()
 		preload(FX_TARGET)
+		preload(BUFF_TUPLE.abilId)
+		preload(ORB_ABIL_ID)
 
 		AbilityShop.onSold() (unit u, int abilId, int level) ->
 			if abilId == ABIL_ID and level == 1
