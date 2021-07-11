@@ -1,0 +1,158 @@
+package Statistic
+import LinkedList
+import HashMap
+import ClosureTimers
+import ClosureEvents
+import ChatCommand
+
+
+class Statistic
+	static constant COLUMN_TITLE_COLOR = "|cffffcc00"
+	static constant TOTAL_TITLE_COLOR = "|cffc3dbff"
+	static constant LEFT_PLAYER_COLOR = "|cff969696"
+
+	static constant COMMAND_RESET = "ResetStatistic"
+	static constant SHORT_COMMAND_RESET = "rs"
+	static constant COMMAND_SHOW_TOTAL = "ShowTotalStatistic"
+	static constant SHORT_COMMAND_SHOW_TOTAL = "sts"
+
+	private static let playingPlayers = new LinkedList<player>
+	private static let totalPlayerDamage = new HashMap<player, real>
+	private static let totalPlayerKills = new HashMap<player, int>
+	private static let currentPlayerDamage = new HashMap<player, real>
+	private static let currentPlayerKills = new HashMap<player, int>
+	private static real totalDamage = 0
+	private static int totalKills = 0
+
+	/** Returns the player's number (not index!) in the statistic multiboard.
+	Returns 0 if there's no such player in the statistic. */
+	static function getPlayerNumber(player p) returns int
+		for i = 0 to playingPlayers.size() - 1
+			if p == playingPlayers.get(i)
+				return i + 1
+		return 0
+
+	/** Returns the player by its number (not index!) in the statistic multiboard.
+	Returns null if there's no player with such a number. */
+	static function getPlayer(int number) returns player
+		if number > 0 and number <= playingPlayers.size()
+			return playingPlayers.get(number - 1)
+		return null
+
+	protected static function _init()
+		for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+			let p = players[i]
+			if p.getController() == MAP_CONTROL_USER and p.getSlotState() == PLAYER_SLOT_STATE_PLAYING
+				playingPlayers.add(p)
+				totalPlayerDamage.put(p, 0)
+				totalPlayerKills.put(p, 0)
+				currentPlayerDamage.put(p, 0)
+				currentPlayerKills.put(p, 0)
+
+		let board = CreateMultiboard()
+		..setItemsStyle(true, false)
+		..setTitle("Statistic")
+		..setItemsValue("0")
+		..setColumnCount(3)
+		..setRowCount(playingPlayers.size() + 2)
+		..setColumnWidth(0, 0.12)
+		..setColumnWidth(1, 0.08)
+		..setColumnWidth(2, 0.025)
+		..setItemValue(0, 0, "{0}Name:|r".format(COLUMN_TITLE_COLOR))
+		..setItemValue(0, 1, "{0}Damage:|r".format(COLUMN_TITLE_COLOR))
+		..setItemValue(0, 2, "{0}Kills:|r".format(COLUMN_TITLE_COLOR))
+		for row = 1 to board.getRowCount() - 2
+			board.setItemValue(row, 0, "{0} {1}".format(row.toString(), playingPlayers.get(row - 1).getNameColored()))
+		let lastRow = board.getRowCount() - 1
+		board..setItemValue(lastRow, 0, "{0}Total|r".format(TOTAL_TITLE_COLOR))
+		..setItemValue(lastRow, 1, "0")
+		..setItemValue(lastRow, 2, "0")
+
+		..show()
+		..maximize()
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) ->
+			let target = EventData.getTriggerUnit()
+			let source = EventData.getEventDamageSource()
+			if source != null and target.isEnemyOf(source) and playingPlayers.has(source.getOwner(()))
+				let sourceOwner = source.getOwner()
+				let eventDamage = EventData.getEventDamage()
+				let totalValue = totalPlayerDamage.get(sourceOwner) + eventDamage
+				let currentValue = currentPlayerDamage.get(sourceOwner) + eventDamage
+				totalPlayerDamage.put(sourceOwner, totalValue)
+				currentPlayerDamage.put(sourceOwner, currentValue)
+				let i = playingPlayers.indexOf(sourceOwner)
+				board.setItemValue(i + 1, 1, currentValue.toInt())
+				totalDamage += eventDamage
+				board.setItemValue(playingPlayers.size() + 1, 1, totalDamage.toInt())
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let target = EventData.getDyingUnit()
+			let source = EventData.getKillingUnit()
+			if source != null and target.isEnemyOf(source) and playingPlayers.has(source.getOwner())
+				let sourceOwner = source.getOwner()
+				let totalValue = totalPlayerKills.get(sourceOwner) + 1
+				let currentValue = currentPlayerKills.get(sourceOwner) + 1
+				totalPlayerKills.put(sourceOwner, totalValue)
+				currentPlayerKills.put(sourceOwner, currentValue)
+				let i = playingPlayers.indexOf(sourceOwner)
+				board.setItemValue(i + 1, 2, currentValue)
+				totalKills++
+				board.setItemValue(playingPlayers.size() + 1, 2, totalKills)
+
+		EventListener.add(EVENT_PLAYER_LEAVE) ->
+			let p = EventData.getTriggerPlayer()
+			let row = playingPlayers.indexOf(p) + 1
+			board.setItemValue(row, 0, "{0} {1}{2}|r".format(row.toString(), LEFT_PLAYER_COLOR, p.getName()))
+
+		var cb = ChatCommand.register(COMMAND_RESET) subcommand ->
+			let triggerPlayer = EventData.getTriggerPlayer()
+			if localPlayer == triggerPlayer
+				for p in playingPlayers
+					currentPlayerDamage.put(p, 0)
+					currentPlayerKills.put(p, 0)
+				totalDamage = 0
+				totalKills = 0
+			for row = 1 to board.getRowCount() - 1
+				let damageItem = board.getItem(row, 1)
+				let killsItem = board.getItem(row, 2)
+				if localPlayer == triggerPlayer
+					damageItem.setValue("0")
+					killsItem.setValue("0")
+				damageItem.release()
+				killsItem.release()
+
+		ChatCommand.register(SHORT_COMMAND_RESET, cb)
+					
+		cb = ChatCommand.register(COMMAND_SHOW_TOTAL) subcommand ->
+			let triggerPlayer = EventData.getTriggerPlayer()
+			if localPlayer == triggerPlayer
+				totalDamage = 0
+				totalKills = 0
+				for p in playingPlayers
+					currentPlayerDamage.put(p, totalPlayerDamage.get(p))
+					currentPlayerKills.put(p, totalPlayerKills.get(p))
+					totalDamage += totalPlayerDamage.get(p)
+					totalKills += totalPlayerKills.get(p)
+			for row = 1 to board.getRowCount() - 2
+				let damageItem = board.getItem(row, 1)
+				let killsItem = board.getItem(row, 2)
+				if localPlayer == triggerPlayer
+					damageItem.setValue(currentPlayerDamage.get(playingPlayers.get(row - 1)).toInt())
+					killsItem.setValue(currentPlayerKills.get(playingPlayers.get(row - 1)))
+				damageItem.release()
+				killsItem.release()
+			let totalDamageItem = board.getItem(playingPlayers.size() + 1, 1)
+			let totalKillsItem = board.getItem(playingPlayers.size() + 1, 2)
+			if localPlayer == triggerPlayer
+				totalDamageItem.setValue(totalDamage.toInt())
+				totalKillsItem.setValue(totalKills)
+			totalDamageItem.release()
+			totalKillsItem.release()
+
+		ChatCommand.register(SHORT_COMMAND_SHOW_TOTAL, cb)
+
+
+init
+	nullTimer() -> 
+		Statistic._init()
