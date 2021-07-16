@@ -5,8 +5,6 @@ import ObjectIdGenerator
 import ClosureEvents
 import ClosureTimers
 import LinkedList
-import LinkedListModule
-import HashMap
 
 
 /* An item alias is an item that copies all the fields of a specific item,
@@ -22,21 +20,36 @@ it can't be done because of the annoying mechanic. */
 
 
 public abstract class ItemAlias
-	use LinkedListModule
+	protected ItemAlias next = null
+	protected ItemAlias prev = null
+
+	protected static ItemAlias first = null
 
 	abstract function call(unit u, item givenItem)
+
+	ondestroy
+		if first == this
+			first = next
+		else
+			prev.next = next
+		if next != null
+			next.prev = prev
 
 	/** Called when the hero either has or doesn't have an empty slot for the item.
 	The actual item will be removed from the map and replaced with its alias right
 	after the callback's executed. */
 	static function onPickUp(ItemAlias cb) returns ItemAlias
+		if first == null
+			cb.next = first
+			first.prev = cb
+		first = cb
 		return cb
 
 	// Compiletime 
 
 	// Transfered data
-	protected static let itemIds = compiletime(new LinkedList<int>)
-	protected static let aliasIds = compiletime(new LinkedList<int>)
+	protected static let itemId = compiletime(new LinkedList<int>)
+	protected static let aliasId = compiletime(new LinkedList<int>)
 
 	abstract static class BuildCallback
 		abstract function call(ItemDefinition def, bool isAlias)
@@ -47,8 +60,8 @@ public abstract class ItemAlias
 		actualItemDef.setUseAutomaticallyWhenAcquired(false)
 		aliasItemDef..setUseAutomaticallyWhenAcquired(true)
 		..setAbilities("")
-		itemIds.add(actualItemDef.getNewId())
-		aliasIds.add(aliasItemDef.getNewId())
+		itemId.add(actualItemDef.getNewId())
+		aliasId.add(aliasItemDef.getNewId())
 		destroy buildCb
 	
 	static function build(int actualItemId, int aliasItemId, BuildCallback buildCb)
@@ -61,25 +74,29 @@ public abstract class ItemAlias
 		build(ITEM_ID_GEN.next(), ITEM_ID_GEN.next(), buildCb)
 
 	protected static function _init()
-		let itemFromAlias = new HashMap<item, item>
+		for i = 0 to itemId.size() - 1
+			createItem(itemId.get(i), ZERO2).remove()
+			createItem(aliasId.get(i), ZERO2).remove()
 
 		EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) () ->
 			let aliasItem = EventData.getManipulatedItem()
 			let aliasItemId = aliasItem.getTypeId()
-			if aliasIds.has(aliasItemId)
+			if aliasId.has(aliasItemId)
 				let u = EventData.getTriggerUnit()
 				let pos = aliasItem.getPos()
 				let p = aliasItem.getPlayer()
 				let charges = aliasItem.getCharges()
 				aliasItem.remove()
 				let isInventoryFull = u.isInventoryFull()
-				let index = aliasIds.indexOf(aliasItemId)
-				let actualItemId = itemIds.get(index)
+				let index = aliasId.indexOf(aliasItemId)
+				let actualItemId = itemId.get(index)
 				let newItem = not isInventoryFull ? u.addItemById(actualItemId) : createItem(actualItemId, pos)
 				newItem..setPlayer(p, true)
 				..setCharges(charges)
-				for cb in ItemAlias
+				var cb = first
+				while cb != null
 					cb.call(u, newItem)
+					cb = cb.next
 				if newItem.getTypeId() != 0 and isInventoryFull
 					newItem.remove()
 					createItem(aliasItemId, pos)
@@ -89,20 +106,16 @@ public abstract class ItemAlias
 		EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
 			let droppedItem = EventData.getManipulatedItem()
 			let droppedItemId = droppedItem.getTypeId()
-			if itemIds.has(droppedItemId)
+			if itemId.has(droppedItemId)
 				nullTimer() () ->
 					let p = droppedItem.getPlayer()
 					let pos = droppedItem.getPos()
 					let charges = droppedItem.getCharges()
-					let data = droppedItem.getUserData()
-					droppedItem.setVisible(false)
-					let index = itemIds.indexOf(droppedItemId)
-					let _alias = createItem(aliasIds.get(index), pos)
+					droppedItem.remove()
+					let index = itemId.indexOf(droppedItemId)
+					createItem(aliasId.get(index), pos)
 					..setPlayer(p, true)
 					..setCharges(charges)
-					..setUserData(data)
-					itemFromAlias.put(_alias, droppedItem)
-
 
 init
 	ItemAlias._init()
