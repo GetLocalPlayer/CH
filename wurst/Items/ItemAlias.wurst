@@ -97,11 +97,11 @@ public abstract class ItemAlias
 					let data = droppedItem.getUserData()
 					droppedItem.setVisible(false)
 					let index = itemIds.indexOf(droppedItemId)
-					let alias = createItem(aliasIds.get(index), pos)
+					let _alias = createItem(aliasIds.get(index), pos)
 					..setPlayer(p, true)
 					..setCharges(charges)
 					..setUserData(data)
-					itemFromAlias.put(alias, droppedItem)
+					itemFromAlias.put(_alias, droppedItem)
 
 
 init
