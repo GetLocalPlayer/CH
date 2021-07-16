@@ -3,8 +3,8 @@ projectName: "Vagrants"
 dependencies:
 - "https://github.com/wurstscript/wurstStdlib2"
 buildMapData:
-  name: "CH (test) 11.07.21"
-  fileName: "CH (test) 11.07.21"
+  name: "CH (test) 10.07.21"
+  fileName: "CH (test) 10.07.21"
   author: "GetLocalPlayer"
   playerCount: 2-8
   scenarioData:
