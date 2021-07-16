@@ -1,0 +1,251 @@
+package SecondPartOfDeadSouls
+import Assets
+import ChannelAbilityPreset
+import BuffObjEditing
+import ItemObjEditing
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+
+import RareMerchant
+import WandOfNeutralization
+import GemOfHealth
+import Mindstaff
+import TauntBook
+
+import OrderIds
+import LinkedList
+import HashMap
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import ItemCombine
+import Preload
+
+
+public class SecondPartOfDeadSouls
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Second part of \"Dead Souls\""
+	static constant PASSIVE_DESC = "Everytime an enemy dies within {0} range from the owner, {1} pages appear in the book."
+	static constant ACTIVE_DESC = "Burns the book in the center of the target area increasing magic damage taken by enemies in the the area for {0} sec. by {1}% for each {2} pages burnt."
+	static constant BUFF_DESC = "This unit takes more damage from spells."
+	static constant ICON = Icons.bTNNecromancerMaster
+	static constant int GOLD_COST = WandOfNeutralization.GOLD_COST + GemOfHealth.GOLD_COST + TauntBook.GOLD_COST + Mindstaff.GOLD_COST + SecondPartOfDeadSoulsRecipe.GOLD_COST
+	static constant int STR = 6
+	static constant int AGI = 6
+	static constant int INT = 6
+	static constant int HEALTH = 150
+	static constant int MANA = 150
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	static constant real CONSUMPTION_AOE = 1000
+	static constant int CHARGES_PER_DEATH = 15
+	static constant int MAX_CHARGES = 300
+	static constant int CHARGES_ON_LEVEL = 10
+	static constant real MAX_BURNING_TIME = 3
+	static constant real BURNING_TIME_PER_CHARGE = 0.015
+
+	static constant int MANACOST = 100
+	static constant real COOLDOWN = 20
+	static constant real DURATION = 20
+	static constant real AOE = 300
+	static constant real CAST_RANGE = 500
+	static constant real ART_DURATION = 1
+
+	static constant PRIMARY_PROJECTILE = "Abilities\\SecondPartOfDeadSouls.mdx"
+	static constant real PRIMARY_PROJECTILE_SPEED = 600
+	static constant vec3 PRIMARY_PROJECTILE_LAUNCH_OFFSET = vec3(0, 0, 50)
+	static constant vec3 PRIMARY_PROJECTILE_IMPACT_OFFSET = vec3(0, 0, 150)
+
+	static constant FX_EXPLODE = Objects.undeadDissipate
+	static constant FX_BURNING = "Environment\\LargeBuildingFire\\LargeBuildingFire1.mdl"
+
+	static constant SECONDARY_PROJECTILE = Abilities.avengerMissile
+	static constant real SECONDARY_PROJECTILE_SPEED = 500
+	static constant vec3 SECONDARY_PROJECTILE_LAUNCH_OFFSET = vec3(0, 0, 0)
+	static constant vec3 SECONDARY_PROJECTILE_IMPACT_OFFSET = vec3(0, 0, 50)
+
+	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+	static constant RESISTANCE_ID = compiletime(ABIL_ID_GEN.next())
+	static constant RESISTANCE_PER_LEVEL = 0.01
+	static constant RESISTANCE_TUPLE = compiletime(createDummyBuffObject(NAME, BUFF_DESC, ICON))
+
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..addPassiveEffect(PASSIVE_DESC.format(CONSUMPTION_AOE.toInt().toString(), CHARGES_PER_DEATH.toString()))
+		..setActiveEffect(ACTIVE_DESC.format(DURATION.toInt().toString(), (RESISTANCE_PER_LEVEL * 100).toInt().toString(), CHARGES_ON_LEVEL.toString()))
+
+	@compiletime protected static function build()
+		let attrDef = buildAttributeBonus(NAME, ICON, STR, AGI, INT, tooltipGenerator)
+		let healthDef = buildHitPointsBonus(NAME, ICON, HEALTH, tooltipGenerator)
+		let manaDef = buildManaBonus(NAME, ICON, MANA, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(true)
+			..setCooldownGroup(ABIL_ID.toRawCode())
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities("{0},{1},{3},{4}".format(ABIL_ID.toRawCode(),
+					attrDef.getNewId().toRawCode(),
+					healthDef.getNewId().toRawCode(), manaDef.getNewId().toRawCode()))
+		new ChannelAbilityPreset(ABIL_ID, 1, true)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..setEditorSuffix("Active")
+		..setRace(ITEM_ABILITY_RACE)
+		..setHeroAbility(false)
+		..setItemAbility(true)
+		..setArtCaster("")
+		..setArtTarget("")
+		..setArtSpecial("")
+		..setCooldown(1, COOLDOWN)
+		..setCastRange(1, CAST_RANGE)
+		..setManaCost(1, MANACOST)
+		..setAreaofEffect(1, AOE)
+		..setArtDuration(1, ART_DURATION)
+		..presetOption(Option.VISIBLE, true)
+		..presetOption(Option.TARGETIMAGE, true)
+		..presetTargetType((int lvl) -> Targettype.POINT castTo int)
+		new AbilityDefinitionElunesGrace(RESISTANCE_ID)
+		..setLevels((MAX_CHARGES / CHARGES_ON_LEVEL).toInt())
+		..setRequirements("")
+		..presetDamageDealt((int lvl) -> 1) 
+		..presetDamageTaken((int lvl) -> 1)
+		..presetMagicDamageReduction((int lvl) -> 1 + RESISTANCE_PER_LEVEL * lvl)
+			
+	protected static function _init()
+		new ItemCombine(SecondPartOfDeadSouls.ID, asList<int>(TauntBook.ID, WandOfNeutralization.ID, GemOfHealth.ID, Mindstaff.ID, SecondPartOfDeadSoulsRecipe.ID))
+
+		preload(RESISTANCE_ID)
+		preload(RESISTANCE_TUPLE.abilId)
+		preload(PRIMARY_PROJECTILE)
+		preload(SECONDARY_PROJECTILE)
+		preload(FX_BURNING)
+		preload(FX_EXPLODE)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let dead = EventData.getDyingUnit()
+			forUnitsInRange(dead.getPos(), CONSUMPTION_AOE, true) (unit u) ->
+				if u.isEnemyOf(dead) and u.hasItemById(ID)
+					let _item = u.getItemById(ID)
+					_item.setCharges(_item.getCharges() + CHARGES_PER_DEATH)
+					if _item.getCharges() > MAX_CHARGES
+						_item.setCharges(MAX_CHARGES)
+			
+		
+		let affectedUnits = new HashMap<unit, CallbackSingle>
+
+		EventListener.onPointCast(ABIL_ID) (unit caster, vec2 target) ->
+			let slot = caster.getCurrentOrder() - OrderIds.itemuse00
+			let _item = caster.itemInSlot(slot)
+			let charges = _item.getCharges()
+			if charges < CHARGES_ON_LEVEL
+				if charges > 0
+					_item.setCharges(charges + 1)
+			else
+				let consumedCharges = (charges/CHARGES_ON_LEVEL).toInt() * CHARGES_ON_LEVEL
+				_item.setCharges(consumedCharges < charges ? charges - consumedCharges + 1 : 0)
+				let book = addEffect(PRIMARY_PROJECTILE, caster.getPos3Real() + PRIMARY_PROJECTILE_LAUNCH_OFFSET)
+				let impactPos = target.withTerrainZ() + PRIMARY_PROJECTILE_IMPACT_OFFSET
+				let callAmount = (book.getPos3().distanceTo(impactPos)/PRIMARY_PROJECTILE_SPEED/ANIMATION_PERIOD).toInt()
+				doPeriodicallyCounted(ANIMATION_PERIOD, callAmount) primCb ->
+					if not primCb.isLast()
+						let pos = book.getPos3().moveTowards(impactPos, PRIMARY_PROJECTILE_SPEED * ANIMATION_PERIOD)
+						book.setPos(pos)
+					else
+						book.setPos(impactPos)
+						let fxBurning = addEffect(FX_BURNING, impactPos)
+						doAfter(consumedCharges * BURNING_TIME_PER_CHARGE) -> 
+							book.destr()
+							fxBurning.destr()
+							flashEffect(FX_EXPLODE, impactPos)
+							forUnitsInRange(impactPos.toVec2(), AOE, true) (unit u) ->
+								if u.isEnemyOf(caster) and u.isAlive() and not u.isInvulnerable() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE)
+									let proj = addEffect(SECONDARY_PROJECTILE, impactPos + SECONDARY_PROJECTILE_LAUNCH_OFFSET)
+									doPeriodically(ANIMATION_PERIOD) (secCb) ->
+										let pos = proj.getPos3()
+										let tar = u.getPos3Real() + SECONDARY_PROJECTILE_IMPACT_OFFSET
+										if pos.distanceToSq(tar) > SECONDARY_PROJECTILE_SPEED.squared() * ANIMATION_PERIOD
+											proj.setPos(pos.moveTowards(tar, SECONDARY_PROJECTILE_SPEED * ANIMATION_PERIOD))
+										else
+											destroy secCb
+											proj..setPos(tar)
+											..destr()
+											if not affectedUnits.has(u)
+												u..addAbility(RESISTANCE_ID, (consumedCharges / CHARGES_ON_LEVEL).toInt())
+												..hideAbility(RESISTANCE_ID, true)
+												..addAbility(RESISTANCE_TUPLE.abilId)
+											else
+												destroy affectedUnits.get(u)
+												u.setAbilityLevel(RESISTANCE_ID, (consumedCharges / CHARGES_ON_LEVEL).toInt())
+											let buffCb = doAfter(DURATION) -> 
+												u..hideAbility(RESISTANCE_ID, false)
+												..removeAbility(RESISTANCE_ID)
+												..removeAbility(RESISTANCE_TUPLE.abilId)
+												..removeAbility(RESISTANCE_TUPLE.buffId)
+												affectedUnits.remove(u)
+											affectedUnits.put(u, buffCb)
+											
+
+public class SecondPartOfDeadSoulsRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(SecondPartOfDeadSouls.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant int SHOP_X = 3
+	static constant int SHOP_Y = 0
+	static constant int GOLD_COST = 300
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = SecondPartOfDeadSouls.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(TauntBook.NAME, TauntBook.GOLD_COST)
+		..addRecipeRequirement(GemOfHealth.NAME, GemOfHealth.GOLD_COST)
+		..addRecipeRequirement(Mindstaff.NAME, Mindstaff.GOLD_COST)
+		..addRecipeRequirement(WandOfNeutralization.NAME, WandOfNeutralization.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setAbilities("")
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? SecondPartOfDeadSouls.ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				rareMerchant.addItemSold(def.getNewId())
+
+
+init
+	SecondPartOfDeadSouls._init()
