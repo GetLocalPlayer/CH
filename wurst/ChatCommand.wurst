@@ -10,7 +10,7 @@ import ClosureEvents
 /** Allows to register chat commands (case insensitive).
 Example:
 
-	ChatCommand.register("aBc  dEF     gHi") ->
+	ChatCommand.register("aBc  dEF     gHi") subcommand ->
 		print("Hello, World!")
 
 The callback above will be called when a player types "-abc def ghi"
@@ -19,10 +19,10 @@ The number of spaces doesn't matter, all spaces are just
 ignored (except the very first character of a chat message).
 You don't need to register a chat command with the character the
 command must start with when it's typed in the chat, the initial
-character is defined in "STARTS_WITH" constant below.
+character is defined in "CHAT_COMMAND_STARTS_WITH" constant below.
 If a command typed by a player is longer than the actual command,
-the rest of the message will be passed to the callback as the
-subcommand. Example:
+the rest of the message, trimmed from spaces on both sides, will
+be passed to the callback as the subcommand. Example:
 
 	ChatCommand.register("    aBc  dEF     gHi   ") ->
 		print("Hello, World!")
@@ -34,7 +34,7 @@ subcommand. Example:
 	as the subcommand. */
 
 
-@configurable constant STARTS_WITH = "-"
+@configurable public constant CHAT_COMMAND_STARTS_WITH = "-"
 
 
 abstract class ChatCommand
@@ -64,8 +64,8 @@ abstract class ChatCommand
 init
 	EventListener.add(EVENT_PLAYER_CHAT_FILTER) ->
 		let msg = EventData.getChatMessage()
-		let startsWith = STARTS_WITH.toLowerCase()
-		if msg.substring(0, STARTS_WITH.length()).toLowerCase() == startsWith
+		let startsWith = CHAT_COMMAND_STARTS_WITH.toLowerCase()
+		if msg.substring(0, CHAT_COMMAND_STARTS_WITH.length()).toLowerCase() == startsWith
 			let list = msg.substring(startsWith.length()).split(" ")
 			if not list.isEmpty()
 				var subcommand = ""
