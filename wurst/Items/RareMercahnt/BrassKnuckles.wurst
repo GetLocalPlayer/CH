@@ -25,10 +25,13 @@ public class BrassKnuckles
 	static constant int STRENGTH = 10
 	static constant int CHANCE = 30
 	static constant real STRENGTH_DAMAGE_FACTOR = 0.75
+	static constant ATTACK_TYPE = ATTACK_TYPE_MELEE
+	static constant DAMAGE_TYPE = DAMAGE_TYPE_NORMAL
+	static constant WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
 	
 	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
 		..addPassiveEffect("Gives a {0}% chance to melee attacks to deal additional physical damage on hit equal to {1}% of the wearer strength.".format(CHANCE.toString(), (STRENGTH_DAMAGE_FACTOR * 100).toInt().toString()))
-		..setComment("Do you know da wae?")
+		..setComment("Do u now da wae?")
 			
 	@compiletime protected static function build()
 		let strDef = buildStrengthBonus(NAME, ICON, STRENGTH, tooltipGenerator)
@@ -52,6 +55,14 @@ public class BrassKnuckles
 			tooltipGenerator.applyToDef(def)
 			if not isAlias
 				def.setAbilities(strDef.getNewId().toRawCode())
+
+	protected static function _init()
+		new ItemCombine(BrassKnuckles.ID, asList<int>(GauntletsOfOgre.ID, LumberjacksAxe.ID, BrassKnucklesRecipe.ID))
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) () ->
+			let attacker = EventData.getEventDamageSource()
+			if BlzGetEventIsAttack() and attacker.hasItemById(ID) and GetRandomInt(1, 100) <= CHANCE
+				attacker.damageTarget(EventData.getTriggerUnit(), STRENGTH_DAMAGE_FACTOR * attacker.getStr(true), false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
 
 
 public class BrassKnucklesRecipe
@@ -100,17 +111,5 @@ public class BrassKnucklesRecipe
 
 
 init
-	new ItemCombine(BrassKnuckles.ID, asList<int>(GauntletsOfOgre.ID, LumberjacksAxe.ID, BrassKnucklesRecipe.ID))
-
-
-init
-	let ignoredUnits = CreateGroup()
-
-	EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) () ->
-		let attacker = EventData.getEventDamageSource()
-		if EventData.getDamageAttackType() == ATTACK_TYPE_MELEE and EventData.getDamageType() == DAMAGE_TYPE_NORMAL
-			if attacker.hasItemById(BrassKnuckles.ID) and not ignoredUnits.contains(attacker)
-				if GetRandomInt(1, 100) <= BrassKnuckles.CHANCE
-					ignoredUnits.addUnit(attacker)
-					attacker.damageTarget(EventData.getTriggerUnit(), BrassKnuckles.STRENGTH_DAMAGE_FACTOR * attacker.getStr(true), false, false, ATTACK_TYPE_MELEE, DAMAGE_TYPE_NORMAL, WEAPON_TYPE_WHOKNOWS)
-					ignoredUnits.removeUnit(attacker)
+	BrassKnuckles._init()
+	
