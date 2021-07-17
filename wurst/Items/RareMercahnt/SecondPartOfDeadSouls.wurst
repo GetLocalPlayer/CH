@@ -27,7 +27,7 @@ public class SecondPartOfDeadSouls
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "Second part of \"Dead Souls\""
 	static constant PASSIVE_DESC = "Everytime an enemy dies within {0} range from the owner, {1} pages appear in the book."
-	static constant ACTIVE_DESC = "Burns the book in the center of the target area increasing magic damage taken by enemies in the the area for {0} sec. by {1}% for each {2} pages burnt."
+	static constant ACTIVE_DESC = "Burns the book in the center of the target area increasing magic damage taken by enemies in the area for {0} sec. by {1}% for each {2} pages burnt."
 	static constant BUFF_DESC = "This unit takes more damage from spells."
 	static constant ICON = Icons.bTNNecromancerMaster
 	static constant int GOLD_COST = WandOfNeutralization.GOLD_COST + GemOfHealth.GOLD_COST + TauntBook.GOLD_COST + Mindstaff.GOLD_COST + SecondPartOfDeadSoulsRecipe.GOLD_COST
