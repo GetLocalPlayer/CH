@@ -59,22 +59,23 @@ init
 	
 	ChatCommand.register(COMMAND) (string subcommand) ->
 		let p = EventData.getTriggerPlayer()
+		let s = subcommand.toLowerCase()
 		if localPlayer == p
-			if subcommand == SUBCOMMAND_PRE
+			if s == SUBCOMMAND_PRE
 				currMode = Mode.PRE
 				printTimed("Shown the damage |cFFFFCC00dealt|r", 5)
-			if subcommand == SUBCOMMAND_POST
+			if s == SUBCOMMAND_POST
 				currMode = Mode.POST
 				printTimed("Shown the damage |cFFFFCC00taken|r", 5)
-			if subcommand == SUBCOMMAND_SHOW
+			if s == SUBCOMMAND_SHOW
 				show = true
 				printTimed("|cFFFFCC00Damage|r is shown", 5)
-			if subcommand == SUBCOMMAND_HIDE
+			if s == SUBCOMMAND_HIDE
 				show = false
 				printTimed("|cFFFFCC00No damage|r is shown", 5)
-			if subcommand == SUBCOMMAND_SELF
+			if s == SUBCOMMAND_SELF
 				currShowMode = ShowMode.SELF
 				printTimed("Only |cFFFFCC00your|r damage is shown", 5)
-			if subcommand == SUBCOMMAND_ALL
+			if s == SUBCOMMAND_ALL
 				currShowMode = ShowMode.ALL
 				printTimed("Shown damage of |cFFFFCC00all|r players", 5)

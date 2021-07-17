@@ -21,16 +21,17 @@ You don't need to register a chat command with the character the
 command must start with when it's typed in the chat, the initial
 character is defined in "STARTS_WITH" constant below.
 If a command typed by a player is longer than the actual command,
-the rest words separated by a space will be passe to the callback,
-keeping original case. Example:
+the rest of the message will be passed to the callback as the
+subcommand. Example:
 
 	ChatCommand.register("    aBc  dEF     gHi   ") ->
 		print("Hello, World!")
 
-	And the player's message: "-abc def   ghi    kZuJO 123     456   "
+	And the player's message: "-abc dEF   ghi    kZuJO 123     456   "
 
 	"abc def ghi" string command will be processed as a command
-	"kZuJO 123 456" string will be passed to the callback. */
+	"kZuJO 123     456" string will be passed to the callback
+	as the subcommand. */
 
 
 @configurable constant STARTS_WITH = "-"
@@ -66,12 +67,11 @@ init
 		let startsWith = STARTS_WITH.toLowerCase()
 		if msg.substring(0, STARTS_WITH.length()).toLowerCase() == startsWith
 			let list = msg.substring(startsWith.length()).split(" ")
-			..removeIf((string t) -> t == "")
 			if not list.isEmpty()
 				var subcommand = ""
 				while not list.isEmpty()
 					let cmd = list.joinBy(" ").toLowerCase()
-					if ChatCommand.execute(cmd, subcommand.toLowerCase().trim())
+					if ChatCommand.execute(cmd, subcommand.trim())
 						list.clear()
 					else
 						subcommand = list.pop() + " " + subcommand
