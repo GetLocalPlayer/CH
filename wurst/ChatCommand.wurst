@@ -71,7 +71,7 @@ init
 				var subcommand = ""
 				while not list.isEmpty()
 					let cmd = list.joinBy(" ").toLowerCase()
-					if ChatCommand.execute(cmd, subcommand)
+					if ChatCommand.execute(cmd, subcommand.toLowerCase().trim())
 						list.clear()
 					else
 						subcommand = list.pop() + " " + subcommand
