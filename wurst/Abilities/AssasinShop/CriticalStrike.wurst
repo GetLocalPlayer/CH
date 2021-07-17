@@ -29,7 +29,7 @@ class CriticalStire
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
 		..setLevels(LEVELS)
-		..addTooltipProperty("Chance", (int lvl) -> CHANCE.toString() + "%")
+		..addTooltipProperty("Chance", (int lvl) -> CHANCE)
 		..addTooltipProperty("Damage increased to", (int lvl) -> (DAMAGE_MULTIPLIER[lvl - 1] * 100).toInt().toString() + "%")
 		..tooltipStopListen()
 		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
