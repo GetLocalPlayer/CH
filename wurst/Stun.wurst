@@ -3,6 +3,7 @@ import HashMap
 import TimerUtils
 import ClosureTimers
 import DummyCaster
+import Preloader
 
 import OrderIds
 import AbilityObjEditing
@@ -15,12 +16,12 @@ import ObjectIds
 that's actually used by stun abilities, but dummy approach
 is still better just because we can dispel the stun buff. */
 
-let abilityId = compiletime(ABIL_ID_GEN.next())
+let abilId = compiletime(ABIL_ID_GEN.next())
 let buffId = compiletime(BUFF_ID_GEN.next())
 
 
 @compiletime function buildCustomStun()
-    new AbilityDefinitionMountainKingThunderBolt(abilityId)
+    new AbilityDefinitionMountainKingThunderBolt(abilId)
     ..setLevels(1)
     ..setDurationHero(1, 999999)
     ..setDurationNormal(1, 999999)
@@ -43,7 +44,7 @@ public function unit.stun(real duration) returns bool
     if not stunnedUnits.has(this)
         new DummyCaster()
         ..origin(this.getPos())
-        ..castTarget(abilityId, 1, OrderIds.thunderbolt, this)
+        ..castTarget(abilId, 1, OrderIds.thunderbolt, this)
         let tim = getTimer()
         ..doAfter(duration) () ->
             this.removeAbility(buffId)
@@ -63,3 +64,7 @@ public function unit.removeStun() returns bool
         this.removeAbility(buffId)
         return true
     return false
+
+
+init
+    preloadAbility(abilId)
