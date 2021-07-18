@@ -200,7 +200,6 @@ function clearDamage(unit u)
 	if whiteBonus.has(u)
 		u.setBaseDamage(u.getBaseDamage(0) - whiteBonus.get(u), 0)
 	whiteBonus.remove(u)
-	usedAttr.remove(u)
 	u.removeAbility(markerId)
 	for id in greenBonusIds
 		u.removeAbility(id)
@@ -222,7 +221,7 @@ init
 
 	EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) ->
 		let u = EventData.getAttackerUnit()
-		if u.hasAbility(BrassKnuckles.ABIL_ID) and u.isType(UNIT_TYPE_HERO)
+		if u.hasItemById(BrassKnuckles.ID) and u.isType(UNIT_TYPE_HERO)
 			updateDamage(u)
 
 	EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
@@ -239,7 +238,7 @@ init
 	EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
 		let u = EventData.getTriggerUnit()
 		let itemId = EventData.getManipulatedItem().getTypeId()
-		if itemId == BrassKnuckles.ID and owners.has(u)
+		if itemId == BrassKnuckles.ID
 			nullTimer() -> 
 				if not u.hasItemById(BrassKnuckles.ID) and owners.has(u)
 					owners.remove(u)
@@ -247,7 +246,9 @@ init
 						updateTimer.pause()
 					clearDamage(u)
 		else if u.isType(UNIT_TYPE_HERO)
-			updateDamage(u)
+			nullTimer() ->
+				if u.hasItemById(BrassKnuckles.ID)
+					updateDamage(u)
 
 	EventListener.onCast(BrassKnuckles.ABIL_ID) (unit caster) ->
 		let s = usedAttr.get(caster)
