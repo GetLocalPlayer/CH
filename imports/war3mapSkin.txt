@@ -10,6 +10,7 @@ Targetancient=TRIGSTR_5081
 PRIMARY_ATTRIBUTE="Each point increases mana point regeneration"
 BONUS_DAMAGE="rate"
 BONUS_MANAREGEN="|n|cFF969696Hero attributes can be adjusted in ''Hero Attributes'' menu.|r"
+RESOURCE_UBERTIP_GOLD="Click to share your gold with your teammates."
 LUMBER="Skill points"
 COLON_LUMBER="Skill points:"
 RESOURCE_UBERTIP_LUMBER="Received on each levelup or as a reward for deeds."

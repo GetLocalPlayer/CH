@@ -1,0 +1,40 @@
+package GoldSharing
+import ObjectIdGenerator
+import ItemObjEditing
+import AbilityObjEditing
+import ObjectIds
+import SpawnHeroes
+
+
+let itemId = compiletime(ITEM_ID_GEN.next())
+
+@compiletime
+function build()
+	let abilDef = new AbilityDefinitionGiveGold(ABIL_ID_GEN.next())
+	..setGoldGiven(1, 1)
+	new ItemDefinition(itemId, 'gold')
+	..setName("Gold Coin")
+	..setTooltipBasic("Gold Coin")
+	..setTooltipExtended("Just a gold coin.")
+	..setDescription("Just a gold coin.")
+	..setAbilities(abilDef.getNewId().toRawCode())
+	..setCooldownGroup(abilDef.getNewId().toRawCode())
+
+
+init
+	let resourceFrame = getFrame("ResourceBarFrame")
+	let goldMouseListener = resourceFrame.getChild(0)
+	..setPoint(FRAMEPOINT_TOPRIGHT, resourceFrame, FRAMEPOINT_TOPRIGHT, -0.267, -0.003125)
+	..setWidth(0.054875)
+	let btn = createFrame("GLUEBUTTON", "GoldShareButton", GAME_UI, "", 0)
+	..setPoint(FRAMEPOINT_TOPRIGHT, goldMouseListener, FRAMEPOINT_TOPLEFT, 0, 0)
+	..setPoint(FRAMEPOINT_BOTTOMRIGHT, goldMouseListener, FRAMEPOINT_BOTTOMLEFT, 0, 0)
+	..setWidth(0.01640625)
+	
+	CreateTrigger()
+	..registerFrameEvent(btn, FRAMEEVENT_CONTROL_CLICK)
+	..addAction() ->
+		let p = EventData.getTriggerPlayer()
+		if p.getGold() > 0 and p.getHero().isAlive()
+			p.setGold(p.getGold() - 1)
+			createItem(itemId, p.getHero().getPos())

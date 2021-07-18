@@ -12,6 +12,13 @@ constant STARTING_SKILL_POINTS = 15
 constant SPAWN_RECT = baseEntranceRect
 
 
+unit array playerHero
+
+
+public function player.getHero() returns unit
+	return playerHero[this.getId()]
+
+
 init
 	let list = CustomHero.meleeIds.copy()
 	for i = 0 to bj_MAX_PLAYER_SLOTS - 1
@@ -26,4 +33,5 @@ init
 			..select(hero)
 			..setState(PLAYER_STATE_RESOURCE_LUMBER , STARTING_LUMBER)
 			..setState(PLAYER_STATE_RESOURCE_GOLD  , STARTING_GOLD)
+			playerHero[p.getId()] = hero
 			SetPlayerHandicapXP(p, 0)
