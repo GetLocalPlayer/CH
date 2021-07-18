@@ -4,7 +4,7 @@ import HashMap
 import ChannelAbilityPreset
 
 import ClosureEvents
-import Preload
+import Preloader
 
 @configurable constant MAX_ABILITIES_SOLD = 7
 @configurable constant MSG_MAX_ABILITIES_SOLD = "The hero cannot learn more abilites"
@@ -103,7 +103,7 @@ public class AbilityShopPreset extends BuildingDefinition
 
 	protected static function _init()
 		for abilId in abilities
-			preload(abilId)
+			preloadAbility(abilId)
 
 		// <buyer, ability counter>
 		let abilitiesSold = new HashMap<unit, int>

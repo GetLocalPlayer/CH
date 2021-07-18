@@ -20,7 +20,7 @@ import ClosureEvents
 import ClosureForGroups
 import ClosureTimers
 import ItemCombine
-import Preload
+import Preloader
 
 
 public class SecondPartOfDeadSouls
@@ -131,12 +131,12 @@ public class SecondPartOfDeadSouls
 	protected static function _init()
 		new ItemCombine(SecondPartOfDeadSouls.ID, asList<int>(TauntBook.ID, WandOfNeutralization.ID, GemOfHealth.ID, Mindstaff.ID, SecondPartOfDeadSoulsRecipe.ID))
 
-		preload(RESISTANCE_ID)
-		preload(RESISTANCE_TUPLE.abilId)
-		preload(PRIMARY_PROJECTILE)
-		preload(SECONDARY_PROJECTILE)
-		preload(FX_BURNING)
-		preload(FX_EXPLODE)
+		preloadAbility(RESISTANCE_ID)
+		preloadAbility(RESISTANCE_TUPLE.abilId)
+		Preload(PRIMARY_PROJECTILE)
+		Preload(SECONDARY_PROJECTILE)
+		Preload(FX_BURNING)
+		Preload(FX_EXPLODE)
 
 		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
 			let dead = EventData.getDyingUnit()

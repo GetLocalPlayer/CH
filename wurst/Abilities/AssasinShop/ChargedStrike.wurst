@@ -11,7 +11,7 @@ import HashList
 import ClosureEvents
 import ClosureTimers
 import LigthingEx
-import Preload
+import Preloader
 
 
 public class ChargedStrike
@@ -86,9 +86,9 @@ public class ChargedStrike
 		..setArtTarget(1, "")
 
 	protected static function _init()
-		preload(ORB_ABIL_ID)
-		preload(ORB_BUFF_ID)
-		preload(FX_TARGET)
+		preloadAbility(ORB_ABIL_ID)
+		preloadAbility(ORB_BUFF_ID)
+		Preload(FX_TARGET)
 		AbilityShop.onSold() (unit u, int abilId, int level) ->
 			if abilId == ABIL_ID and level == 1
 				u..addAbility(ORB_ABIL_ID)
