@@ -6,35 +6,41 @@ import ChannelAbilityPreset
 import ItemTooltipGenerator
 import ItemAbilityPreset
 import ItemAlias
-import RareMerchant
-import GauntletsOfOgre
-import LumberjacksAxe
-
-import ClosureEvents
-import LinkedList
 import ItemCombine
 
+import RareMerchant
+import GlovesOfHaste
+import ClawsOfAttack
+
+import ClosureEvents
+import ClosureTimers
+import TimerUtils
+import Preloader
+import HashMap
+import LinkedList
+
+
+/* Works specifically with CustomHeroes of this map. */
 
 public class BrassKnuckles
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "Brass Knuckles"
 	static constant ICON = "ReplaceableTextures\\CommandButtons\\BTNBrassKnuckles.blp"
-	static constant int GOLD_COST = GauntletsOfOgre.GOLD_COST + LumberjacksAxe.GOLD_COST + BrassKnucklesRecipe.GOLD_COST
-	static constant int ID = compiletime(ITEM_ID_GEN.next())
-	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
-	static constant int STRENGTH = 10
-	static constant int CHANCE = 30
-	static constant real STRENGTH_DAMAGE_FACTOR = 0.75
-	static constant ATTACK_TYPE = ATTACK_TYPE_MELEE
-	static constant DAMAGE_TYPE = DAMAGE_TYPE_NORMAL
-	static constant WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
+	static constant GOLD_COST = GlovesOfHaste.GOLD_COST + ClawsOfAttack.GOLD_COST + BrassKnucklesRecipe.GOLD_COST
+	static constant ATTACK_DAMAGE = ClawsOfAttack.ATTACK_DAMAGE
+	static constant ATTACK_RATE = GlovesOfHaste.ATTACK_RATE
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
 	
 	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
-		..addPassiveEffect("Gives a {0}% chance to melee attacks to deal additional physical damage on hit equal to {1}% of the wearer strength.".format(CHANCE.toString(), (STRENGTH_DAMAGE_FACTOR * 100).toInt().toString()))
+		..addPassiveEffect("Increases the owner's attack damage depending on its strength, agility, or intelligence value.")
+		..setActiveEffect("Switches the stat that's used as the source of the bonus attack damage.")
 		..setComment("Do u now da wae?")
 			
 	@compiletime protected static function build()
-		let strDef = buildStrengthBonus(NAME, ICON, STRENGTH, tooltipGenerator)
+		let adDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
+		let asDef = buildAttackSpeedBonus(NAME, ICON, ATTACK_RATE, tooltipGenerator)
 		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
 			def..setLevel(1)
 			..setLevelUnclassified(1)
@@ -46,7 +52,8 @@ public class BrassKnuckles
 			..setStockStartDelay(1)
 			..setCanBeDropped(true)
 			..setPerishable(false)
-			..setActivelyUsed(false)
+			..setActivelyUsed(true)
+			..setCooldownGroup(ABIL_ID.toRawCode())
 			..setCanBeSoldByMerchants(true)
 			..setCanBeSoldToMerchants(true)
 			..setGoldCost(GOLD_COST)
@@ -54,22 +61,21 @@ public class BrassKnuckles
 			..setInterfaceIcon(ICON)
 			tooltipGenerator.applyToDef(def)
 			if not isAlias
-				def.setAbilities(strDef.getNewId().toRawCode())
+				def.setAbilities("{0},{1},{2}".format(ABIL_ID.toRawCode(), adDef.getNewId().toRawCode(), asDef.getNewId().toRawCode()))
+		new ChannelAbilityPreset(ABIL_ID, 1, true, null)
+		..setCooldown(1, 1)
+		..setTargetType(1, Targettype.NONE castTo int)
+		..setDisableOtherAbilities(1, false)
+		..setFollowThroughTime(1, 1)
 
 	protected static function _init()
-		new ItemCombine(BrassKnuckles.ID, asList<int>(GauntletsOfOgre.ID, LumberjacksAxe.ID, BrassKnucklesRecipe.ID))
-
-		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) () ->
-			let attacker = EventData.getEventDamageSource()
-			if BlzGetEventIsAttack() and attacker.hasItemById(ID) and GetRandomInt(1, 100) <= CHANCE
-				attacker.damageTarget(EventData.getTriggerUnit(), STRENGTH_DAMAGE_FACTOR * attacker.getStr(true), false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
+		new ItemCombine(ID, asList<int>(ClawsOfAttack.ID, GlovesOfHaste.ID, BrassKnucklesRecipe.ID))
 
 
 public class BrassKnucklesRecipe
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "{0} Recipe".format(BrassKnuckles.NAME)
 	static constant ICON = Icons.bTNSnazzyScrollGreen
-	static constant ALIAS_ICON = BrassKnuckles.ICON
 	static constant int SHOP_X = 0
 	static constant int SHOP_Y = 2
 	static constant int GOLD_COST = 250
@@ -78,8 +84,8 @@ public class BrassKnucklesRecipe
 
 	protected static let tooltipGenerator = BrassKnuckles.tooltipGenerator.copy()
 		..setName(NAME)
-		..addRecipeRequirement(GauntletsOfOgre.NAME, GauntletsOfOgre.GOLD_COST)
-		..addRecipeRequirement(LumberjacksAxe.NAME, LumberjacksAxe.GOLD_COST)
+		..addRecipeRequirement(GlovesOfHaste.NAME, GlovesOfHaste.GOLD_COST)
+		..addRecipeRequirement(ClawsOfAttack.NAME, ClawsOfAttack.GOLD_COST)
 		..addRecipeRequirement("Recipe", GOLD_COST)
 		..setComment("")
 
@@ -103,13 +109,153 @@ public class BrassKnucklesRecipe
 			..setButtonPositionX(SHOP_X)
 			..setButtonPositionY(SHOP_Y)
 			..setClassification(CLASSIFICATION)
-			..setInterfaceIcon(isAlias ? ALIAS_ICON : ICON)
+			..setInterfaceIcon(isAlias ? BrassKnuckles.ICON : ICON)
 			tooltipGenerator..setName(NAME)
 			..applyToDef(def, true)
 			if isAlias
 				rareMerchant.addItemSold(def.getNewId())
 
-
+		
 init
 	BrassKnuckles._init()
-	
+				
+
+enum Attribute
+	STR
+	AGI
+	INT
+
+
+function unit.getAttribute(Attribute attr, bool includeBonus) returns int
+	switch attr
+		case Attribute.STR
+			return this.getStr(includeBonus)
+		case Attribute.AGI
+			return this.getAgi(includeBonus)
+		case Attribute.INT
+			return this.getInt(includeBonus)
+
+
+let whiteBonus = new HashMap<unit, int>
+let usedAttr = new HashMap<unit, Attribute>
+let maxPower = 9
+let greenBonusIds = compiletime(new LinkedList<int>)
+let damageMasks = compiletime(new LinkedList<int>)
+
+@compiletime
+function buildGreenBonus()
+	for i = 0 to maxPower
+		let damage = 2 .pow(i)
+		let def = new AbilityDefinitionAttackBonus(ABIL_ID_GEN.next())
+		..setIconNormal(BrassKnuckles.ICON)
+		..setName("{0} +{1}".format(BrassKnuckles.NAME, damage.toString()))
+		..setItemAbility(false)
+		..setAttackBonus(1, damage)
+		greenBonusIds.add(def.getNewId())
+		damageMasks.add(damage)
+
+/* Basic attack damage changes aren't memorized for
+different forms of a unit. That means, if a unit changes
+its form via, for instance, metamorphosys ability, the
+damage bonus will be reset.
+Same truble we have if we give an ability to a unit
+that can change its form. But, in case of an ability,
+we can at least check if the unit is still having the
+ability. So I give this dummy-ability non-permanently
+to a unit to indicate if it has changed	its form and,
+hence, reset the basic damage given in the code. */
+let markerId = compiletime(ABIL_ID_GEN.next())
+
+@compiletime
+function buildMarker()
+	new AbilityDefinitionAttackBonus(markerId)
+	..setIconNormal(BrassKnuckles.ICON)
+	..setName(BrassKnuckles.NAME + " marker")
+	..setItemAbility(false)
+	..setAttackBonus(1, 0)
+
+
+function updateDamage(unit u)
+	if not usedAttr.has(u)
+		usedAttr.put(u, Attribute.STR)
+	let whiteAttr = u.getAttribute(usedAttr.get(u), false)
+	let greenAttr = u.getAttribute(usedAttr.get(u), true) - whiteAttr
+	if not whiteBonus.has(u) or not u.hasAbility(markerId)
+		whiteBonus.put(u, 0)
+		u.addAbility(markerId)
+	let whiteDamage = whiteBonus.get(u)
+	if whiteDamage != whiteAttr
+		u.setBaseDamage(u.getBaseDamage(0) + (whiteAttr - whiteDamage), 0)
+		whiteBonus.put(u, whiteAttr)
+	for i = 0 to maxPower
+		let id = greenBonusIds.get(i)
+		let mask = damageMasks.get(i)
+		if greenAttr.bitAnd(mask) != 0
+			u.addAbility(id)
+		else
+			u.removeAbility(id)
+
+
+function clearDamage(unit u)
+	if whiteBonus.has(u)
+		u.setBaseDamage(u.getBaseDamage(0) - whiteBonus.get(u), 0)
+	whiteBonus.remove(u)
+	usedAttr.remove(u)
+	u.removeAbility(markerId)
+	for id in greenBonusIds
+		u.removeAbility(id)
+
+
+let owners = CreateGroup()
+let updateTimer = getTimer()
+let updateInterval = 1.
+
+
+init
+	for id in greenBonusIds
+		preloadAbility(id)
+
+	let updateCb = updateTimer.doPeriodically(updateInterval) (CallbackPeriodic cb) ->
+		for u in owners
+			updateDamage(u)
+	updateTimer.pause()
+
+	EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) ->
+		let u = EventData.getAttackerUnit()
+		if u.hasAbility(BrassKnuckles.ABIL_ID) and u.isType(UNIT_TYPE_HERO)
+			updateDamage(u)
+
+	EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
+		let u = EventData.getTriggerUnit()
+		if u.isType(UNIT_TYPE_HERO)
+			let itemId = EventData.getManipulatedItem().getTypeId()
+			if itemId == BrassKnuckles.ID and not owners.contains(u)
+				if owners.isEmpty()
+					updateTimer.doPeriodically(updateInterval, updateCb)
+				owners.addUnit(u)
+			if u.hasItemById(BrassKnuckles.ID)
+				updateDamage(u)
+
+	EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+		let u = EventData.getTriggerUnit()
+		let itemId = EventData.getManipulatedItem().getTypeId()
+		if itemId == BrassKnuckles.ID and owners.contains(u)
+			nullTimer() -> 
+				if not u.hasItemById(BrassKnuckles.ID) and owners.contains(u)
+					owners.removeUnit(u)
+					if owners.isEmpty()
+						updateTimer.pause()
+					clearDamage(u)
+		else if u.isType(UNIT_TYPE_HERO)
+			updateDamage(u)
+
+	EventListener.onCast(BrassKnuckles.ABIL_ID) (unit caster) ->
+		let s = usedAttr.get(caster)
+		switch s
+			case Attribute.STR
+				usedAttr.put(caster, Attribute.AGI)
+			case Attribute.AGI
+				usedAttr.put(caster, Attribute.INT)
+			case Attribute.INT
+				usedAttr.put(caster, Attribute.STR)
+		updateDamage(caster)

@@ -2,6 +2,7 @@ package CustomHero
 import ClosureEvents
 import HashMap
 import LinkedList
+import LinkedListModule
 import ClosureTimers
 
 import ObjectIds
@@ -41,7 +42,7 @@ constant int AGI_PER_ABIL_LEVEL = 1
 constant int INT_PER_ABIL_LEVEL = 1
 /** Each hero already has 1 skill point at first level. */
 constant int SKILL_POINTS_PER_LEVEL = 3
-constant int STARTING_SKILL_POINTS = 15
+//constant int STARTING_SKILL_POINTS = 15
 constant int ATTR_ABIL_MAX_LEVEL = 50
 constant STR_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 constant AGI_ABIL_ID = compiletime(ABIL_ID_GEN.next())
@@ -69,30 +70,12 @@ enum CustomHeroEventIds
 	ATTACK_SWITCH
 
 abstract class CustomHero
-	protected CustomHero next = null
-	protected CustomHero prev = null
-	protected int eventId
+	static abstract class AttackSwitchCallback
+		use LinkedListModule
+		abstract function call(unit u, bool isMelee)
 
-	protected static CustomHero array first
-
-	abstract function onEvent(unit u, bool isMelee)
-
-	static function onAttackSwitch(CustomHero cb) returns CustomHero
-		cb.eventId = CustomHeroEventIds.ATTACK_SWITCH castTo int
-		if first[cb.eventId] != null
-			first[cb.eventId].prev = cb
-			cb.next = first[cb.eventId]
-		first[cb.eventId] = cb
+	static function onAttackSwitch(AttackSwitchCallback cb) returns AttackSwitchCallback
 		return cb
-
-	ondestroy
-		if first[eventId] == this
-			first[eventId] = next
-		else
-			prev.next = next
-		if next != null
-			next.prev = prev
-
 	// Transfer data
 	static let meleeIds = compiletime(new LinkedList<int>)
 	static let rangerIds = compiletime(new LinkedList<int>)
@@ -241,10 +224,8 @@ init
 			let isMelee = u.isType(UNIT_TYPE_MELEE_ATTACKER)
 			setAbilityIcon(abilId, isMelee ? ATTACK_SWITCHER_ENABLE_MELEE_ICON : ATTACK_SWITCHER_ENABLE_RANGER_ICON)
 			setAbilityTooltip(abilId, ATTACK_SWITCHER_TOOLTIP.format(isMelee ? ATTACK_SWITCHER_RANGER : ATTACK_SWITCHER_MELEE), 0)
-			var attackSwitchCb = CustomHero.first[CustomHeroEventIds.ATTACK_SWITCH castTo int]
-			while attackSwitchCb != null
-				attackSwitchCb.onEvent(u, isMelee)
-				attackSwitchCb = attackSwitchCb.next
+			for cb in CustomHero.AttackSwitchCallback
+				cb.call(u, isMelee)
 			// Attack range Circle
 			if isMelee
 				let eff = addEffect("Abilities\\AttackRangeCircle\\AttackRangeCircle.mdx", u.getPos())
@@ -267,7 +248,5 @@ init
 			let eff = rangedCircles.getAndRemove(u)
 			destroy circlesCallback.getAndRemove(eff)
 			eff.destr()
-		var attackSwitchCb = CustomHero.first[CustomHeroEventIds.ATTACK_SWITCH castTo int]
-		while attackSwitchCb != null
-			attackSwitchCb.onEvent(u, u.isType(UNIT_TYPE_MELEE_ATTACKER))
-			attackSwitchCb = attackSwitchCb.next
+		for cb in CustomHero.AttackSwitchCallback
+			cb.call(u, u.isType(UNIT_TYPE_MELEE_ATTACKER))
