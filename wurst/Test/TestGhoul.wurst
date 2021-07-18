@@ -45,7 +45,7 @@ function createGhouls()
 	for i = 0 to count - 1
 		let u = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ID, SPAWN_RECT.randomPoint(), GetRandomInt(0, 359).toReal().asAngleDegrees())
 		..setMaxHP(testGhoulsMaxLife)
-		ghouls.addUnit(u)
+		ghouls.add(u)
 	
 init
 	EventListener.add(EVENT_PLAYER_CHAT_FILTER) () ->
@@ -64,7 +64,7 @@ init
 	EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->
 		let u = EventData.getDyingUnit()
 		if u.getTypeId() == UNIT_ID
-			ghouls.removeUnit(u)
+			ghouls.remove(u)
 
 
 function setHP()

@@ -161,8 +161,8 @@ function spawnDrops(unit caster, real mana)
 						let targets = CreateGroup()
 						forUnitsInRange(drop.getPos(), NecklaceOfWastedMana.DROPS_CONSUME_RANGE, true) (unit u) ->
 							if u != caster and u.isAlive() and u.isType(UNIT_TYPE_HERO) and u.isAllyOf(caster)
-								targets.addUnit(u)
-						let ally = targets.getRandomUnit()
+								targets.add(u)
+						let ally = targets.getRandom()
 						if ally != null
 							ally.setMana(ally.getMana() + containedMana)
 							drop.destr()
@@ -170,8 +170,8 @@ function spawnDrops(unit caster, real mana)
 						else
 							forUnitsInRange(drop.getPos(), NecklaceOfWastedMana.DROPS_ATTACK_RANGE, true) (unit u) ->
 								if u.isEnemyOf(caster) and u.isAlive() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and not u.isInvulnerable()
-									targets.addUnit(u)
-							let enemy = targets.getRandomUnit()
+									targets.add(u)
+							let enemy = targets.getRandom()
 							if enemy != null
 								_target = enemy
 							else

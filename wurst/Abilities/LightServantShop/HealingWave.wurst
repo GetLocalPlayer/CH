@@ -74,14 +74,14 @@ init
 		var healing = HEALING[caster.getAbilityLevel(ABIL_ID) - 1]
 		target.setLife(target.getLife() + healing)
 		let healedUnits = CreateGroup()
-		..addUnit(target)
+		..add(target)
 		var previousTarget = target
 		doPeriodicallyCounted(LIGHTNING_JUMP_INTERVAL, NUMBER_OF_TARGETS - 1) cbTargets ->
 			unit newTarget = null
 			let targetPos = previousTarget.getPos()
 			ENUM_GROUP.enumUnitsInRange(targetPos, AOE + MAX_COLLISION_SIZE)
 			for u in ENUM_GROUP
-				if u.isInRange(targetPos, AOE) and not healedUnits.contains(u)
+				if u.isInRange(targetPos, AOE) and not healedUnits.has(u)
 					if u.isAlive() and u.isAllyOf(caster) and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and not u.isInvulnerable() and not u.isType(UNIT_TYPE_STRUCTURE)
 						if newTarget == null or u.getLife()/u.getMaxHP() < newTarget.getLife()/newTarget.getMaxHP()
 							newTarget = u
@@ -92,7 +92,7 @@ init
 				..setLifetime(LIGHTNING_LIFETIME)
 				..setFadepoint(LIGHTNING_LIFETIME)
 				previousTarget = newTarget
-				healedUnits.addUnit(previousTarget)
+				healedUnits.add(previousTarget)
 			if newTarget == null or cbTargets.isLast()
 				healedUnits.destr()
 				if not cbTargets.isLast()

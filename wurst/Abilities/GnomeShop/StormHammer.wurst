@@ -145,10 +145,10 @@ class StormHammer
 						enumUnmarked.clear()
 						forUnitsInRange(target.toVec2(), AOE, true) (unit u) ->
 							if isValidTarget(caster, u)
-								enumGroup.addUnit(u)
+								enumGroup.add(u)
 								if not u.hasAbility(MARK_BUFF.buffId)
-									enumUnmarked.addUnit(u)
-						let random = enumUnmarked.isEmpty() ? enumGroup.getRandomUnit() : enumUnmarked.getRandomUnit()
+									enumUnmarked.add(u)
+						let random = enumUnmarked.isEmpty() ? enumGroup.getRandom() : enumUnmarked.getRandom()
 						if random != null
 							if not random.addAbility(MARK_BUFF.abilId)
 								destroy markedUnits.get(random)

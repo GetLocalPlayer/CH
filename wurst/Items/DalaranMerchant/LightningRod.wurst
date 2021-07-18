@@ -156,10 +156,10 @@ init
 
 	EventListener.onTargetCast(LightningRod.ABIL_ID) (unit caster, unit target) ->
 		if not affectedUnits.has(target)
-			ChargedStrike.additionalTargets.addUnit(target)
+			ChargedStrike.additionalTargets.add(target)
 		else
 			destroy affectedUnits.getAndRemove(target)
 		let cb = doAfter(LightningRod.DURATION) () ->
-			ChargedStrike.additionalTargets.removeUnit(target)
+			ChargedStrike.additionalTargets.remove(target)
 			affectedUnits.remove(target)
 		affectedUnits.put(target, cb)

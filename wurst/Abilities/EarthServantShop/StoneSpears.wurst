@@ -98,7 +98,7 @@ init
 							ENUM_GROUP.enumUnitsInRange(projectilePos.toVec2(), PROJECTILE_COLLISIONO_SIZE + MAX_COLLISION_SIZE, null)
 							for u in ENUM_GROUP
 								if u.isAllyOf(attacker) or not u.isAlive() or u.isType(UNIT_TYPE_MAGIC_IMMUNE) or not u.isInRange(projectilePos.toVec2(), PROJECTILE_COLLISIONO_SIZE)
-									ENUM_GROUP.removeUnit(u)
+									ENUM_GROUP.remove(u)
 							let isCollided = not ENUM_GROUP.isEmpty()
 							ENUM_GROUP.clear()
 							if not isCollided and projectilePos.distanceToSq(targetPos) > projectileOffsetSq

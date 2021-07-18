@@ -29,7 +29,7 @@ init
 			if msg.startsWith(cmd) or msg.startsWith(short)
 				for name in heroByName
 					let hero = createUnit(localPlayer, heroByName.get(name), TEST_RECT.randomPoint(), GetRandomReal(-180, 180).asAngleDegrees())
-					createdHeroes.addUnit(hero)
+					createdHeroes.add(hero)
 
 	EventListener.add(EVENT_PLAYER_CHAT_FILTER) () ->
 		if bj_isSinglePlayer
@@ -40,7 +40,7 @@ init
 				let name = msg.startsWith(cmd) ? msg.substring(cmd.length() + 1) : (msg.startsWith(short) ? msg.substring(short.length() + 1) : null)
 				if heroByName.has(name)
 					let hero = createUnit(localPlayer, heroByName.get(name), TEST_RECT.randomPoint(), GetRandomReal(-180, 180).asAngleDegrees())
-					createdHeroes.addUnit(hero)
+					createdHeroes.add(hero)
 				else
 					print("No hero with such name.")
 
