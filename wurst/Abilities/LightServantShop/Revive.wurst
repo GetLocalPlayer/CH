@@ -1,0 +1,115 @@
+package Revive
+import Assets
+import ChannelAbilityPreset
+import AbilityTooltipGenerator
+import LightServantShop
+import HotkeyFactory
+
+import ClosureForGroups
+import ClosureEvents
+import ClosureTimers
+import MapBounds
+import LinkedList
+import HeroCorpse
+import HeroSpawn
+
+
+public class Revive
+	static constant int SHOP_COST = 1
+	static constant int LEVELS = 5
+	static constant HOTKEY = getHotkey()
+	static constant ICON = Icons.bTNResurrection
+	static constant NAME = "Revive"
+	static constant DESCRIPTION = "A wave of divine energy that revives heroes on its way."
+	static constant real array RESTORATION = [0.1, 0.2, 0.3, 0.4, 0.5]
+	static constant int array REVIVED = [1, 1, 1, 1, 2]
+	static constant real SPEED = 850
+	static constant real CAST_RANGE = 1000.
+	static constant real AOE = 150.
+	static constant real array COOLDOWN = [200, 200, 200, 200, 200]
+	static constant int array MANACOST = [200, 220, 240, 260, 350]
+	static constant FX_PARTICLE = Abilities.levelupcaster
+
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		..addPropertyPostfix("Health/Mana restored", "%")
+		new ChannelAbilityPreset(ID, LEVELS, true)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..presetHotkey(HOTKEY)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setArtTarget("")
+		..setArtEffect("")
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..presetAreaofEffect(lvl -> AOE)
+		..presetCastRange(lvl -> CAST_RANGE)
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
+		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..addTooltipProperty("Heroes revived", (int lvl) -> REVIVED[lvl - 1])
+		..addTooltipProperty("Health/Mana restored", (int lvl) -> (RESTORATION[lvl - 1] * 100).toInt())
+		..tooltipStopListen()
+		..presetOption(Option.VISIBLE, true)
+		..presetOption(Option.TARGETIMAGE, false)
+		..presetTargetType((int lvl) -> Targettype.POINT castTo int)
+		..presetDisableOtherAbilities((int lvl) -> false)
+		..presetFollowThroughTime((int lvl) -> 1.)
+		..presetArtDuration((int lvl) -> 5) 
+		..presetCastingTime((int lvl) -> 0)
+		lightServantShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+
+	private static let enumItems = new LinkedList<item>
+
+	protected static function _init()
+		Preload(FX_PARTICLE)
+		
+		EventListener.onPointCast(ID) (unit caster, vec2 target) ->
+			var _pos = caster.getPos()
+			let dest = _pos.moveTowards(target, CAST_RANGE)
+			let offset = (dest - _pos).norm() * SPEED * ANIMATION_PERIOD
+			let level = caster.getAbilityLevel(ID)
+			var count = REVIVED[level - 1]
+			doPeriodicallyCounted(ANIMATION_PERIOD, (CAST_RANGE / SPEED / ANIMATION_PERIOD).toInt()) (CallbackCounted cb) ->
+				EnumItemsInRect(boundRect, Filter(() -> GetFilterItem().getTypeId() == HeroCorpse.ALIAS_ID)) ->
+					enumItems.add(GetEnumItem())
+				for corpse in enumItems
+					if corpse.getPos().distanceToSq(_pos) <= AOE.squared()
+						let hero = corpse.getPlayer().getHero()
+						if hero != null and not hero.isAlive()
+							hero.revive(corpse.getPos(), true)
+							hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
+							hero.setMana(hero.getMaxMana() * RESTORATION[level - 1])
+							corpse.remove()
+							count -= 1
+							if count == 0
+								break
+				enumItems.clear()
+				forUnitsInRange(_pos, AOE, true) (unit u) ->
+					if count > 0
+						for i in u.inventory()
+							if i.getTypeId() == HeroCorpse.ID 
+								let corpse = i
+								let hero = corpse.getPlayer().getHero()
+								if hero != null and not hero.isAlive()
+									hero.revive(corpse.getPos(), true)
+									hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
+									hero.setMana(hero.getMaxMana() * RESTORATION[level - 1])
+									corpse.remove()
+									count -= 1
+									if count == 0
+										break
+				flashEffect(FX_PARTICLE, _pos)
+				if not cb.isLast()
+					_pos += offset
+				if count == 0
+					destroy cb
+					
+
+init
+	Revive._init()
