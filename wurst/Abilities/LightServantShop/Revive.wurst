@@ -85,10 +85,10 @@ public class Revive
 							hero.revive(corpse.getPos(), true)
 							hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
 							hero.setMana(hero.getMaxMana() * RESTORATION[level - 1])
-							corpse.remove()
 							count -= 1
 							if count == 0
 								break
+						corpse.remove()
 				enumItems.clear()
 				forUnitsInRange(_pos, AOE, true) (unit u) ->
 					if count > 0
@@ -100,10 +100,10 @@ public class Revive
 									hero.revive(u.getPos(), true)
 									hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
 									hero.setMana(hero.getMaxMana() * RESTORATION[level - 1])
-									corpse.remove()
 									count -= 1
 									if count == 0
 										break
+								corpse.remove()
 				flashEffect(FX_PARTICLE, _pos)
 				if not cb.isLast()
 					_pos += offset

@@ -3,6 +3,7 @@ import LinkedList
 import CustomHero
 import BootsOfSalvation
 import Base
+import ClosureEvents
 
 
 constant STARTING_ITEM_ID = BootsOfSalvation.ID
@@ -35,3 +36,6 @@ init
 			..setState(PLAYER_STATE_RESOURCE_GOLD  , STARTING_GOLD)
 			playerHero[p.getId()] = hero
 			SetPlayerHandicapXP(p, 0)
+
+	EventListener.add(EVENT_PLAYER_LEAVE) ->
+		playerHero[EventData.getTriggerPlayer().getId()] = null
