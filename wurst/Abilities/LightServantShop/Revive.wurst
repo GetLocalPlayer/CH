@@ -97,7 +97,7 @@ public class Revive
 								let corpse = i
 								let hero = corpse.getPlayer().getHero()
 								if hero != null and not hero.isAlive()
-									hero.revive(corpse.getPos(), true)
+									hero.revive(u.getPos(), true)
 									hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
 									hero.setMana(hero.getMaxMana() * RESTORATION[level - 1])
 									corpse.remove()
