@@ -15,7 +15,7 @@ import Preloader
 
 public class HeroCorpse
 	static constant int GOLD_COST = 200
-	static constant CLASSIFICATION = "Permanent"
+	static constant CLASSIFICATION = "Artifact" // Must be artifact or they won't be able to be picked up by other players
 	static constant NAME = "Hero Corpse"
 	static constant ICON = Icons.bTNEntrapmentWard
 	static constant DESC = "Delivery the corpse on the base to revive the hero."

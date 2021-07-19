@@ -2,8 +2,12 @@ package ItemOwnership
 import ClosureEvents
 import OrderIds
 
-
 constant KEEP_CHARGED_NEUTRAL = true
+
+/** These types' ownership is ignored. */
+function isIgnoredType(itemtype t) returns boolean
+	return t == ITEM_TYPE_ARTIFACT
+
 
 init
 	EventListener.add(EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER) ->
@@ -12,8 +16,9 @@ init
 		if targetItem != null and orderId == OrderIds.smart
 			let u = EventData.getTriggerUnit()
 			let itemPlayer = targetItem.getPlayer()
-			if itemPlayer.getId() != PLAYER_NEUTRAL_PASSIVE and itemPlayer != u.getOwner()
-				u.issuePointOrderById(OrderIds.move, targetItem.getPos())
+			if not isIgnoredType(targetItem.getItemtype())
+				if itemPlayer.getId() != PLAYER_NEUTRAL_PASSIVE and itemPlayer != u.getOwner()
+					u.issuePointOrderById(OrderIds.move, targetItem.getPos())
 
 	EventListener.add(EVENT_PLAYER_UNIT_SELL_ITEM) ->
 		let buyer = EventData.getBuyingUnit()
