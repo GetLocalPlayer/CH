@@ -1,4 +1,4 @@
-package SpawnHeroes
+package HeroSpawn
 import LinkedList
 import CustomHero
 import BootsOfSalvation

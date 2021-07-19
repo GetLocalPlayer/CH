@@ -1,0 +1,113 @@
+package HeroCorpse
+import Assets
+import ObjectIds
+import ObjectIdGenerator
+import AbilityObjEditing
+import BuffObjEditing
+import ItemAlias
+import ItemTooltipGenerator
+
+import ClosureEvents
+import ClosureTimers
+import HeroSpawn
+import Preloader
+
+
+public class HeroCorpse
+	static constant int GOLD_COST = 200
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Hero Corpse"
+	static constant ICON = Icons.bTNEntrapmentWard
+	static constant DESC = "Delivery the corpse on the base to revive the hero."
+	static constant COMMENT = "Kinda heavy..."
+	static constant BUFF_NAME = "Heavy Corpse"
+	static constant BUFF_DESC = "Someone ate too much!"
+	static constant MODEL = Doodads.sittingCorpse
+	static constant MODEL_SCALE = 1.55
+
+	static constant REVIVE_RECT = gg_rct_BaseEntrance
+	static constant SLOW_FACTOR = 0.8
+
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	static constant SLOW_ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	
+	private static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..addPassiveEffect(DESC)
+		..setComment(COMMENT)
+
+	@compiletime static protected function build()
+		let abilDef = new AbilityDefinitionAuraSlow(SLOW_ID)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..setItemAbility(true)
+		..setAttackSpeedFactor(1, 0)
+		..setMovementSpeedFactor(1, -SLOW_FACTOR)
+		..setAreaofEffect(1, 0)
+		..setBuffs(1, BUFF_ID.toRawCode())
+		..setTargetsAllowed(1, "self")
+		new BuffDefinition(BUFF_ID, 'Basl')
+		..setName(BUFF_NAME)
+		..setIcon(ICON)
+		..setTooltipNormal(1, BUFF_NAME)
+		..setTooltipNormalExtended(1, BUFF_DESC)
+		..setArtTarget("")
+		ItemAlias.build(ID, ALIAS_ID) (def, isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setScalingValue(MODEL_SCALE)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			..setModelUsed(MODEL)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities(abilDef.getNewId().toRawCode())
+
+	protected static function _init()
+		preloadAbility(SLOW_ID)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+			let u = EventData.getTriggerUnit()
+			let itemId = EventData.getManipulatedItem().getTypeId()
+			if itemId == ID
+				nullTimer() -> 
+					if not u.hasItemById(itemId)
+						u.removeAbility(BUFF_ID)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let u = EventData.getDyingUnit()
+			if u == u.getOwner().getHero()
+				createItem(ALIAS_ID, u.getPos())
+				..setPlayer(u.getOwner(), true)
+
+		let reg = CreateRegion()
+		reg.addRect(REVIVE_RECT)
+		CreateTrigger()
+		..registerEnterRegion(reg, null)
+		..addCondition(Condition(() -> EventData.getEnteringUnit().hasItemById(ID)))
+		..addAction() ->
+			let u = EventData.getEnteringUnit()
+			for i in u.inventory()
+				if i.getTypeId() == ID
+					let hero = i.getPlayer().getHero()
+					if hero != null and not hero.isAlive()
+						hero.revive(REVIVE_RECT.randomPoint(), true)
+					i.remove()
+					
+
+init
+	HeroCorpse._init()

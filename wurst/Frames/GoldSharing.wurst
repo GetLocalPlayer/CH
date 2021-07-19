@@ -3,7 +3,7 @@ import ObjectIdGenerator
 import ItemObjEditing
 import AbilityObjEditing
 import ObjectIds
-import SpawnHeroes
+import HeroSpawn
 
 
 let itemId = compiletime(ITEM_ID_GEN.next())
