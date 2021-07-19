@@ -25,7 +25,7 @@ constant real array CHANNELING_TIME = [1.2, 1.2, 1.2, 1.2, 1.2]
 constant real AOE = 175.
 constant real COOLDOWN = 7.
 
-constant real LANDING_DAMAGE = 40.
+constant real LANDING_DAMAGE = 28.
 constant real LANDING_AOE = 200.
 
 constant real SPAWN_LIFETIME = 9.5

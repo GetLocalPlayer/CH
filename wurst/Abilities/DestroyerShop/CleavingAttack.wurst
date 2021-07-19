@@ -15,7 +15,7 @@ constant NAME = "Cleaving Attack"
 constant DESCRIPTION = "The hero strikes with such force that a part of his |cffffaf00melee|r attacks' damage strikes through to enemies near the primary attacked unit. |cff969696Cleaving damage does not ignore armor.|r"
 constant AOE = 200.
 constant TARGETS_ALLOWED = "air,ground,enemy"
-constant DAMAGE_FACOTOR = [0.20, 0.25, 0.30, 0.35, 0.40]
+constant DAMAGE_FACOTOR = [0.35, 0.40, 0.45, 0.50, 0.55]
 
 constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
 
