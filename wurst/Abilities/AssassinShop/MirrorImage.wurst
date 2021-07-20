@@ -5,7 +5,7 @@ import ClosureEvents
 import Assets
 import ChannelAbilityPreset
 import AbilityTooltipGenerator
-import AssasinShop
+import AssassinShop
 import HotkeyFactory
 
 
@@ -53,7 +53,7 @@ constant DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 	..presetArtDuration((int lvl) -> 1) 
 	..presetCastingTime((int lvl) -> 0)
 	..setAnimationNames("spell")
-	assasinShopDef.addAbilitySold(ABIL_ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+	assassinShopDef.addAbilitySold(ABIL_ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 	new AbilityDefinitionItemIllusion(DUMMY_ABIL_ID)
 	..setLevels(LEVELS)
 	..setRequiredLevel(2)

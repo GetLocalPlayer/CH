@@ -3,7 +3,7 @@ import Assets
 import ObjectIdGenerator
 import AbilityObjEditing
 import AbilityTooltipGenerator
-import AssasinShop
+import AssassinShop
 
 
 constant SHOP_COST = 1
@@ -30,4 +30,4 @@ constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
 	..addTooltipProperty("Chance", (int lvl) -> (CHANCE[lvl - 1] * 100).toInt().toString())
 	..tooltipStopListen()
 	..presetChancetoEvade((int lvl) -> CHANCE[lvl - 1])
-	assasinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+	assassinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)

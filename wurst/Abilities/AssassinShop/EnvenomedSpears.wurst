@@ -9,7 +9,7 @@ import ObjectIdGenerator
 import BuffObjEditing
 import AbilityObjEditing
 import AbilityTooltipGenerator
-import AssasinShop
+import AssassinShop
 
 
 constant SHOP_COST = 1
@@ -43,7 +43,7 @@ constant BUFF = compiletime(createDummyBuffObject(NAME, BUFF_DESCRIPTION, ICON, 
 		..addTooltipProperty("Duration", (int lvl) -> DURATION) 			
 		..tooltipStopListen()
 		..presetTargetsAllowed((int lvl) -> "none")
-	assasinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+	assassinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 	new AbilityDefinitionFrostDamageBonus(ORB_ABIL_ID)
 		..setMissileArt("")
 		..setArtTarget("")

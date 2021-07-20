@@ -1,4 +1,4 @@
-package AssasinShop
+package AssassinShop
 import ClosureForGroups
 import MapBounds
 
@@ -11,11 +11,11 @@ import public AbitilyShop
 let shopId = compiletime(UNIT_ID_GEN.next())
 let originalShopId = 'n005'
 
-public AbilityShopPreset assasinShopDef
+public AbilityShopPreset assassinShopDef
 
 
 @compiletime function build()
-	assasinShopDef = new AbilityShopPreset(shopId, Icons.bTNAssassin, "Assasin", Soundsets.heroWarden, Units.assassin1)
+	assassinShopDef = new AbilityShopPreset(shopId, Icons.bTNAssassin, "Assassin", Soundsets.heroWarden, Units.assassin1)
 	..setArmorType(ArmorType.Normal)
 	..setGroundTexture("")
 	..setCollisionSize(0)

@@ -3,7 +3,7 @@ import Assets
 import ObjectIdGenerator
 import AbilityObjEditing
 import AbilityTooltipGenerator
-import AssasinShop
+import AssassinShop
 
 
 class DrunkenBrawler
@@ -40,4 +40,4 @@ class DrunkenBrawler
 		..presetChancetoCriticalStrike((int lvl) -> CHANCE_TO_CRITICAL_STRIKE[lvl - 1].toReal())
 		..presetChancetoEvade((int lvl) -> CHANCE_TO_EVADE)
 		..presetDamageMultiplier((int lvl) -> DAMAGE_MULTIPLIER) 
-		assasinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		assassinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)

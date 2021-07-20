@@ -3,7 +3,7 @@ import Assets
 import ObjectIdGenerator
 import AbilityObjEditing
 import AbilityTooltipGenerator
-import AssasinShop
+import AssassinShop
 
 
 class CriticalStire
@@ -35,4 +35,4 @@ class CriticalStire
 		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
 		..presetChancetoCriticalStrike((int lvl) -> CHANCE.toReal())
 		..presetDamageMultiplier((int lvl) -> DAMAGE_MULTIPLIER[lvl - 1])
-		assasinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		assassinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
