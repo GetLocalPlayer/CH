@@ -81,14 +81,15 @@ public class Revive
 				for corpse in enumItems
 					if corpse.getPos().distanceToSq(_pos) <= AOE.squared()
 						let hero = corpse.getPlayer().getHero()
+						let corpsePos = corpse.getPos()
+						corpse.remove()
 						if hero != null and not hero.isAlive()
-							hero.revive(corpse.getPos(), true)
+							hero.revive(corpsePos, true)
 							hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
 							hero.setMana(hero.getMaxMana() * RESTORATION[level - 1])
 							count -= 1
 							if count == 0
 								break
-						corpse.remove()
 				enumItems.clear()
 				forUnitsInRange(_pos, AOE, true) (unit u) ->
 					if count > 0
@@ -96,6 +97,7 @@ public class Revive
 							if i.getTypeId() == HeroCorpse.ID 
 								let corpse = i
 								let hero = corpse.getPlayer().getHero()
+								corpse.remove()
 								if hero != null and not hero.isAlive()
 									hero.revive(u.getPos(), true)
 									hero.setHP(hero.getMaxHP() * RESTORATION[level - 1])
@@ -103,7 +105,6 @@ public class Revive
 									count -= 1
 									if count == 0
 										break
-								corpse.remove()
 				flashEffect(FX_PARTICLE, _pos)
 				if not cb.isLast()
 					_pos += offset
