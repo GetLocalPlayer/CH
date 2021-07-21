@@ -1,0 +1,166 @@
+package BookOfInspirationalQuotes
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import DalaranMerchant
+import TauntBook
+import RingOfProtection
+import GemOfHealth
+import SobiMask
+
+import ItemCombine
+import LinkedList
+import HashMap
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import BattleRoar
+import CommandAura
+import Preloader
+
+
+public class BookOfInspirationalQuotes
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Book of Inspirational Quotes"
+	static constant PASSIVE_DESC = "Effect of the wearer's \"{0}\" is twice stronger on allies affected by \"{1}\".".format(BattleRoar.NAME, CommandAura.NAME)
+	static constant ICON = Icons.bTNSorceressMaster
+	static constant int GOLD_COST = RingOfProtection.GOLD_COST * 2 + SobiMask.GOLD_COST + GemOfHealth.GOLD_COST + TauntBook.GOLD_COST + BookOfInspirationalQuotesRecipe.GOLD_COST
+	static constant int DEFENSE = RingOfProtection.DEFENCE * 2 + 1
+	static constant real MANA_REG = SobiMask.MANA_REG_RATE + 0.5
+	static constant int HIT_POINTS = GemOfHealth.HIT_POINTS + 50
+
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	static constant ABIL_ID = TauntBook.TAUNT_ABIL_ID
+
+	private static constant AD_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..setActiveEffect(TauntBook.tooltipGenerator.getActiveEffect())
+		..addPassiveEffect(PASSIVE_DESC)
+			
+	@compiletime protected static function build()
+		let defenseDef = buildDefenseBonus(NAME, ICON, DEFENSE, tooltipGenerator)
+		let hitPointsDef = buildHitPointsBonus(NAME, ICON, HIT_POINTS, tooltipGenerator)
+		let manaRegDef = buildManaRegenerationBonus(NAME, ICON, MANA_REG, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(true)
+			..setCooldownGroup(ABIL_ID.toRawCode())
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities("{0},{1},{2},{3}".format(
+					ABIL_ID.toRawCode(),
+					defenseDef.getNewId().toRawCode(),
+					manaRegDef.getNewId().toRawCode(),
+					hitPointsDef.getNewId().toRawCode()))
+		new AbilityDefinitionAttackBonus(AD_ABIL_ID)
+		..setLevels(BattleRoar.LEVELS)
+		..presetAttackBonus((int lvl) -> BattleRoar.DAMAGE_BONUS[lvl - 1].toInt())
+
+	protected static function _init()
+		new ItemCombine(ID, asList<int>(
+			RingOfProtection.ID, RingOfProtection.ID,
+			TauntBook.ID,
+			GemOfHealth.ID,
+			SobiMask.ID,
+			BookOfInspirationalQuotesRecipe.ID))
+
+		preloadAbility(AD_ABIL_ID)
+
+		let targets = new HashMap<unit, CallbackSingle>
+
+		EventListener.onCast(BattleRoar.ID) (unit caster) ->
+			if caster.hasItemById(ID)
+				forUnitsInRange(caster.getPos(), BattleRoar.AOE, true) (unit u) ->
+					if u.isAlive() and u.isAllyOf(caster) and u.isType(UNIT_TYPE_HERO) and u.hasAbility(CommandAura.BUFF_ID) 
+						let lvl = caster.getAbilityLevel(BattleRoar.ID) 
+						u.addPermanentAbility(AD_ABIL_ID, lvl)
+						let cb = doAfter(BattleRoar.DURATION[lvl - 1]) -> 
+							u.removeAbility(AD_ABIL_ID)
+							targets.remove(u)
+						if targets.has(u)
+							destroy targets.get(u)
+						targets.put(u, cb)
+					
+		EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) ->
+			let attacker = EventData.getAttackerUnit()
+			if attacker.hasAbility(AD_ABIL_ID) and not attacker.hasAbility(BattleRoar.ID)
+				attacker.removeAbility(AD_ABIL_ID)
+				destroy targets.get(attacker)
+				targets.remove(attacker)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let dead = EventData.getDyingUnit()
+			if dead.removeAbility(AD_ABIL_ID)
+				destroy targets.get(dead)
+				targets.remove(dead)
+
+
+public class BookOfInspirationalQuotesRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(BookOfInspirationalQuotes.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant int SHOP_X = 0
+	static constant int SHOP_Y = 2
+	static constant int GOLD_COST = 500
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = BookOfInspirationalQuotes.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(RingOfProtection.NAME, RingOfProtection.GOLD_COST)
+		..addRecipeRequirement(RingOfProtection.NAME, RingOfProtection.GOLD_COST)
+		..addRecipeRequirement(TauntBook.NAME, TauntBook.GOLD_COST)
+		..addRecipeRequirement(SobiMask.NAME, SobiMask.GOLD_COST)
+		..addRecipeRequirement(GemOfHealth.NAME, GemOfHealth.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? BookOfInspirationalQuotes.ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				dalaranMerchant.addItemSold(def.getNewId())
+
+
+init
+	BookOfInspirationalQuotes._init()

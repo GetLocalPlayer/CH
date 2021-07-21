@@ -42,6 +42,9 @@ public class ItemTooltipGenerator implements TooltipGenerator
 	function setActiveEffect(string description)
 		activeEffect = description
 
+	function getActiveEffect() returns string
+		return activeEffect
+
 	function addPassiveEffect(string description)
 		passiveEffects.add(description)
 

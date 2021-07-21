@@ -25,12 +25,13 @@ public class TauntBook
 	static constant int ID = compiletime(ITEM_ID_GEN.next())
 	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
 	static constant TARGETS_ALLOWED = "air,ground,enemy,vuln,invu"
-
-	@compiletime static protected function build()
-		let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+	
+	static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
 			..setActiveEffect("Taunts {0} enemies in {1} range, making them attack the wearer ({2} sec. cooldow).".format(TAUNT_TARGETS.toString(), TAUNT_AOE.toInt().toString(), TAUNT_COOLDOWN.toInt().toString()))
 			..addPassiveEffect("Blocks {0} damage from ranged attacks.".format(DAMAGE_BLOCKED.toString()))
 			..setComment("You've never seen such a thick book...")
+
+	@compiletime static protected function build()
 		let damageBlockDef = new AbilityDefinitionHardenedSkin(DAMAGE_BLOCK_ABIL_ID)
 			..setLevels(1)
 			..setItemAbility(true)
