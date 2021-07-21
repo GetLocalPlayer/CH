@@ -1,0 +1,58 @@
+package BattleRoar
+import Assets
+import ObjectIds
+import ObjectIdGenerator
+import BuffObjEditing
+import AbilityObjEditing
+import AbilityTooltipGenerator
+import DestroyerShop
+import HotkeyFactory
+
+
+public class BattleRoar
+	static constant SHOP_COST = 1
+	static constant LEVELS = 5
+	static constant HOTKEY = getHotkey()
+	static constant ICON = Icons.bTNBattleRoar
+	static constant NAME = "Battle Roar"
+	static constant DESC = "Increases attack damage of nearby heroes."
+	static constant BUFF_DESC = "Attack damage of this unit is increased."
+	static constant real AOE = 500.
+	static constant real array DAMAGE_BONUS = [20, 27, 34, 41, 48]
+	static constant real array DURATION = [15, 15, 15, 15, 15]
+	static constant real array COOLDOWN = [25, 25, 25, 25, 25]
+	static constant int array MANACOST = [75, 85, 95, 105, 120]
+	static constant TARGETS_ALLOWED = "air,ground,friend,self,vuln,invu,neutral,hero"
+
+	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESC)
+		new AbilityDefinitionBattleRoar(ABIL_ID)
+		..setIconNormal(ICON)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setName(NAME)
+		..presetHotkey(HOTKEY)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
+		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..presetDamageIncrease((int lvl) -> DAMAGE_BONUS[lvl - 1]) 
+		..presetAreaofEffect((lvl) -> AOE)
+		..tooltipStopListen()
+		..presetDurationHero((lvl) -> DURATION[lvl - 1])
+		..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED)
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+		destroyerShopDef.addAbilitySold(ABIL_ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		new BuffDefinition(BUFF_ID, 'Basl')
+		..setName(1, NAME)
+		..setIcon(ICON)
+		..setTooltipNormal(1, NAME)
+		..setTooltipNormalExtended(1, BUFF_DESC)
+		..setArtTarget(1, Abilities.howlTarget)

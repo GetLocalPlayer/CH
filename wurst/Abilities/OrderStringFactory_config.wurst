@@ -21,7 +21,8 @@ let bannedOrders = asList<string>(
 	"frostarmor",
 	"rejuvination",
 	"frostnova",
-	"forkedlightning")
+	"forkedlightning",
+	"battleroar")
 
 
 @config function isOrderBanned(string _order) returns boolean
