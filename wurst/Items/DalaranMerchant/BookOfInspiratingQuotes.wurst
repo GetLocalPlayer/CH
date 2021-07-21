@@ -1,4 +1,4 @@
-package BookOfInspirationalQuotes
+package BookOfInspiratingQuotes
 import Assets
 import ItemObjEditing
 import ChannelAbilityPreset
@@ -23,12 +23,12 @@ import CommandAura
 import Preloader
 
 
-public class BookOfInspirationalQuotes
+public class BookOfInspiratingQuotes
 	static constant CLASSIFICATION = "Permanent"
-	static constant NAME = "Book of Inspirational Quotes"
+	static constant NAME = "Book of Inspirating Quotes"
 	static constant PASSIVE_DESC = "Effect of the wearer's \"{0}\" is twice stronger on allies affected by \"{1}\".".format(BattleRoar.NAME, CommandAura.NAME)
 	static constant ICON = Icons.bTNSorceressMaster
-	static constant int GOLD_COST = RingOfProtection.GOLD_COST * 2 + SobiMask.GOLD_COST + GemOfHealth.GOLD_COST + TauntBook.GOLD_COST + BookOfInspirationalQuotesRecipe.GOLD_COST
+	static constant int GOLD_COST = RingOfProtection.GOLD_COST * 2 + SobiMask.GOLD_COST + GemOfHealth.GOLD_COST + TauntBook.GOLD_COST + BookOfInspiratingQuotesRecipe.GOLD_COST
 	static constant int DEFENSE = RingOfProtection.DEFENCE * 2 + 1
 	static constant real MANA_REG = SobiMask.MANA_REG_RATE + 0.5
 	static constant int HIT_POINTS = GemOfHealth.HIT_POINTS + 50
@@ -82,7 +82,7 @@ public class BookOfInspirationalQuotes
 			TauntBook.ID,
 			GemOfHealth.ID,
 			SobiMask.ID,
-			BookOfInspirationalQuotesRecipe.ID))
+			BookOfInspiratingQuotesRecipe.ID))
 
 		preloadAbility(AD_ABIL_ID)
 
@@ -115,9 +115,9 @@ public class BookOfInspirationalQuotes
 				targets.remove(dead)
 
 
-public class BookOfInspirationalQuotesRecipe
+public class BookOfInspiratingQuotesRecipe
 	static constant CLASSIFICATION = "Permanent"
-	static constant NAME = "{0} Recipe".format(BookOfInspirationalQuotes.NAME)
+	static constant NAME = "{0} Recipe".format(BookOfInspiratingQuotes.NAME)
 	static constant ICON = Icons.bTNSnazzyScrollGreen
 	static constant int SHOP_X = 0
 	static constant int SHOP_Y = 2
@@ -125,7 +125,7 @@ public class BookOfInspirationalQuotesRecipe
 	static constant int ID = compiletime(ITEM_ID_GEN.next())
 	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
 
-	protected static let tooltipGenerator = BookOfInspirationalQuotes.tooltipGenerator.copy()
+	protected static let tooltipGenerator = BookOfInspiratingQuotes.tooltipGenerator.copy()
 		..setName(NAME)
 		..addRecipeRequirement(RingOfProtection.NAME, RingOfProtection.GOLD_COST)
 		..addRecipeRequirement(RingOfProtection.NAME, RingOfProtection.GOLD_COST)
@@ -155,7 +155,7 @@ public class BookOfInspirationalQuotesRecipe
 			..setButtonPositionX(SHOP_X)
 			..setButtonPositionY(SHOP_Y)
 			..setClassification(CLASSIFICATION)
-			..setInterfaceIcon(isAlias ? BookOfInspirationalQuotes.ICON : ICON)
+			..setInterfaceIcon(isAlias ? BookOfInspiratingQuotes.ICON : ICON)
 			tooltipGenerator..setName(NAME)
 			..applyToDef(def, true)
 			if isAlias
@@ -163,4 +163,4 @@ public class BookOfInspirationalQuotesRecipe
 
 
 init
-	BookOfInspirationalQuotes._init()
+	BookOfInspiratingQuotes._init()

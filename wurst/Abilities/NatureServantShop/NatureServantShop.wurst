@@ -5,7 +5,7 @@ import MapBounds
 import Assets
 import ObjEditingCommons
 import ObjectIdGenerator
-import public AbitilyShop
+import public AbilityShop
 
 
 let shopId = compiletime(UNIT_ID_GEN.next())

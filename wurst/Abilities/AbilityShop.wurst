@@ -1,4 +1,4 @@
-package AbitilyShop
+package AbilityShop
 import LinkedList
 import HashMap
 import ChannelAbilityPreset
