@@ -1,7 +1,6 @@
 package OrderStringFactory_config
 import LinkedList
 
-
 let bannedOrders = asList<string>(
 	"metamorphosis", // Melee/Range switcher
 	"thunderclap",
@@ -22,7 +21,8 @@ let bannedOrders = asList<string>(
 	"rejuvination",
 	"frostnova",
 	"forkedlightning",
-	"battleroar")
+	"battleroar",
+	"stomp")
 
 
 @config function isOrderBanned(string _order) returns boolean

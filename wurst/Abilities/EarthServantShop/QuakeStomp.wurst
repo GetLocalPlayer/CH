@@ -1,0 +1,112 @@
+package QuakeStomp
+import Assets
+import ObjectIds
+import ObjectIdGenerator
+import BuffObjEditing
+import AbilityObjEditing
+import AbilityTooltipGenerator
+import EarthServantShop
+import HotkeyFactory
+
+import Preloader
+import DummyCaster
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import OrderIds
+
+
+public class QuakeStomp
+	static constant SHOP_COST = 1
+	static constant LEVELS = 5
+	static constant HOTKEY = getHotkey()
+	static constant ICON = Icons.bTNEarthquake
+	static constant NAME = "Quake Stomp"
+	static constant DESC = "Slams the ground, dealing damage to nearby enemies, causing an earthquake in the affected area that slows enemies and deals the same amount of damage for its duration."
+	static constant BUFF_DESC = "Movement speed of this unit is reduced."
+
+	static constant TARGETS_ALLOWED = "ground,enemy"
+	static constant real array AOE = [200, 200, 200, 200, 200]
+	static constant real array DURATION = [10, 10, 10, 10, 10]
+	static constant real array COOLDOWN = [7, 7, 7, 7, 7]
+	static constant int array MANACOST = [85, 90, 95, 100, 105]
+	static constant real array MOVEMENT_SLOW = [0.3, 0.3, 0.3, 0.3, 0.3]
+	static constant real array DAMAGE = [80., 100., 120., 140., 200.]
+	static constant real array DAMAGE_INTERVAL = [0.5, 0.5, 0.5, 0.5, 0.5]
+
+	static constant ATTACK_TYPE = ATTACK_TYPE_NORMAL
+	static constant DAMAGE_TYPE = DAMAGE_TYPE_MAGIC
+	static constant WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
+
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+
+	private static constant DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESC)
+		..addPropertyPostfix("Movement Slow", "%")
+		new AbilityDefinitionTaurenChieftainWarStomp(ID)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..presetHotkey(HOTKEY)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..addTooltipProperty("Damage", (int lvl) -> DAMAGE[lvl - 1].toInt())
+		..addTooltipProperty("Movement Slow", (int lvl) -> (MOVEMENT_SLOW[lvl - 1] * 100).toInt())
+		..presetAreaofEffect((int lvl) -> AOE[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
+		..tooltipStopListen()
+		..presetDurationHero((int lvl) -> DURATION[lvl - 1])
+		..presetDamage((int lvl) -> 0	)
+		..presetTargetsAllowed((int lvl) -> "none")
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+		earthServantShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		new BuffDefinition(BUFF_ID, 'Basl')
+		..setIcon(ICON)
+		..setName(1, NAME)
+		..setTooltipNormal(1, NAME)
+		..setTooltipNormalExtended(1, BUFF_DESC)
+		new AbilityDefinitionFarseerEarthquake(DUMMY_ABIL_ID)
+		..setDummyAbility()
+		..setLevels(LEVELS)
+		..presetAreaofEffect((int lvl) -> AOE[lvl - 1])
+		..presetFinalArea((int lvl) -> AOE[lvl - 1]) 
+		..presetDamageperSecondtoBuildings((int lvl) -> 0)
+		..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED) 
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+
+	protected static function onInit()
+		preloadAbility(DUMMY_ABIL_ID)
+
+		EventListener.onCast(ID) (unit caster) ->
+			let lvl = caster.getAbilityLevel(ID)
+			let pos = caster.getPos()
+			let aoe = AOE[lvl - 1]
+			let damage = DAMAGE[lvl - 1]
+			forUnitsInRange(pos, aoe, true) (unit u) ->
+				if u.isAlive() and u.isEnemyOf(caster)
+					caster.damageTarget(u, damage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
+			let callAmount = (DURATION[lvl - 1] / DAMAGE_INTERVAL[lvl - 1]).toInt()
+			let periodicDamage = damage / callAmount
+			new DummyCaster()
+			..owner(caster.getOwner())
+			..origin(pos)
+			..delay(DURATION[lvl - 1])
+			..castPoint(DUMMY_ABIL_ID, lvl, OrderIds.earthquake, pos)
+			doPeriodicallyCounted(DAMAGE_INTERVAL[lvl - 1], callAmount) (CallbackCounted cb) ->
+				forUnitsInRange(pos, aoe, true) (unit u) ->
+					if u.isAlive() and u.isEnemyOf(caster)
+						caster.damageTarget(u, periodicDamage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
+
+
+init
+	QuakeStomp.onInit()
+			
