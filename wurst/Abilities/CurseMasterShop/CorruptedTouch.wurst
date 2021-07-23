@@ -1,7 +1,4 @@
 package CorruptedTouch
-import ClosureEvents
-import DummyCaster
-
 import OrderIds
 import ObjectIds
 import ObjectIdGenerator
@@ -9,88 +6,71 @@ import BuffObjEditing
 import AbilityObjEditing
 import AbilityTooltipGenerator
 import CurseMasterShop
+import AttackModifier
+
+import DummyCaster
 
 
-constant int SHOP_COST = 1
-constant int LEVELS = 5
-constant ICON = "ReplaceableTextures\\CommandButtons\\PASBTNCorruptedTouch.blp"
-constant NAME = "Corrupted Touch"
-constant DESCRIPTION = "The hero's attacks reduce a target's armor on hit.|n|n[|cffff0000Attack Modifier|r]"
-constant BUFF_DESCRIPTION = "This unit's armor is redused."
-constant TARGETS_ALLOWED = "air,ground,enemy"
-constant real DURATION = 5
-constant int array ARMOR_REDUCTION = [3, 4, 5, 6, 7]
+public class CorruptedTouch
+	static constant int SHOP_COST = 1
+	static constant int LEVELS = 5
+	static constant ICON = "ReplaceableTextures\\CommandButtons\\PASBTNCorruptedTouch.blp"
+	static constant NAME = "Corrupted Touch"
+	static constant DESC = "The hero's attacks reduce a target's armor on hit.|n|n[|cffff0000Attack Modifier|r]"
+	static constant BUFF_DESC = "This unit's armor is redused."
+	static constant TARGETS_ALLOWED = "air,ground,enemy"
+	static constant real DURATION = 10
+	static constant int array ARMOR_REDUCTION = [3, 4, 5, 6, 7]
 
-constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
-constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant ORB_ABIL_ID = compiletime(ABIL_ID_GEN.next())
-constant ORB_BUFF_ID = compiletime(BUFF_ID_GEN.next())
-constant DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	static constant DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESC)
+		new AttackModifier(ID, LEVELS, tooltipGen)
+		..setIconNormal(ICON)
+		..setArtTarget("")
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setName(NAME)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..addTooltipProperty("Armor Reduction", (int lvl) -> ARMOR_REDUCTION[lvl - 1])
+		..addTooltipProperty("Duration", (int lvl) -> DURATION)
+		..tooltipStopListen()
+		curseMasterShopDef.addAbilitySold(ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		new AbilityDefinitionAlchemistAcidBomb(DUMMY_ABIL_ID)
+		..setDummyAbility()
+		..setMissileArt("")
+		..setMissileSpeed(0)
+		..setLevels(LEVELS)
+		..presetBuffs((lvl) -> BUFF_ID.toRawCode())
+		..presetArmorPenalty((lvl) -> ARMOR_REDUCTION[lvl - 1])
+		..presetDurationNormal((lvl) -> DURATION)
+		..presetDurationHero((lvl) -> DURATION)
+		..presetPrimaryDamage((lvl) -> 0)
+		..presetSecondaryDamage((lvl) -> 0)
+		..presetAreaofEffect((lvl) -> 0)
+		..presetDamageInterval((lvl) -> 1000)
+		..presetTargetsAllowed((lvl) -> TARGETS_ALLOWED)
+		new BuffDefinition(BUFF_ID, 'Basl')
+		..setName(1, NAME)
+		..setIcon(ICON)
+		..setTooltipNormal(1, NAME)
+		..setTooltipNormalExtended(1, BUFF_DESC)
+		..setArtTarget(1, "")
 
-@compiletime function build()
-	let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
-	new AbilityDefinitionPaladinDevotionAura(ABIL_ID)
-	..setIconNormal(ICON)
-	..setArtTarget("")
-	..setHeroAbility(true)
-	..setRequirements("")
-	..setRace(Race.Human)
-	..setName(NAME)
-	..registerTooltipGenerator(tooltipGen)
-	..tooltipStartListen()
-	..setLevels(LEVELS)
-	..addTooltipProperty("Armor Reduction", (int lvl) -> ARMOR_REDUCTION[lvl - 1])
-	..tooltipStopListen()
-	..presetTargetsAllowed((lvl) -> "none")
-	curseMasterShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
-	new AbilityDefinitionFrostDamageBonus(ORB_ABIL_ID)
-	..setMissileArt("")
-	..setArtTarget("")
-	..setArtSpecial("")
-	..setRace(Race.Human)
-	..setName(NAME)
-	..setDamageBonus(1, 0)
-	..setEnabledAttackIndex(1, 1)
-	..setTargetsAllowed(1, TARGETS_ALLOWED)
-	..setBuffs(1, ORB_BUFF_ID.toRawCode())
-	new BuffDefinition(ORB_BUFF_ID, 'Basl')
-	..setArtTarget(1, "")
-	new AbilityDefinitionAlchemistAcidBomb(DUMMY_ABIL_ID)
-	..setMissileArt("")
-	..setMissileSpeed(0)
-	..setLevels(LEVELS)
-	..presetBuffs((lvl) -> BUFF_ID.toRawCode())
-	..presetArmorPenalty((lvl) -> ARMOR_REDUCTION[lvl - 1])
-	..presetDurationNormal((lvl) -> DURATION)
-	..presetDurationHero((lvl) -> DURATION)
-	..presetPrimaryDamage((lvl) -> 0)
-	..presetSecondaryDamage((lvl) -> 0)
-	..presetAreaofEffect((lvl) -> 0)
-	..presetDamageInterval((lvl) -> 1000)
-	..presetTargetsAllowed((lvl) -> TARGETS_ALLOWED)
-	..setDummyAbility()
-	new BuffDefinition(BUFF_ID, 'Basl')
-	..setName(1, NAME)
-	..setIcon(ICON)
-	..setTooltipNormal(1, NAME)
-	..setTooltipNormalExtended(1, BUFF_DESCRIPTION)
-	..setArtTarget(1, "")
+	protected static function onInit()
+		AttackModifier.onHit(ID) (unit caster, unit target, int level) ->
+			new DummyCaster()
+			..origin(caster.getPos())
+			..owner(caster.getOwner())
+			..castTarget(DUMMY_ABIL_ID, level, OrderIds.acidbomb, target)
+			return true
 
 
 init
-	AbilityShop.onSold() (unit u, int abilId, int level) ->
-		if abilId == ABIL_ID and level == 1
-			u..addAbility(ORB_ABIL_ID)
-			..makeAbilityPermanent(ORB_ABIL_ID, true)
-
-	EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
-		let target = EventData.getTriggerUnit()
-		if target.hasAbility(ORB_BUFF_ID)
-			target.removeAbility(ORB_BUFF_ID)
-			let attacker = EventData.getEventDamageSource()
-			new DummyCaster()
-			..delay(1)
-			..origin(attacker.getPos())
-			..owner(attacker.getOwner())
-			..castTarget(DUMMY_ABIL_ID, attacker.getAbilityLevel(ABIL_ID), OrderIds.acidbomb, target)
+	CorruptedTouch.onInit()
