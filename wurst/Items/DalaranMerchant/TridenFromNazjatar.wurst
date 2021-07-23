@@ -15,15 +15,14 @@ import UnholyFrenzy
 
 import ItemCombine
 import LinkedList
-import DummyRecycler
-import EnvenomedSpears
+import ClosureEvents
 import AttackModifier
 
 
 public class TridenFromNazjatar
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "Triden from Nazjatar"
-	static constant PASSIVE_DESC = "Affected by \"{0}\", the wearer's attack modifiers apply twice.".format(UnholyFrenzy.NAME)
+	static constant PASSIVE_DESC = "Affected by \"{0}\", the wearer engages all attack modifiers it has.".format(UnholyFrenzy.NAME)
 	static constant ICON = Icons.bTNNagaWeaponUp2
 	static constant int GOLD_COST = ShamanClaws.GOLD_COST + Spear.GOLD_COST + Knife.GOLD_COST + LumberjacksAxe.GOLD_COST + TridenFromNazjatarRecipe.GOLD_COST
 	static constant int STR = 15
@@ -69,15 +68,10 @@ public class TridenFromNazjatar
 	protected static function onInit()
 		new ItemCombine(ID, asList<int>(Spear.ID, ShamanClaws.ID, Knife.ID, LumberjacksAxe.ID, TridenFromNazjatarRecipe.ID))
 
-		AttackModifier.onCast() (unit caster, unit target, int abilId, int level) ->
-			if caster.hasItemById(ID) and caster.hasAbility(UnholyFrenzy.BUFF_ID)
-				if abilId == EnvenomedSpears.ID
-					let dummy = DummyRecycler.get(caster.getPos(), angle(0))
-					..setOwner(caster.getOwner(), false)
-					DummyRecycler.recycle(dummy, EnvenomedSpears.DURATION)
-					AttackModifier.cast(dummy, target, abilId, level)
-				else
-					AttackModifier.cast(caster, target, abilId, level)
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
+			let u = EventData.getEventDamageSource()
+			if BlzGetEventIsAttack()
+				AttackModifier.setUnitIgnorePriority(u, u.hasAbility(UnholyFrenzy.BUFF_ID) and u.hasItemById(ID))
 
 
 public class TridenFromNazjatarRecipe
