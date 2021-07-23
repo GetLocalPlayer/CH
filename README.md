@@ -14,6 +14,15 @@ Command | Short | Purpose
 -ResetStatistic | -rs | sets the statistic board's values to zero
 -ShowTotalStatistic | -sts | shows statistic for the whole game
 
+Command | | Purpose
+--- | --- | ---
+-dmg pre | shows damage taken (AFTER armor and ability reduction) on units as floating text
+-dmg post | shows damage dealing (BEFORE armor and ability reduction) on units as floating text
+-dmg self | shows only your own damage
+-dmg all | shows damage of all players
+-dmg hide | disables showing damage as floating text
+-dmg show | enables showing damage as floating text
+
 ### Test Commands
 
 The commands below can be used in singleplayer mode to test the map. Non-case sensitive.
