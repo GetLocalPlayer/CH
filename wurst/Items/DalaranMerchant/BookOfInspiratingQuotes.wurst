@@ -76,7 +76,7 @@ public class BookOfInspiratingQuotes
 		..setLevels(BattleRoar.LEVELS)
 		..presetAttackBonus((int lvl) -> BattleRoar.DAMAGE_BONUS[lvl - 1].toInt())
 
-	protected static function _init()
+	protected static function onInit()
 		new ItemCombine(ID, asList<int>(
 			RingOfProtection.ID, RingOfProtection.ID,
 			TauntBook.ID,
@@ -163,4 +163,4 @@ public class BookOfInspiratingQuotesRecipe
 
 
 init
-	BookOfInspiratingQuotes._init()
+	BookOfInspiratingQuotes.onInit()

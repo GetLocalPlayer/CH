@@ -68,7 +68,7 @@ public class BrassKnuckles
 		..setDisableOtherAbilities(1, false)
 		..setFollowThroughTime(1, 1)
 
-	protected static function _init()
+	protected static function onInit()
 		new ItemCombine(ID, asList<int>(ClawsOfAttack.ID, GlovesOfHaste.ID, BrassKnucklesRecipe.ID))
 
 
@@ -117,7 +117,7 @@ public class BrassKnucklesRecipe
 
 		
 init
-	BrassKnuckles._init()
+	BrassKnuckles.onInit()
 				
 
 enum Attribute

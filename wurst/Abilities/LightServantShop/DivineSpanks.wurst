@@ -81,7 +81,7 @@ class DivineSpanks
 		..setEnabledAttackIndex(1, 1)
 		..setTargetsAllowed(1, "none")
 
-	protected static function _init()
+	protected static function onInit()
 		Preload(FX_TARGET)
 		preloadAbility(BUFF_TUPLE.abilId)
 		preloadAbility(ORB_ABIL_ID)
@@ -155,4 +155,4 @@ class DivineSpanks
 
 
 init
-	DivineSpanks._init()
+	DivineSpanks.onInit()

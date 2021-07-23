@@ -101,7 +101,7 @@ public class AbilityShopPreset extends BuildingDefinition
 		return heroDef.getNewId()
 
 
-	protected static function _init()
+	protected static function onInit()
 		for abilId in abilities
 			preloadAbility(abilId)
 
@@ -156,7 +156,7 @@ public class AbilityShopPreset extends BuildingDefinition
 				soldUnit.remove()
 
 init
-	AbilityShopPreset._init()
+	AbilityShopPreset.onInit()
 		
 
 public abstract class AbilityShop

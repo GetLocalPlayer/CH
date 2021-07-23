@@ -39,7 +39,7 @@ class Statistic
 			return playingPlayers.get(number - 1)
 		return null
 
-	protected static function _init()
+	protected static function onInit()
 		for i = 0 to bj_MAX_PLAYER_SLOTS - 1
 			let p = players[i]
 			if p.getController() == MAP_CONTROL_USER and p.getSlotState() == PLAYER_SLOT_STATE_PLAYING
@@ -155,4 +155,4 @@ class Statistic
 
 init
 	nullTimer() -> 
-		Statistic._init()
+		Statistic.onInit()

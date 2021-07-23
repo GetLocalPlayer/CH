@@ -77,7 +77,7 @@ public class HeroCorpse
 			if not isAlias
 				def.setAbilities(abilDef.getNewId().toRawCode())
 
-	protected static function _init()
+	protected static function onInit()
 		preloadAbility(SLOW_ID)
 
 		EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
@@ -110,4 +110,4 @@ public class HeroCorpse
 					
 
 init
-	HeroCorpse._init()
+	HeroCorpse.onInit()

@@ -128,7 +128,7 @@ public class SecondPartOfDeadSouls
 		..presetDamageTaken((int lvl) -> 1)
 		..presetMagicDamageReduction((int lvl) -> 1 + RESISTANCE_PER_LEVEL * lvl)
 			
-	protected static function _init()
+	protected static function onInit()
 		new ItemCombine(SecondPartOfDeadSouls.ID, asList<int>(TauntBook.ID, WandOfNeutralization.ID, GemOfHealth.ID, Mindstaff.ID, SecondPartOfDeadSoulsRecipe.ID))
 
 		preloadAbility(RESISTANCE_ID)
@@ -248,4 +248,4 @@ public class SecondPartOfDeadSoulsRecipe
 
 
 init
-	SecondPartOfDeadSouls._init()
+	SecondPartOfDeadSouls.onInit()

@@ -66,7 +66,7 @@ public class Revive
 
 	private static let enumItems = new LinkedList<item>
 
-	protected static function _init()
+	protected static function onInit()
 		Preload(FX_PARTICLE)
 		
 		EventListener.onPointCast(ID) (unit caster, vec2 target) ->
@@ -113,4 +113,4 @@ public class Revive
 					
 
 init
-	Revive._init()
+	Revive.onInit()
