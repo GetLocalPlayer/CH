@@ -39,7 +39,7 @@ public class CorruptedTouch
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
 		..addTooltipProperty("Armor Reduction", (int lvl) -> ARMOR_REDUCTION[lvl - 1])
-		..addTooltipProperty("Duration", (int lvl) -> DURATION)
+		..presetDurationNormal((int lvl) -> DURATION)
 		..tooltipStopListen()
 		curseMasterShopDef.addAbilitySold(ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 		new AbilityDefinitionAlchemistAcidBomb(DUMMY_ABIL_ID)
