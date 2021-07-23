@@ -1,0 +1,130 @@
+package TridenFromNazjatar
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import DalaranMerchant
+import LumberjacksAxe
+import Knife
+import Spear
+import ShamanClaws
+import UnholyFrenzy
+
+import ItemCombine
+import LinkedList
+import DummyRecycler
+import EnvenomedSpears
+import AttackModifier
+
+
+public class TridenFromNazjatar
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Triden from Nazjatar"
+	static constant PASSIVE_DESC = "Affected by \"{0}\", the wearer's attack modifiers apply twice.".format(UnholyFrenzy.NAME)
+	static constant ICON = Icons.bTNNagaWeaponUp2
+	static constant int GOLD_COST = ShamanClaws.GOLD_COST + Spear.GOLD_COST + Knife.GOLD_COST + LumberjacksAxe.GOLD_COST + TridenFromNazjatarRecipe.GOLD_COST
+	static constant int STR = 15
+	static constant int AGI = 15
+	static constant int ATTACK_DAMAGE = 35
+	static constant real ATTACK_SPEED = 0.15
+
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..addPassiveEffect(PASSIVE_DESC)
+		..setComment("Found by a nudist on the south beach of Westfall.")
+			
+	@compiletime protected static function build()
+		let attrDef = buildAttributeBonus(NAME, ICON, STR, AGI, 0, tooltipGenerator)
+		let attackDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
+		let asDef = buildAttackSpeedBonus(NAME, ICON, ATTACK_SPEED, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities("{0},{1},{2}".format(
+					attrDef.getNewId().toRawCode(),
+					attackDef.getNewId().toRawCode(),
+					asDef.getNewId().toRawCode()))
+
+	protected static function onInit()
+		new ItemCombine(ID, asList<int>(Spear.ID, ShamanClaws.ID, Knife.ID, LumberjacksAxe.ID, TridenFromNazjatarRecipe.ID))
+
+		AttackModifier.onCast() (unit caster, unit target, int abilId, int level) ->
+			if caster.hasItemById(ID) and caster.hasAbility(UnholyFrenzy.BUFF_ID)
+				if abilId == EnvenomedSpears.ID
+					let dummy = DummyRecycler.get(caster.getPos(), angle(0))
+					..setOwner(caster.getOwner(), false)
+					DummyRecycler.recycle(dummy, EnvenomedSpears.DURATION)
+					AttackModifier.cast(dummy, target, abilId, level)
+				else
+					AttackModifier.cast(caster, target, abilId, level)
+
+
+public class TridenFromNazjatarRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(TridenFromNazjatar.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant int SHOP_X = 1
+	static constant int SHOP_Y = 1
+	static constant int GOLD_COST = 250
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = TridenFromNazjatar.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(Spear.NAME, Spear.GOLD_COST)
+		..addRecipeRequirement(ShamanClaws.NAME,ShamanClaws.GOLD_COST)
+		..addRecipeRequirement(Knife.NAME, Knife.GOLD_COST)
+		..addRecipeRequirement(LumberjacksAxe.NAME, LumberjacksAxe.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? TridenFromNazjatar.ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				dalaranMerchant.addItemSold(def.getNewId())
+
+
+init
+	TridenFromNazjatar.onInit()

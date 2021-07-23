@@ -9,39 +9,42 @@ import ItemTooltipGenerator
 import ItemAbilityPreset
 
 
-constant int GOLD_COST = 850
-constant CLASSIFICATION = "Permanent"
-constant NAME = "Spear"
-constant ICON = Icons.bTNSteelRanged
-constant int SHOP_X = 1
-constant int SHOP_Y = 1
-constant int ATTACK_DAMAGE = 18
+public class Spear
+	static constant int GOLD_COST = 850
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "Spear"
+	static constant ICON = Icons.bTNSteelRanged
+	static constant int SHOP_X = 1
+	static constant int SHOP_Y = 1
+	static constant int ATTACK_DAMAGE = 18
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
 
-
-@compiletime function build()
-	let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
-	let abilDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
-	ItemAlias.build(ITEM_ID_GEN.next()) (def, isAlias) ->
-		def..setLevel(1)
-		..setLevelUnclassified(1)
-		..setLumberCost(0)
-		..setHitPoints(999999)
-		..setNumberofCharges(0)
-		..setStockMaximum(1)
-		..setStockReplenishInterval(1)
-		..setStockStartDelay(1)
-		..setCanBeDropped(true)
-		..setPerishable(false)
-		..setActivelyUsed(false)
-		..setCanBeSoldByMerchants(true)
-		..setCanBeSoldToMerchants(true)
-		..setGoldCost(GOLD_COST)
-		..setButtonPositionX(SHOP_X)
-		..setButtonPositionY(SHOP_Y)
-		..setClassification(CLASSIFICATION)
-		..setInterfaceIcon(ICON)
-		tooltipGenerator.applyToDef(def)
-		if isAlias
-			fleaMarket.addItemSold(def.getNewId())
-		else
-			def.setAbilities(abilDef.getNewId().toRawCode())
+	@compiletime
+	private static function build()
+		let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		let abilDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID) (def, isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if isAlias
+				fleaMarket.addItemSold(def.getNewId())
+			else
+				def.setAbilities(abilDef.getNewId().toRawCode())

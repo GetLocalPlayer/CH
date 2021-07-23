@@ -2,6 +2,7 @@ package AttackModifier
 import ChannelAbilityPreset
 
 import LinkedList
+import LinkedListModule
 import HashMap
 import AbilityShop
 import ClosureEvents
@@ -58,17 +59,41 @@ public class AttackModifier extends ChannelAbilityPreset
 	static abstract class OnHitCallback
 		abstract function run(unit caster, unit target, int level) returns bool
 
-	private static let callbacks = new HashMap<int, OnHitCallback>
+	private static let onHitCallbacks = new HashMap<int, OnHitCallback>
 	private static let owners = new HashMap<unit, LinkedList<int>>
+	private static let ignorePriorityGroup = CreateGroup()
 	
 	/** The callback must return a bool value.
 	return false - next callback in the stack will be executed
 	return true - next callback in the stack will not be executed (the attack modifier doesn't stack) */
 	static function onHit(int abilId, OnHitCallback cb) returns OnHitCallback
-		if callbacks.has(abilId)
+		if onHitCallbacks.has(abilId)
 			error("`onHit` callback for `{0}` is already implemented.".format(GetObjectName(abilId)))
-		callbacks.put(abilId, cb)
+		onHitCallbacks.put(abilId, cb)
 		return cb
+
+	static abstract class OnCastCallback
+		use LinkedListModule
+		abstract function run(unit caster, unit target, int abilId, int level)
+
+	/** Called each time an onHit callbac is executed. */
+	static function onCast(OnCastCallback cb) returns OnCastCallback
+		return cb
+
+	/** Executes `onHit` callback bound to the ability.
+	Doesn't matter if the caster has or doesn't have the ability.
+	Does not trigger onHit/onCast callbacks. */
+	static function cast(unit caster, unit target, int abilId, int level) returns bool
+		if onHitCallbacks.has(abilId)
+			onHitCallbacks.get(abilId).run(caster, target, level)
+			return true
+		return false
+
+	static function setUnitIgnorePriority(unit u, bool flag)
+		if flag
+			ignorePriorityGroup.add(u)
+		else
+			ignorePriorityGroup.remove(u)
 
 	protected static function onInit()
 		AbilityShop.onSold() (unit u, int id, int level) ->
@@ -98,9 +123,12 @@ public class AttackModifier extends ChannelAbilityPreset
 			if BlzGetEventIsAttack() and owners.has(u)
 				let target = EventData.getTriggerUnit()
 				for id in owners.get(u)
-					if u.hasAbility(id) and callbacks.get(id).run(u, target, u.getAbilityLevel(id))
-						break
+					if u.hasAbility(id)
+						if onHitCallbacks.get(id).run(u, target, u.getAbilityLevel(id))
+							for cb in OnCastCallback
+								cb.run(u, target, id, u.getAbilityLevel(id))
+							if not ignorePriorityGroup.has(u) 
+								break
 
-		
 init
 	AttackModifier.onInit()
