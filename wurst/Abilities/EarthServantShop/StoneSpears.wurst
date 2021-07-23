@@ -49,10 +49,10 @@ class StoneSpears
 
 	protected static function onInit()
 		AttackModifier.onHit(ID) (unit caster, unit target, int level) ->
-			let proc = GetRandomInt(1, 100) <= CHANCE[level - 1]
-			if proc
+			if GetRandomInt(1, 100) <= CHANCE[level - 1]
 				apply(caster, target)
-			return proc
+			return true
+			
 
 	static function apply(unit caster, unit target)
 		let attackerPos = caster.getPos()

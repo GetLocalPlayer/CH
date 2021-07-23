@@ -64,10 +64,9 @@ public abstract class ChargedStrike
 		Preload(FX_TARGET)
 
 		AttackModifier.onHit(ID) (unit caster, unit target, int level) ->
-			let proc = GetRandomInt(1, 100) <= CHANCE
-			if proc
+			if GetRandomInt(1, 100) <= CHANCE
 				apply(caster, target, DAMAGE[level - 1])
-			return proc
+			return true
 			
 	static function apply(unit caster, unit target, real damage)
 		let affectedUnits = CreateGroup()
