@@ -1,20 +1,17 @@
 package ChargedStrike
 import Assets
-import ObjectIds
 import ObjectIdGenerator
-import BuffObjEditing
 import AbilityObjEditing
 import AbilityTooltipGenerator
 import AssassinShop
+import AttackModifier
 
-import HashList
-import ClosureEvents
+import LinkedListModule
 import ClosureTimers
 import LigthingEx
-import Preloader
 
 
-public class ChargedStrike
+public abstract class ChargedStrike
 	static constant int SHOP_COST = 1
 	static constant int LEVELS = 5
 	static constant ICON = Icons.pASBTNStormHammer
@@ -27,8 +24,6 @@ public class ChargedStrike
 	static constant real LIFETIME = 1.
 	static constant real BOUNCE_DELAY = 0.5
 
-	static constant TARGETS_ALLOWED = "air,ground,enemy,organic"
-
 	static constant LIGHT_TYPE = LIGHTNING_CHAIN_LIGHTNING_SEECONDARY
 	static constant LIGHT_OFFSET = vec3(0, 0, 75)
 
@@ -38,24 +33,18 @@ public class ChargedStrike
 	condition. Basically, used only in the active effect of "Lightning Rod" item. */
 	static let additionalTargets = CreateGroup()
 
-	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
-	static constant ORB_ABIL_ID = compiletime(ABIL_ID_GEN.next())
-	static constant ORB_BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	static constant ID = compiletime(ABIL_ID_GEN.next())
 
-	static abstract class Callback
-		abstract function run(unit target)
+	use LinkedListModule
 
-		ondestroy
-			callbacks.remove(this)
+	static function onBounce(ChargedStrike cb) returns ChargedStrike
+		return cb
 
-	protected static let callbacks = new HashList<ChargedStrike.Callback>
-
-	static function onBounce(ChargedStrike.Callback cb)
-		callbacks.add(cb)
+	protected abstract function run(unit target)
 
 	@compiletime protected static function build()
 		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
-		new AbilityDefinitionPaladinDevotionAura(ABIL_ID)
+		new AttackModifier(ID, LEVELS, tooltipGen)
 		..setIconNormal(ICON)
 		..setArtTarget("")
 		..setHeroAbility(true)
@@ -64,46 +53,23 @@ public class ChargedStrike
 		..setName(NAME)
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
-		..setLevels(LEVELS)
 		..addTooltipProperty("Chance", (int lvl) -> CHANCE.toString())
 		..addTooltipProperty("Damage", (int lvl) -> DAMAGE[lvl - 1].toInt())
 		..addTooltipProperty("Number of Targets", (int lvl) -> NUMBER_OF_TARGETS)
 		..presetAreaofEffect((lvl) -> BOUNCE_RANGE)
 		..tooltipStopListen()
-		..presetTargetsAllowed((int lvl) -> "none")
-		assassinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
-		new AbilityDefinitionFrostDamageBonus(ORB_ABIL_ID)
-		..setMissileArt("")
-		..setArtTarget("")
-		..setArtSpecial("")
-		..setRace(Race.Human)
-		..setName(NAME)
-		..setDamageBonus(1, 0)
-		..setEnabledAttackIndex(1, 1)
-		..setTargetsAllowed(1, TARGETS_ALLOWED)
-		..setBuffs(1, ORB_BUFF_ID.toRawCode())
-		new BuffDefinition(ORB_BUFF_ID, 'Basl')
-		..setArtTarget(1, "")
+		assassinShopDef.addAbilitySold(ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 
-	protected static function _init()
-		preloadAbility(ORB_ABIL_ID)
-		preloadAbility(ORB_BUFF_ID)
+	protected static function onInit()
 		Preload(FX_TARGET)
-		AbilityShop.onSold() (unit u, int abilId, int level) ->
-			if abilId == ABIL_ID and level == 1
-				u..addAbility(ORB_ABIL_ID)
-				..makeAbilityPermanent(ORB_ABIL_ID, true)
 
-		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
-			let target = EventData.getTriggerUnit()
-			if target.hasAbility(ORB_BUFF_ID) and not target.isType(UNIT_TYPE_MAGIC_IMMUNE) and target.isAlive()
-				target.removeAbility(ORB_BUFF_ID)
-				if GetRandomInt(1, 100) <= CHANCE
-					let caster = EventData.getEventDamageSource()
-					apply(caster, target, caster.getAbilityLevel(ABIL_ID))
-
-	static function apply(unit caster, unit target, int level)
-		let damage = DAMAGE[level - 1]
+		AttackModifier.onHit(ID) (unit caster, unit target, int level) ->
+			let proc = GetRandomInt(1, 100) <= CHANCE
+			if proc
+				apply(caster, target, DAMAGE[level - 1])
+			return proc
+			
+	static function apply(unit caster, unit target, real damage)
 		let affectedUnits = CreateGroup()
 		..add(target)
 		caster.damageTarget(target, damage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_LIGHTNING, WEAPON_TYPE_WHOKNOWS)
@@ -122,19 +88,19 @@ public class ChargedStrike
 				if not affectedUnits.has(u) and u.isInRange(prevPos, BOUNCE_RANGE)
 					ENUM_GROUP.add(u)
 			let randomUnit = ENUM_GROUP.getRandom()
+			ENUM_GROUP.clear()
 			if randomUnit != null
 				caster.damageTarget(randomUnit, damage, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_LIGHTNING, WEAPON_TYPE_WHOKNOWS)
 				new LigthingEx(LIGHT_TYPE, _previousTarget, randomUnit, LIGHT_OFFSET, LIGHT_OFFSET)
 				..setLifetime(LIFETIME)
 				..setFadepoint(LIFETIME)
-				flashEffect(FX_TARGET, randomUnit, "origin")
+				flashEffect(FX_TARGET, randomUnit, FX_ATTACH_TARGET)
 				_previousTarget = randomUnit
 				affectedUnits.add(randomUnit)
-				for cb in callbacks
+				for cb in ChargedStrike
 					cb.run(randomUnit)
 			else
 				destroy cb
-			ENUM_GROUP.clear()
-
+			
 init
-	ChargedStrike._init()
+	ChargedStrike.onInit()

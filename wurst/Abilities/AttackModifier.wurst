@@ -1,0 +1,106 @@
+package AttackModifier
+import ChannelAbilityPreset
+
+import LinkedList
+import HashMap
+import AbilityShop
+import ClosureEvents
+import ErrorHandling
+
+
+/** Creates a stack of attack modifiers - callbacks that are executed
+when a unit hits an enemy with an attack.
+This is not the default ingame system that relies on an orb effect.
+Instead, it's triggered on DAMAGING event with BlzGetEventIsAttack
+check. This works ONLY with abilities that were built with 
+AttackModifier class and with abilities that were bought in an
+AbilityShop of this map.
+
+Compiletime:
+	let def = new AttackModifier(id, levels, tgen)
+
+Runtime:
+	AttackModifier.onHit(id) caster, target, level ->
+		...
+		return true/false
+
+A callback must return `true` if no next callback in the stack must
+be executed (like if attack modifiers didn't stack).
+
+AttackModifier extends ChannelAbilityPreset and can be cast. Casting
+an attack modifier simply puts it at the top of the stack.
+Buying an attack modifier also puts it on the top of the stack.
+*/
+
+
+public class AttackModifier extends ChannelAbilityPreset
+	private static let abilities = compiletime(new LinkedList<int>)
+
+	construct(int id, int levels, TooltipGenerator tgen)
+		super(id, levels, true, tgen)
+		_construct()
+
+	construct(int id, int levels)
+		super(id, levels, true)
+		_construct()
+
+	private function _construct()
+		abilities.add(getNewId())
+		for i = 1 to getLevels()
+			setCooldown(i, 0.5)
+
+	override function setLevels(int value)
+		super.setLevels(value)
+		if value > getLevels()
+			for i = getLevels() + 1 to value
+				setCooldown(i, 0.5)
+			
+	static abstract class OnHitCallback
+		abstract function run(unit caster, unit target, int level) returns bool
+
+	private static let callbacks = new HashMap<int, OnHitCallback>
+	private static let owners = new HashMap<unit, LinkedList<int>>
+	
+	/** The callback must return a bool value.
+	return false - next callback in the stack will be executed
+	return true - next callback in the stack will not be executed (the attack modifier doesn't stack) */
+	static function onHit(int abilId, OnHitCallback cb) returns OnHitCallback
+		if callbacks.has(abilId)
+			error("`onHit` callback for `{0}` is already implemented.".format(GetObjectName(abilId)))
+		callbacks.put(abilId, cb)
+		return cb
+
+	protected static function onInit()
+		AbilityShop.onSold() (unit u, int id, int level) ->
+			if abilities.has(id)
+				if not owners.has(u)
+					owners.put(u, new LinkedList<int>)
+				owners.get(u)
+				..remove(id)
+				..addtoStart(id)
+
+		EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
+			let u = EventData.getTriggerUnit()
+			let id = EventData.getSpellAbilityId()
+			if abilities.has(id) and owners.has(u)
+				owners.get(u)
+				..remove(id)
+				..addtoStart(id)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let u = EventData.getDyingUnit()
+			if not u.isType(UNIT_TYPE_HERO) and owners.has(u)
+				destroy owners.get(u)
+				owners.remove(u)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
+			let u = EventData.getEventDamageSource()
+			if BlzGetEventIsAttack() and owners.has(u)
+				let target = EventData.getTriggerUnit()
+				for id in owners.get(u)
+					if u.hasAbility(id) and callbacks.get(id).run(u, target, u.getAbilityLevel(id))
+						break
+
+		
+init
+	AttackModifier.onInit()
