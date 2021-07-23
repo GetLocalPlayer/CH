@@ -39,15 +39,15 @@ class DivineSpanks
 	static constant FX_SECONDARY_TARGET = Abilities.vampiricAuraTarget
 	static constant FX_ATTACH_SECONDARY_TARGET = "origin"
 
-	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	static constant ID = compiletime(ABIL_ID_GEN.next())
 	static constant BUFF_TUPLE = compiletime(createDummyBuffObject(BUFF_NAME, BUFF_DESCRIPTION, ICON, FX_BUFF_TARGET, "chest"))
-	// This orb abil needs only to change the owner's attack missile
+	// This orb abil is needed only to change the owner's attack missile
 	static constant ORB_ABIL_ID = compiletime(ABIL_ID_GEN.next())
 	static constant ORB_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 	@compiletime private static function build()
 		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
-		new ChannelAbilityPreset(ABIL_ID, LEVELS, true)
+		new ChannelAbilityPreset(ID, LEVELS, true)
 		..setIconNormal(ICON)
 		..setName(NAME)
 		..presetHotkey(HOTKEY)
@@ -71,7 +71,7 @@ class DivineSpanks
 		..presetFollowThroughTime((int lvl) -> 1.)
 		..presetArtDuration((int lvl) -> 1) 
 		..presetCastingTime((int lvl) -> 0)
-		lightServantShopDef.addAbilitySold(ABIL_ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		lightServantShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 		new AbilityDefinitionFrostDamageBonus(ORB_ABIL_ID)
 		..setMissileArt(FX_MISSILE)
 		..setArtTarget("")
@@ -80,10 +80,7 @@ class DivineSpanks
 		..setName(NAME)
 		..setDamageBonus(1, 0)
 		..setEnabledAttackIndex(1, 1)
-		..setTargetsAllowed(1, TARGETS_ALLOWED)
-		..setBuffs(1, ORB_BUFF_ID.toRawCode())
-		new BuffDefinition(ORB_BUFF_ID, 'Basl')
-		..setArtTarget(1, "")
+		..setTargetsAllowed(1, "none")
 
 	protected static function _init()
 		Preload(FX_TARGET)
@@ -91,7 +88,7 @@ class DivineSpanks
 		preloadAbility(ORB_ABIL_ID)
 
 		AbilityShop.onSold() (unit u, int abilId, int level) ->
-			if abilId == ABIL_ID and level == 1
+			if abilId == ID and level == 1
 				u..addAbility(ORB_ABIL_ID)
 				..makeAbilityPermanent(ORB_ABIL_ID, true)
 
@@ -102,7 +99,7 @@ class DivineSpanks
 		// <caster, <list of affected units>
 		let castersTargets = new HashMap<unit, LinkedList<unit>>
 
-		EventListener.onTargetCast(ABIL_ID) (unit caster, unit target) ->
+		EventListener.onTargetCast(ID) (unit caster, unit target) ->
 			if not affectedUnits.has(target)
 				target..addAbility(BUFF_TUPLE.abilId)
 				..makeAbilityPermanent(BUFF_TUPLE.abilId, true)
@@ -130,15 +127,23 @@ class DivineSpanks
 			buffCallbacks.put(target, buffCb)
 
 		onAttackPreventionCheck() (unit attacker, unit target) ->
-			return not attacker.hasAbility(ABIL_ID)
+			return not attacker.hasAbility(ID)
+
+		EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) ->
+			let target = EventData.getTriggerUnit()
+			let attacker = EventData.getAttackerUnit()
+			if target.isAllyOf(attacker)
+				if attacker.hasAbility(ID)
+					attacker.addAbility(ORB_ABIL_ID)
+			else
+				attacker.removeAbility(ORB_ABIL_ID)
 
 		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
 			let target = EventData.getTriggerUnit()
-			target.removeAbility(ORB_BUFF_ID)
 			let attacker = EventData.getEventDamageSource()
-			if  attacker.hasAbility(ABIL_ID) and attacker.isAllyOf(target) and BlzGetEventIsAttack()
+			if  BlzGetEventIsAttack() and attacker.hasAbility(ID) and attacker.isAllyOf(target) 
 				flashEffect(FX_TARGET, target, FX_ATTACH_TARGET)
-				let lvl = attacker.getAbilityLevel(ABIL_ID)
+				let lvl = attacker.getAbilityLevel(ID)
 				var healing = HEALING_FACTOR[lvl - 1] * EventData.getEventDamage()
 				EventData.setDamage(0)
 				if castersTargets.has(attacker)
