@@ -43,7 +43,6 @@ class DivineSpanks
 	static constant BUFF_TUPLE = compiletime(createDummyBuffObject(BUFF_NAME, BUFF_DESCRIPTION, ICON, FX_BUFF_TARGET, "chest"))
 	// This orb abil is needed only to change the owner's attack missile
 	static constant ORB_ABIL_ID = compiletime(ABIL_ID_GEN.next())
-	static constant ORB_BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 	@compiletime private static function build()
 		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
