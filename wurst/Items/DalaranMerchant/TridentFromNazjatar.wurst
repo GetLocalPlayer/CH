@@ -1,4 +1,4 @@
-package TridenFromNazjatar
+package TridentFromNazjatar
 import Assets
 import ItemObjEditing
 import ChannelAbilityPreset
@@ -19,12 +19,12 @@ import ClosureEvents
 import AttackModifier
 
 
-public class TridenFromNazjatar
+public class TridentFromNazjatar
 	static constant CLASSIFICATION = "Permanent"
-	static constant NAME = "Triden from Nazjatar"
+	static constant NAME = "Trident from Nazjatar"
 	static constant PASSIVE_DESC = "Affected by \"{0}\", the wearer engages all attack modifiers it has.".format(UnholyFrenzy.NAME)
 	static constant ICON = Icons.bTNNagaWeaponUp2
-	static constant int GOLD_COST = ShamanClaws.GOLD_COST + Spear.GOLD_COST + Knife.GOLD_COST + LumberjacksAxe.GOLD_COST + TridenFromNazjatarRecipe.GOLD_COST
+	static constant int GOLD_COST = ShamanClaws.GOLD_COST + Spear.GOLD_COST + Knife.GOLD_COST + LumberjacksAxe.GOLD_COST + TridentFromNazjatarRecipe.GOLD_COST
 	static constant int STR = 15
 	static constant int AGI = 15
 	static constant int ATTACK_DAMAGE = 35
@@ -66,7 +66,7 @@ public class TridenFromNazjatar
 					asDef.getNewId().toRawCode()))
 
 	protected static function onInit()
-		new ItemCombine(ID, asList<int>(Spear.ID, ShamanClaws.ID, Knife.ID, LumberjacksAxe.ID, TridenFromNazjatarRecipe.ID))
+		new ItemCombine(ID, asList<int>(Spear.ID, ShamanClaws.ID, Knife.ID, LumberjacksAxe.ID, TridentFromNazjatarRecipe.ID))
 
 		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
 			let u = EventData.getEventDamageSource()
@@ -74,9 +74,9 @@ public class TridenFromNazjatar
 				AttackModifier.setUnitIgnorePriority(u, u.hasAbility(UnholyFrenzy.BUFF_ID) and u.hasItemById(ID))
 
 
-public class TridenFromNazjatarRecipe
+public class TridentFromNazjatarRecipe
 	static constant CLASSIFICATION = "Permanent"
-	static constant NAME = "{0} Recipe".format(TridenFromNazjatar.NAME)
+	static constant NAME = "{0} Recipe".format(TridentFromNazjatar.NAME)
 	static constant ICON = Icons.bTNSnazzyScrollGreen
 	static constant int SHOP_X = 1
 	static constant int SHOP_Y = 1
@@ -84,7 +84,7 @@ public class TridenFromNazjatarRecipe
 	static constant int ID = compiletime(ITEM_ID_GEN.next())
 	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
 
-	protected static let tooltipGenerator = TridenFromNazjatar.tooltipGenerator.copy()
+	protected static let tooltipGenerator = TridentFromNazjatar.tooltipGenerator.copy()
 		..setName(NAME)
 		..addRecipeRequirement(Spear.NAME, Spear.GOLD_COST)
 		..addRecipeRequirement(ShamanClaws.NAME,ShamanClaws.GOLD_COST)
@@ -113,7 +113,7 @@ public class TridenFromNazjatarRecipe
 			..setButtonPositionX(SHOP_X)
 			..setButtonPositionY(SHOP_Y)
 			..setClassification(CLASSIFICATION)
-			..setInterfaceIcon(isAlias ? TridenFromNazjatar.ICON : ICON)
+			..setInterfaceIcon(isAlias ? TridentFromNazjatar.ICON : ICON)
 			tooltipGenerator..setName(NAME)
 			..applyToDef(def, true)
 			if isAlias
@@ -121,4 +121,4 @@ public class TridenFromNazjatarRecipe
 
 
 init
-	TridenFromNazjatar.onInit()
+	TridentFromNazjatar.onInit()
