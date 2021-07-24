@@ -1,0 +1,5 @@
+package PrintOnInit
+
+
+init
+	printTimed("Looking for a decent loading screen.", 15)
