@@ -20,9 +20,12 @@ public function buildAttributeBonus(string name, string icon, int strength, int 
 	..setAgilityBonus(1, agility)
 	..setIntelligenceBonus(1, intelligence)
 	if tg != null
-		tg.addProperty("Strength", (int lvl) -> strength.toString())
-		tg.addProperty("Agility", (int lvl) -> agility.toString())
-		tg.addProperty("Intelligence", (int lvl) -> intelligence.toString())
+		if strength != 0
+			tg.addProperty("Strength", (int lvl) -> strength.toString())
+		if agility != 0
+			tg.addProperty("Agility", (int lvl) -> agility.toString())
+		if intelligence != 0
+			tg.addProperty("Intelligence", (int lvl) -> intelligence.toString())
 	return def
 
 public function buildStrengthBonus(string name, string icon, int strength, TooltipGenerator tg) returns AbilityDefinitionAllPlus1

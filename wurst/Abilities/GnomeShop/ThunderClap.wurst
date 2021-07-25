@@ -9,54 +9,59 @@ import GnomeShop
 import HotkeyFactory
 
 
-constant SHOP_COST = 1
-constant LEVELS = 5
-constant HOTKEY = getHotkey()
-constant ICON = Icons.bTNThunderClap
-constant NAME = "Thunder Clap"
-constant DESCRIPTION = "Slams the ground, dealing damage to nearby enemy units and slowing their movement and attack rate."
-constant BUFF_DESCRIPTION = "This unit has been hit by Thunder Clap; its movement speed and attack rate are reduced."
+public class ThunderClap
+	static constant SHOP_COST = 1
+	static constant LEVELS = 5
+	static constant HOTKEY = getHotkey()
+	static constant ICON = Icons.bTNThunderClap
+	static constant NAME = "Thunder Clap"
+	static constant DESCRIPTION = "Slams the ground, dealing damage to nearby enemy units and slowing their movement and attack rate."
+	static constant BUFF_DESCRIPTION = "This unit has been hit by Thunder Clap; its movement speed and attack rate are reduced."
 
-constant TARGETS_ALLOWED = "air,ground,organic,enemy"
-constant AOE = 300.
-constant DURATION = 2.
-constant COOLDOWN = 5.
-constant MOVEMENT_SPEED_REDUCTION = 0.5
-constant ATTACK_SPEED_REDUCTION = 0.5
-constant MANACOST = [85, 90, 95, 100, 105]
-constant DAMAGE = [50., 65., 85., 110., 135.]
+	static constant TARGETS_ALLOWED = "air,ground,organic,enemy"
+	static constant AOE = 300.
+	static constant DURATION = 2.
+	static constant COOLDOWN = 5.
+	static constant MOVEMENT_SPEED_REDUCTION = 0.5
+	static constant ATTACK_SPEED_REDUCTION = 0.5
+	static constant MANACOST = [85, 90, 95, 100, 105]
+	static constant DAMAGE = [50., 65., 85., 110., 135.]
 
-constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
-constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	static constant FX_EFFECT = Abilities.thunderclapCaster
 
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
-@compiletime function build()
-	let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
-	new AbilityDefinitionMountainKingThunderClap(ABIL_ID)
-	..setIconNormal(ICON)
-	..setName(NAME)
-	..presetHotkey(HOTKEY)
-	..setHeroAbility(true)
-	..setRequirements("")
-	..setRace(Race.Human)
-	..registerTooltipGenerator(tooltipGen)
-	..tooltipStartListen()
-	..setLevels(LEVELS)
-	..addTooltipProperty("Damage", (int lvl) -> DAMAGE[lvl - 1].toInt())
-	..addTooltipProperty("Attack Rate Reduction", (int lvl) -> (ATTACK_SPEED_REDUCTION * 100).toInt().toString() + "%")
-	..addTooltipProperty("Movement Speed Reduction", (int lvl) -> (MOVEMENT_SPEED_REDUCTION * 100).toInt().toString() + "%")
-	..presetAreaofEffect((int lvl) -> AOE)
-	..presetDurationNormal((int lvl) -> DURATION)
-	..presetCooldown((int lvl) -> COOLDOWN)
-	..presetManaCost((int lvl) -> MANACOST[lvl - 1])
-	..tooltipStopListen()
-	..presetDurationHero((int lvl) -> DURATION)
-	..presetAOEDamage((int lvl) -> DAMAGE[lvl - 1])
-	..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED)
-	..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
-	gnomeShopDef.addAbilitySold(ABIL_ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
-	new BuffDefinition(BUFF_ID, 'Basl')
-	..setIcon(ICON)
-	..setName(1, NAME)
-	..setTooltipNormal(1, NAME)
-	..setTooltipNormalExtended(1, BUFF_DESCRIPTION)
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		new AbilityDefinitionMountainKingThunderClap(ID)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..setArtCaster("")
+		..setArtEffect(FX_EFFECT)
+		..presetHotkey(HOTKEY)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..addTooltipProperty("Damage", (int lvl) -> DAMAGE[lvl - 1].toInt())
+		..addTooltipProperty("Attack Rate Reduction", (int lvl) -> (ATTACK_SPEED_REDUCTION * 100).toInt().toString() + "%")
+		..addTooltipProperty("Movement Speed Reduction", (int lvl) -> (MOVEMENT_SPEED_REDUCTION * 100).toInt().toString() + "%")
+		..presetAreaofEffect((int lvl) -> AOE)
+		..presetDurationNormal((int lvl) -> DURATION)
+		..presetCooldown((int lvl) -> COOLDOWN)
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
+		..tooltipStopListen()
+		..presetDurationHero((int lvl) -> DURATION)
+		..presetAOEDamage((int lvl) -> DAMAGE[lvl - 1])
+		..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED)
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+		gnomeShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		new BuffDefinition(BUFF_ID, 'Basl')
+		..setIcon(ICON)
+		..setName(1, NAME)
+		..setTooltipNormal(1, NAME)
+		..setTooltipNormalExtended(1, BUFF_DESCRIPTION)

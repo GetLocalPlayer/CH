@@ -18,7 +18,7 @@ import Preloader
 
 
 
-class StormHammer
+public class StormHammer
 	static constant SHOP_COST = 1
 	static constant LEVELS = 5
 	static constant HOTKEY = getHotkey()
@@ -96,7 +96,16 @@ class StormHammer
 		..presetCastingTime((int lvl) -> 0)
 		gnomeShopDef.addAbilitySold(ABIL_ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 
+	// Specifically for Resonating Maul
 	use LinkedListModule
+	private unit caster
+	private vec2 pos
+
+	function getCaster() returns unit
+		return caster
+
+	function getPos() returns vec2
+		return pos
 
 	private static function isValidTarget(unit caster, unit u) returns bool
 		return u.isEnemyOf(caster) and u.isAlive() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and not u.isInvulnerable()
@@ -117,7 +126,11 @@ class StormHammer
 		let callAmount = (dist2d / PROJECTILE_SPEED / ANIMATION_PERIOD).toInt()
 		var _currCall = 0
 		
+		this.caster = caster
+		pos = launchPos.toVec2()
+		
 		doPeriodicallyCounted(ANIMATION_PERIOD, callAmount) (projCb) ->
+			pos = proj.getPos()
 			if not projCb.isLast()
 				proj.setPos(launchPos.bezier3(control, target, _currCall/callAmount))
 				_currCall += 1
@@ -140,6 +153,7 @@ class StormHammer
 						..destr()
 						enumGroup.destr()
 						enumUnmarked.destr()
+						destroy this
 					else
 						enumGroup.clear()
 						enumUnmarked.clear()
