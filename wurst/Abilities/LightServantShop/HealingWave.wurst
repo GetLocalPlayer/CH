@@ -24,7 +24,7 @@ constant SOUND_EFFECT = "HealingWaveTarget"
 
 constant real array HEALING = [60, 100, 140, 180, 220]
 constant int NUMBER_OF_TARGETS = 6
-constant real HEALING_REDUCTION = 0.1
+constant real HEALING_TARGET_FACTOR = 0.9
 constant real CAST_RANGE = 700.
 constant real AOE = 500.
 constant real COOLDOWN = 2.5
@@ -86,8 +86,8 @@ init
 						if newTarget == null or u.getLife()/u.getMaxHP() < newTarget.getLife()/newTarget.getMaxHP()
 							newTarget = u
 			if newTarget != null
-				healing *= HEALING_REDUCTION
-				newTarget.setLife(newTarget.getLife() + healing)
+				healing *= HEALING_TARGET_FACTOR
+				newTarget.addHP(healing)
 				new LigthingEx(LIGHTNING_TYPE, previousTarget, newTarget, LIGHTING_LAUNCH_IMPACT_OFFSET, LIGHTING_LAUNCH_IMPACT_OFFSET)
 				..setLifetime(LIGHTNING_LIFETIME)
 				..setFadepoint(LIGHTNING_LIFETIME)
