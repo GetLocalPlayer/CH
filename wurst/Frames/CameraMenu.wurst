@@ -17,16 +17,19 @@ init
 	..setPoint(FRAMEPOINT_CENTER, originButton, FRAMEPOINT_CENTER)
 	..setSize(originButton.getWidth(), originButton.getHeight())
 	..setTooltip(tooltip)
-	CreateTrigger()..registerFrameEvent(getFrame("CameraMenuButton"), FRAMEEVENT_CONTROL_CLICK)
+	CreateTrigger()..registerFrameEvent(menuButton, FRAMEEVENT_CONTROL_CLICK)
 	..addAction() ->
 		let cameraMenu = getFrame("CameraMenuBackdrop")
-		let btn = getFrame("CameraMenuButton")
-		if localPlayer == EventData.getTriggerPlayer()
-			btn.setFocus(false)
+		let p = EventData.getTriggerPlayer()
+		if localPlayer == p
 			if cameraMenu.isVisible()
 				cameraMenu.hide()
 			else
 				cameraMenu.show()
+		EventData.getTriggerFrame()
+		..hide(p)
+		..show(p)
+		
 
 	createFrame("CameraMenuBackdrop", GAME_UI, 0, 0)
 	..setPoint(FRAMEPOINT_LEFT, menuButton, FRAMEPOINT_RIGHT, 0.005, 0.0)
