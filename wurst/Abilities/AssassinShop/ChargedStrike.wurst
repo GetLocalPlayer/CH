@@ -18,7 +18,7 @@ public abstract class ChargedStrike
 	static constant NAME = "Charged Strike"
 	static constant DESCRIPTION = "Gives a chance to hurl a lightning on each hit that bounces to nearby enemies.|n|n[|cffff0000Attack Modifier|r]"
 	static constant int CHANCE = 40
-	static constant int NUMBER_OF_TARGETS = 5
+	static constant int NUMBER_OF_TARGETS = 6
 	static constant real array DAMAGE = [50., 70., 90., 110., 130.]
 	static constant real BOUNCE_RANGE = 450.
 	static constant real LIFETIME = 1.
