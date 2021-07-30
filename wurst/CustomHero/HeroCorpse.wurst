@@ -26,6 +26,7 @@ public class HeroCorpse
 	static constant MODEL_SCALE = 1.55
 
 	static constant REVIVE_RECT = gg_rct_BaseEntrance
+	static constant SCAN_RECT = gg_rct_Base
 	static constant SLOW_FACTOR = 0.8
 
 	static constant ID = compiletime(ITEM_ID_GEN.next())
@@ -95,7 +96,7 @@ public class HeroCorpse
 				..setPlayer(u.getOwner(), true)
 
 		let reg = CreateRegion()
-		reg.addRect(REVIVE_RECT)
+		reg.addRect(SCAN_RECT)
 		CreateTrigger()
 		..registerEnterRegion(reg, null)
 		..addCondition(Condition(() -> EventData.getEnteringUnit().hasItemById(ID)))
