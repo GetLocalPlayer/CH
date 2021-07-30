@@ -38,3 +38,6 @@ init
 		if p.getGold() > 0 and p.getHero().isAlive()
 			p.setGold(p.getGold() - 1)
 			createItem(itemId, p.getHero().getPos())
+		EventData.getTriggerFrame()
+		..hide(p)
+		..show(p)
