@@ -24,13 +24,14 @@ class SeedOfCorruption
 
 	static constant PROJECTILE_MODEL = Abilities.orbCorruptionMissile
 	static constant int PROJECTILE_SPEED = 650
+	static constant real PROJECTILE_ARC = 0.2
 
 	static constant FX_PRIMARY = Abilities.banishTarget
 	static constant FX_SECONDARY = Abilities.carrionSwarmDamage
 	static constant FX_EXPLOSION = Abilities.deathCoilSpecialArt
 	static constant FX_EXPLOSION_ATTACH = "origin"
 
-	static constant real array PRIMARY_REDUCTION = [0.20, 0.25, 0.30, 0.35, 0.40]
+	static constant real array PRIMARY_REDUCTION = [1.20, 1.25, 1.30, 0.35, 1.40]
 	static constant real array SECONDARY_ARMOR_REDUCTION = [0.10, 0.125, 0.15, 0.175, 0.2]
 
 	static constant real CAST_RANGE = 550.
@@ -55,7 +56,7 @@ class SeedOfCorruption
 		..presetHotkey(HOTKEY)
 		..setMissileArt(PROJECTILE_MODEL)
 		..setMissileSpeed(PROJECTILE_SPEED)
-		..setMissileArc(0.1)
+		..setMissileArc(PROJECTILE_ARC)
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
 		..setLevels(LEVELS)
@@ -79,7 +80,11 @@ class SeedOfCorruption
 		// Main target buff
 		new AbilityDefinitionPaladinDevotionAura(PRIMARY_BUFF.abilId)
 		..setLevels(LEVELS)
+		..setIconNormal(ICON)
+		..setName(NAME)
 		..setArtTarget(FX_PRIMARY)
+		..presetDurationHero((int lvl) -> 0)
+		..presetDurationNormal((int lvl) -> 0)
 		..presetTargetsAllowed((lvl) -> "self")
 		..presetBuffs((lvl) -> PRIMARY_BUFF.buffId.toRawCode())
 		..presetArmorBonus((lvl) -> -PRIMARY_REDUCTION[lvl - 1])
@@ -93,7 +98,11 @@ class SeedOfCorruption
 		// Explosion buff
 		new AbilityDefinitionPaladinDevotionAura(SECONDARY_BUFF.abilId)
 		..setLevels(LEVELS)
+		..setIconNormal(ICON)
+		..setName(NAME)
 		..setArtTarget(FX_SECONDARY)
+		..presetDurationHero((int lvl) -> 0)
+		..presetDurationNormal((int lvl) -> 0)
 		..presetTargetsAllowed((lvl) -> "self")
 		..presetBuffs((lvl) -> SECONDARY_BUFF.buffId.toRawCode())
 		..presetArmorBonus((lvl) -> -SECONDARY_ARMOR_REDUCTION[lvl - 1])
