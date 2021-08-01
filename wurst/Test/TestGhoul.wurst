@@ -61,7 +61,9 @@ function onInit()
 		let list = subcommand.split(" ")
 		let count = list.get(0).toInt()
 		for i = 1 to count.isBetween(1, ghouls.size()) ? count : ghouls.size()
-			ghouls.next().kill()
+			let u = ghouls.getRandom()
+			ghouls.remove(u)
+			u.kill()
 		destroy list
 
 	ChatCommand.register(SHORT_COMMAND_REMOVE, cb)
