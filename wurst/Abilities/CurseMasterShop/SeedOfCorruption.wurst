@@ -1,15 +1,16 @@
 package SeedOfCorruption
-import ClosureEvents
-import ClosureForGroups
-import ClosureTimers
-import HashMap
-
 import Assets
 import BuffObjEditing
 import ChannelAbilityPreset
 import AbilityTooltipGenerator
 import CurseMasterShop
 import HotkeyFactory
+
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import HashMap
+import Preloader
 
 
 class SeedOfCorruption
@@ -27,6 +28,7 @@ class SeedOfCorruption
 	static constant FX_PRIMARY = Abilities.banishTarget
 	static constant FX_SECONDARY = Abilities.carrionSwarmDamage
 	static constant FX_EXPLOSION = Abilities.deathCoilSpecialArt
+	static constant FX_EXPLOSION_ATTACH = "origin"
 
 	static constant real array PRIMARY_REDUCTION = [0.20, 0.25, 0.30, 0.35, 0.40]
 	static constant real array SECONDARY_ARMOR_REDUCTION = [0.10, 0.125, 0.15, 0.175, 0.2]
@@ -105,6 +107,10 @@ class SeedOfCorruption
 
 
 	protected static function onInit()
+		Preload(FX_EXPLOSION)
+		preloadAbility(PRIMARY_BUFF.abilId)
+		preloadAbility(SECONDARY_BUFF.abilId)
+
 		let affectedPrim = new HashMap<unit, CallbackSingle>
 		let affectedSec = new HashMap<unit, CallbackSingle>
 		let targetCaster = new HashMap<unit, unit>
@@ -139,10 +145,10 @@ class SeedOfCorruption
 			if affectedPrim.has(target)
 				let lvl = target.getAbilityLevel(PRIMARY_BUFF.abilId)
 				let caster = targetCaster.get(target)
-				flashEffect(FX_EXPLOSION, target, "origin")
+				flashEffect(FX_EXPLOSION, target, FX_EXPLOSION_ATTACH)
 				forUnitsInRange(target.getPos(), AOE, true) (unit u) ->
 					if u.isEnemyOf(caster) and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isAlive()
-						flashEffect(FX_EXPLOSION, u, "origin")
+						flashEffect(FX_EXPLOSION, u, FX_EXPLOSION_ATTACH)
 						if affectedSec.has(u)
 							destroy affectedSec.getAndRemove(u)
 							u..removeAbility(SECONDARY_BUFF.buffId)
@@ -152,10 +158,12 @@ class SeedOfCorruption
 							..makeAbilityPermanent(SECONDARY_BUFF.abilId, true)
 							..removeAbility(SECONDARY_BUFF.buffId)
 							..setAbilityLevel(SECONDARY_BUFF.abilId, lvl)
+							..hideAbility(SECONDARY_BUFF.buffId, true)
 						let cb = doAfter(DURATION) ->
 							affectedSec.remove(u)
 							u..removeAbility(SECONDARY_BUFF.abilId)
 							..removeAbility(SECONDARY_BUFF.buffId)
+							..hideAbility(SECONDARY_BUFF.buffId, false)
 						affectedSec.put(u, cb)
 				target..removeAbility(PRIMARY_BUFF.abilId)
 				..removeAbility(PRIMARY_BUFF.buffId)
@@ -169,6 +177,7 @@ class SeedOfCorruption
 				destroy affectedSec.getAndRemove(u)
 				u..removeAbility(SECONDARY_BUFF.abilId)
 				..removeAbility(SECONDARY_BUFF.buffId)
+				..hideAbility(SECONDARY_BUFF.buffId, false)
 
 
 init
