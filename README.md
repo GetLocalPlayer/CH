@@ -43,6 +43,7 @@ Command | Short | Purpose
 -CreateTestGhoul N | -ctg N | creates N enemy ghouls (N can be ommited)
 -RemoveTestGhouls | -rtg | kills all created ghouls
 -SetTestGhoulHitPoints N | -stghp N | sets ghouls' amount of hit points to N
+-SetTestGhoulArmor N | -stga N | sets ghouls' armor value to N
 
 #### Damage Info
 
