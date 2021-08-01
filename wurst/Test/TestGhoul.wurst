@@ -1,27 +1,28 @@
 package TestGhoul
-import ClosureEvents
-
 import Assets
 import ObjectIds
 import ObjectIdGenerator
 import AbilityObjEditing
 
+import ChatCommand
+import ClosureEvents
+import StringUtils
 
-constant COMMAND = "-CreateTestGhoul"
-constant SHORT_COMMAND = "-ctg"
-constant COMMAND_REMOVE = "-RemoveTestGhouls"
-constant SHORT_COMMAND_REMOVE = "-rtg"
-constant COMMAND_HP = "-SetTestGhoulHitPoints"
-constant SHORT_COMMAND_HP = "-stghp"
+
+constant COMMAND_CREATE = "CreateTestGhoul"
+constant SHORT_COMMAND_CREATE = "ctg"
+constant COMMAND_REMOVE = "RemoveTestGhouls"
+constant SHORT_COMMAND_REMOVE = "rtg"
+constant COMMAND_SET_HP = "SetTestGhoulHitPoints"
+constant SHORT_COMMAND_SET_HP = "stghp"
 constant SPAWN_RECT = gg_rct_TestGhoul
 constant UNIT_ID = compiletime(UNIT_ID_GEN.next())
-
-var testGhoulsMaxLife = 5000
+constant MAX_LIFE = 5000
 
 
 @compiletime function build()
 	new UnitDefinition(UNIT_ID, UnitIds.ghoul)
-	..setHitPointsMaximumBase(testGhoulsMaxLife)
+	..setHitPointsMaximumBase(MAX_LIFE)
 	..setManaMaximum(5000)
 	..setSpeedBase(0)
 	..setAttack1DamageBase(5)
@@ -30,56 +31,47 @@ var testGhoulsMaxLife = 5000
 	..setNormalAbilities("{0}".format(AbilityIds.neutralBuildinganyunit.toRawCode()))
 	
 
-let ghouls = CreateGroup()
-
-
-function createGhouls()
-	let msg = EventData.getChatMessage().toLowerCase()
-	let cmd = COMMAND.toLowerCase()
-	let short = SHORT_COMMAND.toLowerCase()
-	if not msg.startsWith(cmd) and not msg.startsWith(short)
-		return
-	let s = msg.startsWith(cmd) ? msg.substring(cmd.length() + 1) : (msg.startsWith(short) ? msg.substring(short.length() + 1) : null)
-	var count = s.toInt()
-	count = count <= 0 ? 1 : count
-	for i = 0 to count - 1
-		let u = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ID, SPAWN_RECT.randomPoint(), GetRandomInt(0, 359).toReal().asAngleDegrees())
-		..setMaxHP(testGhoulsMaxLife)
-		ghouls.add(u)
-	
-init
-	EventListener.add(EVENT_PLAYER_CHAT_FILTER) () ->
-		if bj_isSinglePlayer
-			createGhouls()
-
-	EventListener.add(EVENT_PLAYER_CHAT_FILTER) () ->
-		if bj_isSinglePlayer
-			let msg = EventData.getChatMessage().toLowerCase()
-			let cmd = COMMAND_REMOVE.toLowerCase()
-			let short = SHORT_COMMAND_REMOVE.toLowerCase()
-			if msg.startsWith(cmd) or msg.startsWith(short)
-				for u in ghouls
-					u.kill()
+function onInit()
+	let ghouls = CreateGroup()
+	var _maxLife = MAX_LIFE
 
 	EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->
 		let u = EventData.getDyingUnit()
 		if u.getTypeId() == UNIT_ID
 			ghouls.remove(u)
 
+	var cb = ChatCommand.register(COMMAND_CREATE) (string subcommand) ->
+		let list = subcommand.split(" ")
+		let count = list.get(0).toInt()
+		for i = 1 to count > 0 ? count : 1
+			let u = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ID, SPAWN_RECT.randomPoint(), GetRandomInt(0, 359).toReal().asAngleDegrees())
+			..setMaxHP(_maxLife)
+			ghouls.add(u)
+		destroy list
 
-function setHP()
-	let msg = EventData.getChatMessage().toLowerCase()
-	let cmd = COMMAND_HP.toLowerCase()
-	let short = SHORT_COMMAND_HP.toLowerCase()
-	if not msg.startsWith(cmd) and not msg.startsWith(short)
-		return
-	let s = msg.startsWith(cmd) ? msg.substring(cmd.length() + 1) : (msg.startsWith(short) ? msg.substring(short.length() + 1) : null)
-	let hp = s.toInt()
-	testGhoulsMaxLife = hp <= 0 ? 1 : hp
-	for u in ghouls
-		u.setMaxHP(testGhoulsMaxLife)
-	
+	ChatCommand.register(SHORT_COMMAND_CREATE, cb)
+
+	cb = ChatCommand.register(COMMAND_REMOVE) (string subcommand) ->
+		let list = subcommand.split(" ")
+		let count = list.get(0).toInt()
+		for i = 1 to count.isBetween(1, ghouls.size()) ? count : ghouls.size()
+			ghouls.next().kill()
+		destroy list
+
+	ChatCommand.register(SHORT_COMMAND_REMOVE, cb)
+
+	cb = ChatCommand.register(COMMAND_SET_HP) (string subcommand) ->
+		let list = subcommand.split(" ")
+		let hp = list.get(0).toInt()
+		if hp > 0
+			_maxLife = hp
+			for u in ghouls
+				u.setMaxHP(hp)
+		destroy list
+		
+	ChatCommand.register(SHORT_COMMAND_SET_HP, cb)
+
+
 init
-	EventListener.add(EVENT_PLAYER_CHAT_FILTER) () ->
-		if bj_isSinglePlayer
-			setHP()
+	if bj_isSinglePlayer
+		onInit()

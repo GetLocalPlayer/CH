@@ -24,12 +24,12 @@ class SeedOfCorruption
 	static constant PROJECTILE_MODEL = Abilities.orbCorruptionMissile
 	static constant int PROJECTILE_SPEED = 650
 
-	static constant MAIN_BUFF_EFFECT = Abilities.banishTarget
-	static constant EXPLOSION_BUFF_EFFECT = Abilities.carrionSwarmDamage
-	static constant EXPLOSION_EFFECT = Abilities.deathCoilSpecialArt
+	static constant FX_PRIMARY = Abilities.banishTarget
+	static constant FX_SECONDARY = Abilities.carrionSwarmDamage
+	static constant FX_EXPLOSION = Abilities.deathCoilSpecialArt
 
-	static constant real array ARMOR_REDUCTION = [0.20, 0.25, 0.30, 0.35, 0.40]
-	static constant real array EXPLOSION_ARMOR_REDUCTION = [0.10, 0.125, 0.15, 0.175, 0.2]
+	static constant real array PRIMARY_REDUCTION = [0.20, 0.25, 0.30, 0.35, 0.40]
+	static constant real array SECONDARY_ARMOR_REDUCTION = [0.10, 0.125, 0.15, 0.175, 0.2]
 
 	static constant real CAST_RANGE = 550.
 	static constant real AOE = 300
@@ -40,8 +40,8 @@ class SeedOfCorruption
 
 	static constant ID = compiletime(ABIL_ID_GEN.next())
 	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
-	static constant MAIN_BUFF = buffTuple(compiletime(ABIL_ID_GEN.next()), compiletime(BUFF_ID_GEN.next()))
-	static constant EXPLOSION_BUFF = buffTuple(compiletime(ABIL_ID_GEN.next()), compiletime(BUFF_ID_GEN.next()))
+	static constant PRIMARY_BUFF = buffTuple(compiletime(ABIL_ID_GEN.next()), compiletime(BUFF_ID_GEN.next()))
+	static constant SECONDARY_BUFF = buffTuple(compiletime(ABIL_ID_GEN.next()), compiletime(BUFF_ID_GEN.next()))
 
 
 	@compiletime
@@ -57,8 +57,8 @@ class SeedOfCorruption
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
 		..setLevels(LEVELS)
-		..addTooltipProperty("Armor Reduction", (int lvl) -> (ARMOR_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
-		..addTooltipProperty("Explosion Armor Reduction", (int lvl) -> (EXPLOSION_ARMOR_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
+		..addTooltipProperty("Armor Reduction", (int lvl) -> (PRIMARY_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
+		..addTooltipProperty("Explosion Armor Reduction", (int lvl) -> (SECONDARY_ARMOR_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
 		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
 		..presetCooldown((int lvl) -> COOLDOWN)
 		..presetDurationNormal((int lvl) -> DURATION)
@@ -75,28 +75,28 @@ class SeedOfCorruption
 		..presetBuffs((lvl) -> BUFF_ID.toRawCode())
 		curseMasterShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
 		// Main target buff
-		new AbilityDefinitionPaladinDevotionAura(MAIN_BUFF.abilId)
+		new AbilityDefinitionPaladinDevotionAura(PRIMARY_BUFF.abilId)
 		..setLevels(LEVELS)
-		..setArtTarget(MAIN_BUFF_EFFECT)
+		..setArtTarget(FX_PRIMARY)
 		..presetTargetsAllowed((lvl) -> "self")
-		..presetBuffs((lvl) -> MAIN_BUFF.buffId.toRawCode())
-		..presetArmorBonus((lvl) -> -ARMOR_REDUCTION[lvl - 1])
+		..presetBuffs((lvl) -> PRIMARY_BUFF.buffId.toRawCode())
+		..presetArmorBonus((lvl) -> -PRIMARY_REDUCTION[lvl - 1])
 		..presetPercentBonus((lvl) -> true)
-		new BuffDefinition(MAIN_BUFF.buffId, 'Basl')
+		new BuffDefinition(PRIMARY_BUFF.buffId, 'Basl')
 		..setName(1, NAME)
 		..setIcon(ICON)
 		..setTooltipNormal(1, "|cffff0000{0}|r".format(NAME))
 		..setTooltipNormalExtended(1, BUFF_DESCRIPTION)
 		..setArtTarget(1, "")
 		// Explosion buff
-		new AbilityDefinitionPaladinDevotionAura(EXPLOSION_BUFF.abilId)
+		new AbilityDefinitionPaladinDevotionAura(SECONDARY_BUFF.abilId)
 		..setLevels(LEVELS)
-		..setArtTarget(EXPLOSION_BUFF_EFFECT)
+		..setArtTarget(FX_SECONDARY)
 		..presetTargetsAllowed((lvl) -> "self")
-		..presetBuffs((lvl) -> EXPLOSION_BUFF.buffId.toRawCode())
-		..presetArmorBonus((lvl) -> -EXPLOSION_ARMOR_REDUCTION[lvl - 1])
+		..presetBuffs((lvl) -> SECONDARY_BUFF.buffId.toRawCode())
+		..presetArmorBonus((lvl) -> -SECONDARY_ARMOR_REDUCTION[lvl - 1])
 		..presetPercentBonus((lvl) -> true)
-		new BuffDefinition(EXPLOSION_BUFF.buffId, 'Basl')
+		new BuffDefinition(SECONDARY_BUFF.buffId, 'Basl')
 		..setName(1, NAME)
 		..setIcon(ICON)
 		..setTooltipNormal(1, "|cffff0000{0}|r".format(NAME))
@@ -105,8 +105,9 @@ class SeedOfCorruption
 
 
 	protected static function onInit()
-		let mainBuffTargets = new HashMap<unit, CallbackSingle>
-		let explosionBuffTargets = new HashMap<unit, CallbackSingle>
+		let affectedPrim = new HashMap<unit, CallbackSingle>
+		let affectedSec = new HashMap<unit, CallbackSingle>
+		let targetCaster = new HashMap<unit, unit>
 
 		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
 			let target = EventData.getTriggerUnit()
@@ -114,52 +115,60 @@ class SeedOfCorruption
 				target.removeAbility(BUFF_ID)
 				let caster = EventData.getEventDamageSource()
 				let lvl = caster.getAbilityLevel(ID)
-				if mainBuffTargets.has(target)
-					destroy mainBuffTargets.getAndRemove(target)
-					target..removeAbility(MAIN_BUFF.buffId)
-					..setAbilityLevel(MAIN_BUFF.abilId, lvl)
+				if affectedPrim.has(target)
+					destroy affectedPrim.getAndRemove(target)
+					target..removeAbility(PRIMARY_BUFF.buffId)
+					..setAbilityLevel(PRIMARY_BUFF.abilId, lvl)
 				else
-					target..addAbility(MAIN_BUFF.abilId)
-					..makeAbilityPermanent(MAIN_BUFF.abilId, true)
-					target..removeAbility(MAIN_BUFF.buffId)
-					..setAbilityLevel(MAIN_BUFF.abilId, lvl)
-				CallbackSingle mainBuffTimer = () ->
-					mainBuffTargets.remove(target)
-					target..removeAbility(MAIN_BUFF.abilId)
-					..removeAbility(MAIN_BUFF.buffId)
-				doAfter(DURATION, mainBuffTimer)
-				mainBuffTargets.put(target, mainBuffTimer)
+					target..addAbility(PRIMARY_BUFF.abilId)
+					..makeAbilityPermanent(PRIMARY_BUFF.abilId, true)
+					..removeAbility(PRIMARY_BUFF.buffId)
+					..setAbilityLevel(PRIMARY_BUFF.abilId, lvl)
+					..hideAbility(PRIMARY_BUFF.abilId, true)
+				targetCaster.put(target, caster)
+				let cb = doAfter(DURATION) ->
+					affectedPrim.remove(target)
+					target..removeAbility(PRIMARY_BUFF.abilId)
+					..removeAbility(PRIMARY_BUFF.buffId)
+					..hideAbility(PRIMARY_BUFF.abilId, false)
+					targetCaster.remove(target)
+				affectedPrim.put(target, cb)
 
 		EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->
 			let target = EventData.getDyingUnit()
-			if mainBuffTargets.has(target)
-				let lvl = target.getAbilityLevel(MAIN_BUFF.abilId)
-				destroy mainBuffTargets.getAndRemove(target)
-				target..removeAbility(MAIN_BUFF.abilId)
-				..removeAbility(MAIN_BUFF.buffId)
-				flashEffect(EXPLOSION_EFFECT, target, "origin")
+			if affectedPrim.has(target)
+				let lvl = target.getAbilityLevel(PRIMARY_BUFF.abilId)
+				let caster = targetCaster.get(target)
+				flashEffect(FX_EXPLOSION, target, "origin")
 				forUnitsInRange(target.getPos(), AOE, true) (unit u) ->
-					if u != target and u.isAllyOf(target) and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isAlive()
-						flashEffect(EXPLOSION_EFFECT, u, "origin")
-						if explosionBuffTargets.has(u)
-							destroy explosionBuffTargets.getAndRemove(u)
-							u..removeAbility(EXPLOSION_BUFF.buffId)
-							..setAbilityLevel(EXPLOSION_BUFF.abilId, lvl)
+					if u.isEnemyOf(caster) and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isAlive()
+						flashEffect(FX_EXPLOSION, u, "origin")
+						if affectedSec.has(u)
+							destroy affectedSec.getAndRemove(u)
+							u..removeAbility(SECONDARY_BUFF.buffId)
+							..setAbilityLevel(SECONDARY_BUFF.abilId, lvl)
 						else
-							u..addAbility(EXPLOSION_BUFF.abilId)
-							..makeAbilityPermanent(EXPLOSION_BUFF.abilId, true)
-							..removeAbility(EXPLOSION_BUFF.buffId)
-							..setAbilityLevel(EXPLOSION_BUFF.abilId, lvl)
-						CallbackSingle explosionBuffTimer = () ->
-							explosionBuffTargets.remove(u)
-							u..removeAbility(EXPLOSION_BUFF.abilId)
-							..removeAbility(EXPLOSION_BUFF.buffId)
-						doAfter(DURATION, explosionBuffTimer)
-						explosionBuffTargets.put(u, explosionBuffTimer)
-			if explosionBuffTargets.has(target)
-				destroy explosionBuffTargets.getAndRemove(target)
-				target..removeAbility(EXPLOSION_BUFF.abilId)
-				..removeAbility(EXPLOSION_BUFF.buffId)
+							u..addAbility(SECONDARY_BUFF.abilId)
+							..makeAbilityPermanent(SECONDARY_BUFF.abilId, true)
+							..removeAbility(SECONDARY_BUFF.buffId)
+							..setAbilityLevel(SECONDARY_BUFF.abilId, lvl)
+						let cb = doAfter(DURATION) ->
+							affectedSec.remove(u)
+							u..removeAbility(SECONDARY_BUFF.abilId)
+							..removeAbility(SECONDARY_BUFF.buffId)
+						affectedSec.put(u, cb)
+				target..removeAbility(PRIMARY_BUFF.abilId)
+				..removeAbility(PRIMARY_BUFF.buffId)
+				destroy affectedPrim.getAndRemove(target)
+				targetCaster.remove(target)
+				target.hideAbility(PRIMARY_BUFF.abilId, false)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->
+			let u = EventData.getDyingUnit()
+			if affectedSec.has(u)
+				destroy affectedSec.getAndRemove(u)
+				u..removeAbility(SECONDARY_BUFF.abilId)
+				..removeAbility(SECONDARY_BUFF.buffId)
 
 
 init
