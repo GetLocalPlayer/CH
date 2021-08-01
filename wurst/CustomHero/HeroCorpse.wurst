@@ -9,6 +9,7 @@ import ItemTooltipGenerator
 
 import ClosureEvents
 import ClosureTimers
+import MapBounds
 import HeroSpawn
 import Preloader
 
@@ -81,6 +82,12 @@ public class HeroCorpse
 	protected static function onInit()
 		preloadAbility(SLOW_ID)
 
+		EventListener.add(EVENT_PLAYER_LEAVE) ->
+			EnumItemsInRect(playableMapRect, null) ->
+				let i = GetEnumItem()
+				if (i.getTypeId() == ID or i.getTypeId() == ALIAS_ID) and i.getPlayer() == EventData.getTriggerPlayer()
+					i.remove()
+					
 		EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
 			let u = EventData.getTriggerUnit()
 			let itemId = EventData.getManipulatedItem().getTypeId()
