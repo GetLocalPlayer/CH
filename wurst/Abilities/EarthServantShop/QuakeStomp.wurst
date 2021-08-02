@@ -69,7 +69,7 @@ public class QuakeStomp
 		..presetTargetsAllowed((int lvl) -> "none")
 		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
 		earthServantShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
-		new BuffDefinition(BUFF_ID, 'Basl')
+		new BuffDefinition(BUFF_ID, BuffIds.earthquake)
 		..setIcon(ICON)
 		..setName(1, NAME)
 		..setTooltipNormal(1, NAME)
