@@ -62,7 +62,7 @@ class SeedOfCorruption
 		..tooltipStartListen()
 		..setLevels(LEVELS)
 		..addTooltipProperty("Armor Reduction", (int lvl) -> PRIMARY_REDUCTION[lvl - 1])
-		..addTooltipProperty("Explosion Armor Reduction", (int lvl) -> (SECONDARY_ARMOR_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
+		..addTooltipProperty("Explosion Armor Reduction", (int lvl) -> (SECONDARY_ARMOR_REDUCTION[lvl - 1] * 100).toInt())
 		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
 		..presetCooldown((int lvl) -> COOLDOWN)
 		..presetDurationNormal((int lvl) -> DURATION)
