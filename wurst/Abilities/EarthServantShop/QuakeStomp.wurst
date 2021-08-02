@@ -9,11 +9,10 @@ import EarthServantShop
 import HotkeyFactory
 
 import Preloader
-import DummyCaster
 import ClosureEvents
 import ClosureForGroups
 import ClosureTimers
-import OrderIds
+import DummyRecycler
 
 
 public class QuakeStomp
@@ -33,6 +32,13 @@ public class QuakeStomp
 	static constant real array MOVEMENT_SLOW = [0.3, 0.3, 0.3, 0.3, 0.3]
 	static constant real array DAMAGE = [80., 100., 120., 140., 200.]
 	static constant real array DAMAGE_INTERVAL = [0.5, 0.5, 0.5, 0.5, 0.5]
+
+	static constant real TERRAIN_MAX = 36
+	static constant real TERRAIN_MIN = -36
+	static constant real TERRAIN_INTERVAL = 0.1
+	
+	static constant FX = Abilities.earthquakeTarget
+	static constant real FX_SCALE = 0.8
 
 	static constant ATTACK_TYPE = ATTACK_TYPE_NORMAL
 	static constant DAMAGE_TYPE = DAMAGE_TYPE_MAGIC
@@ -69,19 +75,18 @@ public class QuakeStomp
 		..presetTargetsAllowed((int lvl) -> "none")
 		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
 		earthServantShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
-		new BuffDefinition(BUFF_ID, 'Basl')
+		new BuffDefinition(BUFF_ID, BuffIds.earthquake)
 		..setIcon(ICON)
 		..setName(1, NAME)
 		..setTooltipNormal(1, NAME)
 		..setTooltipNormalExtended(1, BUFF_DESC)
-		new AbilityDefinitionFarseerEarthquake(DUMMY_ABIL_ID)
+		new AbilityDefinitionAuraSlow(DUMMY_ABIL_ID)
 		..setLevels(LEVELS)
 		..presetAreaofEffect((int lvl) -> AOE[lvl - 1])
-		..presetFinalArea((int lvl) -> AOE[lvl - 1]) 
-		..presetDamageperSecondtoBuildings((int lvl) -> 0)
+		..presetMovementSpeedFactor((int lvl) -> -MOVEMENT_SLOW[lvl - 1])
+		..presetAttackSpeedFactor((int lvl) -> 0) 
 		..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED) 
 		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
-		..setDummyAbility()
 
 	protected static function onInit()
 		preloadAbility(DUMMY_ABIL_ID)
@@ -96,15 +101,21 @@ public class QuakeStomp
 					caster.damageTarget(u, damage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
 			let callAmount = (DURATION[lvl - 1] / DAMAGE_INTERVAL[lvl - 1]).toInt()
 			let periodicDamage = damage / callAmount
-			new DummyCaster()
-			..owner(caster.getOwner())
-			..origin(pos)
-			..delay(DURATION[lvl - 1])
-			..castPoint(DUMMY_ABIL_ID, lvl, OrderIds.earthquake, pos)
+			let dummy = DummyRecycler.get(pos, angle(0))
+			..addAbility(DUMMY_ABIL_ID, lvl)
+			..setOwner(caster.getOwner(), false)
+			TerrainDeformRandom(pos.x, pos.y, aoe, TERRAIN_MIN, TERRAIN_MAX, (DURATION[lvl - 1] * 1000).toInt(), (TERRAIN_INTERVAL * 1000).toInt())
+			let fx = addEffect(FX, pos)
+			..setScale(FX_SCALE)
 			doPeriodicallyCounted(DAMAGE_INTERVAL[lvl - 1], callAmount) (CallbackCounted cb) ->
 				forUnitsInRange(pos, aoe, true) (unit u) ->
 					if u.isAlive() and u.isEnemyOf(caster)
 						caster.damageTarget(u, periodicDamage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
+				if cb.isLast()
+					fx.destr()
+					dummy..removeAbility(DUMMY_ABIL_ID)
+					..setOwner(DUMMY_PLAYER, false)
+					DummyRecycler.recycle(dummy)
 
 
 init
