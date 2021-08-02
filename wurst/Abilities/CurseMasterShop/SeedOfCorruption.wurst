@@ -31,8 +31,8 @@ class SeedOfCorruption
 	static constant FX_EXPLOSION = Abilities.deathCoilSpecialArt
 	static constant FX_EXPLOSION_ATTACH = "origin"
 
-	static constant real array PRIMARY_REDUCTION = [1.20, 1.25, 1.30, 0.35, 1.40]
-	static constant real array SECONDARY_ARMOR_REDUCTION = [0.10, 0.125, 0.15, 0.175, 0.2]
+	static constant real array PRIMARY_REDUCTION = [2.0, 2.5, 3.0, 3.5, 4.0]
+	static constant real array SECONDARY_ARMOR_REDUCTION = [0.5, 0.5, 0.5, 0.5, 0.5]
 
 	static constant real CAST_RANGE = 550.
 	static constant real AOE = 300
@@ -50,6 +50,7 @@ class SeedOfCorruption
 	@compiletime
 	private static function build()
 		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		..addPropertyPostfix("Explosion Armor Reduction", "% of primary effect")
 		new AbilityDefinitionAlchemistAcidBomb(ID)
 		..setIconNormal(ICON)
 		..setName(NAME)
@@ -60,7 +61,7 @@ class SeedOfCorruption
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
 		..setLevels(LEVELS)
-		..addTooltipProperty("Armor Reduction", (int lvl) -> (PRIMARY_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
+		..addTooltipProperty("Armor Reduction", (int lvl) -> PRIMARY_REDUCTION[lvl - 1])
 		..addTooltipProperty("Explosion Armor Reduction", (int lvl) -> (SECONDARY_ARMOR_REDUCTION[lvl - 1] * 100).toInt().toString() + "%")
 		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
 		..presetCooldown((int lvl) -> COOLDOWN)
@@ -88,7 +89,7 @@ class SeedOfCorruption
 		..presetTargetsAllowed((lvl) -> "self")
 		..presetBuffs((lvl) -> PRIMARY_BUFF.buffId.toRawCode())
 		..presetArmorBonus((lvl) -> -PRIMARY_REDUCTION[lvl - 1])
-		..presetPercentBonus((lvl) -> true)
+		..presetPercentBonus((lvl) -> false)
 		new BuffDefinition(PRIMARY_BUFF.buffId, 'Basl')
 		..setName(1, NAME)
 		..setIcon(ICON)
@@ -105,8 +106,8 @@ class SeedOfCorruption
 		..presetDurationNormal((int lvl) -> 0)
 		..presetTargetsAllowed((lvl) -> "self")
 		..presetBuffs((lvl) -> SECONDARY_BUFF.buffId.toRawCode())
-		..presetArmorBonus((lvl) -> -SECONDARY_ARMOR_REDUCTION[lvl - 1])
-		..presetPercentBonus((lvl) -> true)
+		..presetArmorBonus((lvl) -> -PRIMARY_REDUCTION[lvl - 1] * SECONDARY_ARMOR_REDUCTION[lvl - 1])
+		..presetPercentBonus((lvl) -> false)
 		new BuffDefinition(SECONDARY_BUFF.buffId, 'Basl')
 		..setName(1, NAME)
 		..setIcon(ICON)
