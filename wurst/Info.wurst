@@ -12,7 +12,7 @@ init
 	new Quest(true)
 	..setTitle("Sauce")
 	..setIcon("ReplaceableTextures\\CommandButtons\\BTNMonsterLure.blp")
-	..setDescription("https://github.com/GetLocalPlayer/CH")
+	..setDescription("Source: github.com/GetLocalPlayer/CH|n|nThe latest build can be found at w3reforged.com")
 	..setState(QuestState.DISCOVERED)
 	new Quest(false)
 	..setTitle("WurstScript")
