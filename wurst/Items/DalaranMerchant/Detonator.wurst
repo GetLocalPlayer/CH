@@ -1,0 +1,145 @@
+package Detonator
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import DalaranMerchant
+import GemOfHealth
+import Mindstaff
+import HelmOfIronWill
+
+import LavaSpawn
+import QuakeStomp
+import ItemCombine
+import LinkedList
+import ClosureEvents
+import ClosureForGroups
+
+
+
+public class Detonator
+	static constant CLASSIFICATION = "Permanent"
+	static constant ICON = "ReplaceableTextures\\CommandButtons\\BTNDetonator.blp"
+	static constant NAME = "Detonator"
+	static constant PASSIVE_DESC = "The weaver's \"{0}\" detonates all \"{1}\" in its area, dealing damage equal to {1}'s maximum life in {2} range.".format(QuakeStomp.NAME, LavaSpawn.NAME, Detonator.AOE.toInt().toString())
+	static constant int GOLD_COST = Mindstaff.GOLD_COST * 2 + GemOfHealth.GOLD_COST + HelmOfIronWill.GOLD_COST + DetonatorRecipe.GOLD_COST
+	static constant int HIT_POINTS = GemOfHealth.HIT_POINTS
+	static constant int MANA = Mindstaff.MANA * 2
+	static constant int DEFENCE = HelmOfIronWill.DEFENCE + 1
+	static constant int HP_REG = HelmOfIronWill.HP_PER_SECOND + 1
+
+	static constant real DAMAGE_FACTOR = 1
+	static constant real AOE = 200
+	static constant ATTACK_TYPE = ATTACK_TYPE_NORMAL
+	static constant DAMAGE_TYPE = DAMAGE_TYPE_FIRE
+	static constant WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
+	static constant FX = Abilities.fireLordDeathExplode
+	static constant real FX_SCALE = 1
+
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+	
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..addPassiveEffect(PASSIVE_DESC)
+			
+	@compiletime protected static function build()
+		let defDef = buildDefenseBonus(NAME, ICON, DEFENCE, tooltipGenerator)
+		let hpRegDef = buildLifeRegenerationBonus(NAME, ICON, HP_REG, tooltipGenerator)
+		let hpDef = buildHitPointsBonus(NAME, ICON, HIT_POINTS, tooltipGenerator)
+		let manaDef = buildManaBonus(NAME, ICON, MANA, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities(commaList(
+					defDef.getNewId(), hpRegDef.getNewId(), hpDef.getNewId(), manaDef.getNewId()))
+		
+	protected static function onInit()
+		new ItemCombine(ID, asList<int>(Mindstaff.ID, Mindstaff.ID, GemOfHealth.ID, HelmOfIronWill.ID, DetonatorRecipe.ID))
+
+		Preload(FX)
+
+		EventListener.onCast(QuakeStomp.ID) (unit caster) ->
+			if caster.hasItemById(ID)
+				let lvl = caster.getAbilityLevel(QuakeStomp.ID)
+				let g = CreateGroup()
+				forUnitsInRange(caster.getPos(), QuakeStomp.AOE[lvl - 1], true) (unit lavaSpawn) ->
+					if lavaSpawn.getTypeId() == LavaSpawn.UNIT_ID and lavaSpawn.isAlive()
+						g.add(lavaSpawn)
+				for lavaSpawn from g
+					forUnitsInRange(lavaSpawn.getPos(), AOE, true) (unit u) ->
+						if u.isAlive() and u.isEnemyOf(lavaSpawn)
+							lavaSpawn.damageTarget(u, lavaSpawn.getMaxHP() * DAMAGE_FACTOR, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
+					addEffect(FX, lavaSpawn.getPos())
+					..setScale(FX_SCALE)
+					..destr()
+					lavaSpawn.remove()
+				g.destr()
+
+
+public class DetonatorRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(Detonator.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant int SHOP_X = 1
+	static constant int SHOP_Y = 2
+	static constant int GOLD_COST = 600
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = Detonator.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(Mindstaff.NAME, Mindstaff.GOLD_COST)
+		..addRecipeRequirement(Mindstaff.NAME, Mindstaff.GOLD_COST)
+		..addRecipeRequirement(GemOfHealth.NAME, GemOfHealth.GOLD_COST)
+		..addRecipeRequirement(HelmOfIronWill.NAME, HelmOfIronWill.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? Detonator.ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				dalaranMerchant.addItemSold(def.getNewId())
+
+
+init
+	Detonator.onInit()
