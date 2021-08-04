@@ -1,0 +1,116 @@
+package Level
+import Portal
+import LinkedList
+import ClosureEvents
+import HashMap
+import HeroSpawn
+import ErrorHandling
+import Base
+
+let regionData = new HashMap<region, int>
+
+function region.setData<T>(T data)
+	regionData.put(this, data castTo int)
+
+function region.getData<T>() returns T
+	return regionData.get(this) castTo T
+
+
+public abstract class Level
+	private let entrance = CreateRegion()
+	private let heroes = CreateGroup()
+	private let aliveEnemies = CreateGroup()
+	private let deadEnemies = CreateGroup()
+
+	private var started = false
+	private var finished = false
+	private Portal portal = new Portal(ZERO2, (u) -> allHeroes.has(u))
+
+	private static let allHeroes = CreateGroup()
+	private static let regTrg = CreateTrigger()
+	private static let levels = new LinkedList<Level>
+
+	construct(rect entrance, vec2 exit)
+		this.entrance.addRect(entrance)
+		portal..setPos(exit)
+		..hide()
+		..addDestination(baseEntranceRect)
+		regTrg.registerEnterRegion(this.entrance, null)
+		this.entrance.setData<Level>(this)
+		levels.add(this)
+
+	ondestroy
+		entrance.destr()
+		heroes.destr()
+		aliveEnemies.destr()
+		destroy portal
+		levels.remove(this)
+
+	abstract function start()
+	abstract function finish()
+	abstract function clean()
+
+	private function _start()
+		if started
+			error("Cannot start a level in progress.")
+		if finished
+			error("Cannot start a finished Level, reset it first.")
+		start()
+
+	private function _finish()
+		if finished
+			error("Cannot finish a finished level.")
+		finished = true
+		started = false
+		portal.show()
+		finish()
+
+	function reset()
+		for u from aliveEnemies
+			u.remove()
+		heroes.clear()
+		portal.hide()
+		finished = false
+		started = false
+		for u from deadEnemies
+			u.remove()
+		clean()
+
+	protected function addEnemy(unit u) returns bool
+		return aliveEnemies.add(u) > 0
+
+	protected static function onInit()
+		for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+			allHeroes.add(players[i].getHero())
+
+		let cond = Condition() ->
+			let u = EventData.getEnteringUnit()
+			return u.isAlive() and allHeroes.has(u)
+		regTrg.addCondition(cond)
+		regTrg.addAction() ->
+			let reg = GetTriggeringRegion()
+			let level = reg.getData<Level>()
+			if not level.finished
+				level.heroes.add(EventData.getTriggerUnit())
+				if level.heroes.size() == allHeroes.size()
+					level._start()
+
+		EventListener.add(EVENT_PLAYER_LEAVE) ->
+			let u = EventData.getTriggerPlayer().getHero()
+			allHeroes.remove(u)
+			for level in levels
+				if not level.finished and level.heroes.size() == allHeroes.size()
+					level._start()
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) -> 
+			let u = EventData.getDyingUnit()
+			for level in levels
+				if not level.finished and level.aliveEnemies.has(u)
+					level.aliveEnemies.remove(u)
+					level.deadEnemies.add(u)
+					if level.aliveEnemies.isEmpty()
+						level._finish()
+
+	
+init
+	Level.onInit()

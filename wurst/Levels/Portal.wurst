@@ -1,0 +1,120 @@
+package Portal
+import HashMap
+import LinkedList
+import Assets
+import LinkedListModule
+import ClosureForGroups
+import ClosureEvents
+import TimerUtils
+import MapBounds
+
+
+constant FX = Abilities.massTeleportTo
+constant real FX_SCALE = 1.1
+constant FX_AREA = Abilities.massTeleportCaster
+constant real FX_AREA_SCALE = 1
+constant FX_TARGET = Abilities.massTeleportTarget
+constant real FX_TARGET_SCALE = 1
+constant real COLL_SIZE = 55
+
+
+public abstract class PortalFilter
+	abstract function run(unit u) returns bool
+
+
+public abstract class PortalCallback
+	use LinkedListModule
+	abstract function run(unit u, vec2 target)
+
+
+public class Portal
+	use LinkedListModule
+	private effect fx
+	private var pos = ZERO2
+	private var hidden = false
+	private let destinations = new LinkedList<rect>
+	private let unitCount = new HashMap<unit, int>
+	private PortalFilter filter
+	
+	private static let t = getTimer()
+
+	construct(vec2 pos, PortalFilter filter)
+		fx = addEffect(FX, pos)
+		..setScale(FX_SCALE)
+		this.pos = pos
+		this.filter = filter
+		if size == 1
+			t.startPeriodic(ANIMATION_PERIOD) ->
+				for p in Portal
+					if not p.destinations.isEmpty()
+						if not p.hidden
+							p.update()
+
+	private function update()
+		forUnitsInRange(pos, COLL_SIZE, true) u ->
+			if u.isAlive() and (filter == null or filter.run(u))
+				var count = unitCount.has(u) ? unitCount.get(u) : 0
+				let dest = destinations.get(count).randomPoint()
+				for cb in PortalCallback
+					cb.run(u, dest)
+				if u.isInRange(pos, COLL_SIZE)
+					addEffect(FX_AREA, u.getPos())
+					..setScale(FX_AREA_SCALE)
+					..destr()
+					u..setPos(dest)
+					..setFacing(GetRandomReal(1, 360).asAngleDegrees())
+					addEffect(FX_TARGET, dest)
+					..setScale(FX_TARGET_SCALE)
+					..destr()
+					count++
+					unitCount.put(u, count == destinations.size() ? 0 : count)
+
+	ondestroy
+		fx.destr()
+		destroy destinations
+		unitCount.flush()
+		destroy unitCount
+		if filter != null
+			destroy filter
+		if size == 0
+			t.pause()
+
+	function hide()
+		hidden = true
+		fx..setScale(0)
+		..setPos(boundMin)
+		..setTimeScale(0)
+
+	function show()
+		hidden = false
+		fx..setScale(FX_SCALE)
+		..setPos(pos)
+		..setTimeScale(1)
+
+	function setPos(vec2 pos)
+		this.pos = pos
+		fx.setPos(pos)
+
+	/** The unit isn't teleported yet. */
+	static function onEnter(PortalCallback cb) returns PortalCallback
+		return cb
+
+	function addDestination(vararg rect rects)
+		for r in rects
+			destinations.add(r)
+
+	function addDestination(vararg vec2 points)
+		for p in points
+			destinations.add(Rect(p.x, p.y, p.x, p.y))
+
+	protected static function onInit()
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let u = EventData.getDyingUnit()
+			if not u.isType(UNIT_TYPE_HERO)
+				for p in Portal
+					p.unitCount.remove(u)
+				
+
+
+init
+	Portal.onInit()

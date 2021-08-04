@@ -1,0 +1,12 @@
+package InitLevels
+import Portal
+import ChatCommand
+import HeroSpawn
+import Level_1
+
+
+init
+	new Portal(gg_rct_LevelPortal.getCenter(), (u) -> u == u.getOwner().getHero())
+	..addDestination(Level_1.entrance)
+
+		

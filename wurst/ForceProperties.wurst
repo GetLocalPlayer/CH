@@ -3,7 +3,7 @@ import LinkedList
 
 
 public let allyPlayers = new LinkedList<player>
-public let enemyPlayer = Player(11)
+public let enemyPlayer = players[11]
 
 
 init

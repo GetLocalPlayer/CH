@@ -66,6 +66,10 @@ constant ATTACK_SWITCHER_ENABLE_RANGER_ICON = "ReplaceableTextures\\CommandButto
 constant ATTACK_SWITCHER_START_WITH_MELEE = true
 
 
+public function unit.isCustomHero() returns bool
+	return CustomHero.isUnitCustomhero(this)
+	
+
 enum CustomHeroEventIds
 	ATTACK_SWITCH
 
@@ -76,14 +80,15 @@ abstract class CustomHero
 
 	static function onAttackSwitch(AttackSwitchCallback cb) returns AttackSwitchCallback
 		return cb
-	// Transfer data
-	static let meleeIds = compiletime(new LinkedList<int>)
-	static let rangerIds = compiletime(new LinkedList<int>)
-	static let attackSwitcherIds = compiletime(new LinkedList<int>)
 
 	static abstract class BuildCallback
 		abstract function call(HeroDefinition def, bool isMelee)
 
+	// Transfer data
+	static let meleeIds = compiletime(new LinkedList<int>)
+	static let rangerIds = compiletime(new LinkedList<int>)
+	static let attackSwitcherIds = compiletime(new LinkedList<int>)
+	
 	private static BuildCallback basicBuild = (def, isMelee) -> begin
 		def..setProperNamesUsed(0)
 			..setName(isMelee ? "Melee" : "Ranger")
@@ -166,6 +171,9 @@ abstract class CustomHero
 	
 	static function build(BuildCallback buildCb) returns BuildCallback
 		return build(HERO_ID_GEN.next(), HERO_ID_GEN.next(), 'Hpal', buildCb)
+
+	static function isUnitCustomhero(unit u) returns bool
+		return meleeIds.has(u.getTypeId()) or rangerIds.has(u.getTypeId())
 	
 
 @compiletime function buildAttibuteLearningAbilities()

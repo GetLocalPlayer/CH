@@ -1,0 +1,48 @@
+package Level_1
+import OrderIds
+import ForceProperties
+import Level
+
+
+class Level_1 extends Level
+	static let normalId = 'n00D'
+	static let eliteId = 'n01F'
+	static let gate = gg_dest_ZTd5_0357
+	static let entrance = gg_rct_Level_1_Entrance
+	static let leftSpawn = gg_rct_Level_1_Left
+	static let rightSpawn = gg_rct_Level_1_Right
+	static let exit = gg_rct_Level_1_Portal.getCenter()
+
+	construct()
+		super(entrance, exit)
+
+	override function start()
+		gate.kill()
+		// Left
+		for i = 1 to 2
+			let u = createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+			addEnemy(u)
+		for i = 1 to 12
+			let u = createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+			addEnemy(u)
+		// Right
+		for i = 1 to 2
+			let u = createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+			addEnemy(u)
+		for i = 1 to 12
+			let u = createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+			addEnemy(u)
+
+	override function finish()
+		skip
+
+	override function clean()
+		gate.restoreLife(gate.getMaxLife(), true)
+
+
+init
+	new Level_1
