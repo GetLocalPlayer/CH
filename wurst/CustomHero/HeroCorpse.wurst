@@ -10,7 +10,7 @@ import ItemTooltipGenerator
 import ClosureEvents
 import ClosureTimers
 import MapBounds
-import HeroSpawn
+import InitCustomHero
 import Preloader
 
 
@@ -98,7 +98,7 @@ public class HeroCorpse
 
 		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
 			let u = EventData.getDyingUnit()
-			if u == u.getOwner().getHero()
+			if u == u.getOwner().getCustomHero()
 				createItem(ALIAS_ID, u.getPos())
 				..setPlayer(u.getOwner(), true)
 
@@ -111,7 +111,7 @@ public class HeroCorpse
 			let u = EventData.getEnteringUnit()
 			for i in u.inventory()
 				if i.getTypeId() == ID
-					let hero = i.getPlayer().getHero()
+					let hero = i.getPlayer().getCustomHero()
 					if hero != null and not hero.isAlive()
 						hero.revive(REVIVE_RECT.randomPoint(), true)
 					i.remove()

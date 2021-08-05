@@ -1,10 +1,17 @@
-package HeroSpawn
+package InitCustomHero
 import LinkedList
 import CustomHero
 import BootsOfSalvation
 import Base
 import ClosureEvents
 
+
+public unit array playerCustomHero
+
+public function player.getCustomHero() returns unit
+	return playerCustomHero[this.getId()]
+
+public let customHeroes = CreateGroup()
 
 constant STARTING_ITEM_ID = BootsOfSalvation.ID
 constant STARTING_GOLD = 300
@@ -13,29 +20,25 @@ constant STARTING_SKILL_POINTS = 15
 constant SPAWN_RECT = baseEntranceRect
 
 
-unit array playerHero
-
-
-public function player.getHero() returns unit
-	return playerHero[this.getId()]
-
-
 init
 	let list = CustomHero.meleeIds.copy()
 	for i = 0 to bj_MAX_PLAYER_SLOTS - 1
 		let p = players[i]
 		if p.getController() == MAP_CONTROL_USER and p.getSlotState() == PLAYER_SLOT_STATE_PLAYING
 			let random = GetRandomInt(0, list.size() - 1)
-			let hero = createUnit(p, list.get(random), SPAWN_RECT.randomPoint(), angle(0))
-			hero.addItemById(STARTING_ITEM_ID).setPlayer(p, true)
-			hero.setSkillPoints(STARTING_SKILL_POINTS)
+			let u = createUnit(p, list.get(random), SPAWN_RECT.randomPoint(), angle(0))
+			u.addItemById(STARTING_ITEM_ID).setPlayer(p, true)
+			u.setSkillPoints(STARTING_SKILL_POINTS)
 			list.removeAt(random)
-			p..panCamToTimed(hero, 0)
-			..select(hero)
+			p..panCamToTimed(u, 0)
+			..select(u)
 			..setState(PLAYER_STATE_RESOURCE_LUMBER , STARTING_LUMBER)
 			..setState(PLAYER_STATE_RESOURCE_GOLD  , STARTING_GOLD)
-			playerHero[p.getId()] = hero
+			playerCustomHero[p.getId()] = u
+			customHeroes.add(u)
 			SetPlayerHandicapXP(p, 0)
 
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
-		playerHero[EventData.getTriggerPlayer().getId()] = null
+		let p = EventData.getTriggerPlayer()
+		customHeroes.remove(p.getCustomHero())
+		playerCustomHero[p.getId()] = null

@@ -1,48 +1,56 @@
 package Level_1
 import OrderIds
 import ForceProperties
-import Level
+import public Level
+import ClosureTimers
+
+
+public Level level_1
+
+let normalId = 'n00D'
+let eliteId = 'n01F'
+let gate = gg_dest_ZTd5_0357
+let entrance = gg_rct_Level_1_Entrance
+let leftSpawn = gg_rct_Level_1_Left
+let rightSpawn = gg_rct_Level_1_Right
+let exit = gg_rct_Level_1_Portal
+let waves = 2
+let delay = 4.
 
 
 class Level_1 extends Level
-	static let normalId = 'n00D'
-	static let eliteId = 'n01F'
-	static let gate = gg_dest_ZTd5_0357
-	static let entrance = gg_rct_Level_1_Entrance
-	static let leftSpawn = gg_rct_Level_1_Left
-	static let rightSpawn = gg_rct_Level_1_Right
-	static let exit = gg_rct_Level_1_Portal.getCenter()
+	construct(rect entrance, vec2 exit, int waves)
+		super(entrance, exit, waves)
 
-	construct()
-		super(entrance, exit)
+	override function onStart()
+		if countWaves == 1
+			gate.kill()
+		doAfter(delay) -> 
+			// Left
+			for i = 1 to 2
+				let u = createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+				addEnemy(u)
+			for i = 1 to 12
+				let u = createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+				addEnemy(u)
+			// Right
+			for i = 1 to 2
+				let u = createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+				addEnemy(u)
+			for i = 1 to 12
+				let u = createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+				addEnemy(u)
 
-	override function start()
-		gate.kill()
-		// Left
-		for i = 1 to 2
-			let u = createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-			addEnemy(u)
-		for i = 1 to 12
-			let u = createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-			addEnemy(u)
-		// Right
-		for i = 1 to 2
-			let u = createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-			addEnemy(u)
-		for i = 1 to 12
-			let u = createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-			..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-			addEnemy(u)
-
-	override function finish()
+	override function onFinish()
 		skip
 
-	override function clean()
+	override function onReset()
 		gate.restoreLife(gate.getMaxLife(), true)
 
 
 init
-	new Level_1
+	level_1 = new Level_1(entrance, exit.getCenter(), waves)

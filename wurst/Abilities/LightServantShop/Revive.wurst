@@ -11,7 +11,7 @@ import ClosureTimers
 import MapBounds
 import LinkedList
 import HeroCorpse
-import HeroSpawn
+import InitCustomHero
 
 
 public class Revive
@@ -80,7 +80,7 @@ public class Revive
 					enumItems.add(GetEnumItem())
 				for corpse in enumItems
 					if corpse.getPos().distanceToSq(_pos) <= AOE.squared()
-						let hero = corpse.getPlayer().getHero()
+						let hero = corpse.getPlayer().getCustomHero()
 						let corpsePos = corpse.getPos()
 						corpse.remove()
 						if hero != null and not hero.isAlive()
@@ -96,7 +96,7 @@ public class Revive
 						for i in u.inventory()
 							if i.getTypeId() == HeroCorpse.ID 
 								let corpse = i
-								let hero = corpse.getPlayer().getHero()
+								let hero = corpse.getPlayer().getCustomHero()
 								corpse.remove()
 								if hero != null and not hero.isAlive()
 									hero.revive(u.getPos(), true)

@@ -1,12 +1,12 @@
 package InitLevels
 import Portal
-import ChatCommand
-import HeroSpawn
+import InitCustomHero
+
 import Level_1
 
 
 init
-	new Portal(gg_rct_LevelPortal.getCenter(), (u) -> u == u.getOwner().getHero())
-	..addDestination(Level_1.entrance)
+	new Portal(gg_rct_LevelPortal.getCenter(), (u) -> customHeroes.has(u))
+	.addDestination(level_1.getEntrance())
 
 		

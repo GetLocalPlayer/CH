@@ -3,7 +3,7 @@ import Portal
 import LinkedList
 import ClosureEvents
 import HashMap
-import HeroSpawn
+import InitCustomHero
 import ErrorHandling
 import Base
 
@@ -17,99 +17,148 @@ function region.getData<T>() returns T
 
 
 public abstract class Level
-	private let entrance = CreateRegion()
-	private let heroes = CreateGroup()
-	private let aliveEnemies = CreateGroup()
-	private let deadEnemies = CreateGroup()
+	protected var maxWaves = 0
+	protected var countWaves = 0
+	protected let entranceReg = CreateRegion()
+	protected rect entranceRect  
+	protected let readyCustomHeroes = CreateGroup()
+	protected let aliveEnemies = CreateGroup()
+	protected let deadEnemies = CreateGroup()
 
-	private var started = false
-	private var finished = false
-	private Portal portal = new Portal(ZERO2, (u) -> allHeroes.has(u))
+	protected var started = false
+	protected var finished = false
+	protected Portal portal = null
+	protected vec2 exit
 
-	private static let allHeroes = CreateGroup()
 	private static let regTrg = CreateTrigger()
 	private static let levels = new LinkedList<Level>
 
+	construct(rect entrance, vec2 exit, int waves)
+		this.entranceReg.addRect(entrance)
+		this.exit = exit
+		this.entranceRect = entrance
+		this.maxWaves = waves
+		regTrg.registerEnterRegion(this.entranceReg, null)
+		this.entranceReg.setData<Level>(this)
+		levels.add(this)
+
 	construct(rect entrance, vec2 exit)
-		this.entrance.addRect(entrance)
-		portal..setPos(exit)
-		..hide()
-		..addDestination(baseEntranceRect)
-		regTrg.registerEnterRegion(this.entrance, null)
-		this.entrance.setData<Level>(this)
+		this.entranceReg.addRect(entrance)
+		this.exit = exit
+		this.entranceRect = entrance
+		this.maxWaves = 1
+		regTrg.registerEnterRegion(this.entranceReg, null)
+		this.entranceReg.setData<Level>(this)
 		levels.add(this)
 
 	ondestroy
-		entrance.destr()
-		heroes.destr()
+		entranceReg.destr()
+		readyCustomHeroes.destr()
 		aliveEnemies.destr()
 		destroy portal
 		levels.remove(this)
 
-	abstract function start()
-	abstract function finish()
-	abstract function clean()
+	abstract function onStart()
+	abstract function onFinish()
+	abstract function onReset()
 
-	private function _start()
-		if started
-			error("Cannot start a level in progress.")
-		if finished
-			error("Cannot start a finished Level, reset it first.")
-		start()
+	protected function start()
+		var count = 0
+		for hero in customHeroes
+			if hero.isAlive()
+				count++
+		for hero in readyCustomHeroes
+			if hero.isAlive()
+				count--
+		if count == 0
+			if started
+				error("Cannot start a level in progress.")
+			if finished
+				error("Cannot start a finished Level, reset it first.")
+			started = true
+			countWaves++
+			onStart()
 
-	private function _finish()
+	protected function finish()
 		if finished
 			error("Cannot finish a finished level.")
-		finished = true
-		started = false
-		portal.show()
-		finish()
+		if countWaves == maxWaves
+			finished = true
+			started = false
+			onFinish()
+			if finished
+				portal = new Portal(exit, (u) -> u == u.getOwner().getCustomHero())
+				..addDestination(baseEntranceRect)
+		else
+			started = false
+			start()
 
-	function reset()
-		for u from aliveEnemies
-			u.remove()
-		heroes.clear()
-		portal.hide()
+	protected function reset()
+		if not finished
+			error("Cannot reset a level that's not finished.")
 		finished = false
 		started = false
+		onReset()
+		countWaves = 0
+		readyCustomHeroes.clear()
+		for u from aliveEnemies
+			u.remove()
 		for u from deadEnemies
 			u.remove()
-		clean()
+		if portal != null
+			destroy portal
+			portal = null
+
+	function getEntrance() returns rect
+		return entranceRect
 
 	protected function addEnemy(unit u) returns bool
 		return aliveEnemies.add(u) > 0
 
-	protected static function onInit()
-		for i = 0 to bj_MAX_PLAYER_SLOTS - 1
-			allHeroes.add(players[i].getHero())
+	private function onEnter(unit u)
+		if not finished and not started and not readyCustomHeroes.has(u)
+			readyCustomHeroes.add(u)
+			start()
 
-		let cond = Condition() ->
+	private function onCustomHeroDeath(unit u)
+		if not finished and not started and not readyCustomHeroes.has(u)
+			start()
+
+	private function onPlayerLeave(player p)
+		if not finished and not started
+			let u = p.getCustomHero()
+			readyCustomHeroes.remove(u)
+			start()
+
+	protected static function onInit()
+		regTrg.addCondition(Condition(() -> begin
 			let u = EventData.getEnteringUnit()
-			return u.isAlive() and allHeroes.has(u)
-		regTrg.addCondition(cond)
+			return u.isAlive() and customHeroes.has(u)
+		end))
 		regTrg.addAction() ->
 			let reg = GetTriggeringRegion()
 			let level = reg.getData<Level>()
-			if not level.finished
-				level.heroes.add(EventData.getTriggerUnit())
-				if level.heroes.size() == allHeroes.size()
-					level._start()
+			if not level.finished and not level.started
+				level.onEnter(EventData.getEnteringUnit())
 
 		EventListener.add(EVENT_PLAYER_LEAVE) ->
-			let u = EventData.getTriggerPlayer().getHero()
-			allHeroes.remove(u)
 			for level in levels
-				if not level.finished and level.heroes.size() == allHeroes.size()
-					level._start()
+				level.onPlayerLeave(EventData.getTriggerPlayer())
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let u = EventData.getDyingUnit()
+			if customHeroes.has(u)
+				for level in levels
+					level.onCustomHeroDeath(u)
 
 		EventListener.add(EVENT_PLAYER_UNIT_DEATH) -> 
 			let u = EventData.getDyingUnit()
 			for level in levels
-				if not level.finished and level.aliveEnemies.has(u)
+				if not level.finished and level.started and level.aliveEnemies.has(u)
 					level.aliveEnemies.remove(u)
 					level.deadEnemies.add(u)
 					if level.aliveEnemies.isEmpty()
-						level._finish()
+						level.finish()
 
 	
 init

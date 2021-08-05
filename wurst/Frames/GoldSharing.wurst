@@ -3,7 +3,7 @@ import ObjectIdGenerator
 import ItemObjEditing
 import AbilityObjEditing
 import ObjectIds
-import HeroSpawn
+import InitCustomHero
 
 
 let itemId = compiletime(ITEM_ID_GEN.next())
@@ -35,9 +35,9 @@ init
 	..registerFrameEvent(btn, FRAMEEVENT_CONTROL_CLICK)
 	..addAction() ->
 		let p = EventData.getTriggerPlayer()
-		if p.getGold() > 0 and p.getHero().isAlive()
+		if p.getGold() > 0 and p.getCustomHero().isAlive()
 			p.setGold(p.getGold() - 1)
-			createItem(itemId, p.getHero().getPos())
+			createItem(itemId, p.getCustomHero().getPos())
 		EventData.getTriggerFrame()
 		..hide(p)
 		..show(p)
