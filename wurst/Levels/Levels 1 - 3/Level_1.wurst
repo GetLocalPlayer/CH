@@ -1,8 +1,10 @@
 package Level_1
 import OrderIds
 import ForceProperties
-import public Level
 import ClosureTimers
+import LinkedList
+import public Level
+
 
 
 public Level level_1
@@ -14,41 +16,59 @@ let entrance = gg_rct_Level_1_Entrance
 let leftSpawn = gg_rct_Level_1_Left
 let rightSpawn = gg_rct_Level_1_Right
 let exit = gg_rct_Level_1_Portal
+
 let waves = 2
 let delay = 4.
 
 
 class Level_1 extends Level
-	construct(rect entrance, vec2 exit, int waves)
-		super(entrance, exit, waves)
+	private CallbackSingle delayWave = null
+	
+	construct(rect entrance, vec2 exit, int wavesCount)
+		super(entrance, exit, wavesCount)
 
-	override function onStart()
-		if countWaves == 1
-			gate.kill()
-		doAfter(delay) -> 
-			// Left
+	ondestroy
+		if delayWave != null
+			destroy delayWave
+	
+	override function onInit()
+		for w = 1 to getWaveCount()
 			for i = 1 to 2
 				let u = createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
 				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-				addEnemy(u)
+				..hide()
+				addEnemy(u, w)
 			for i = 1 to 12
 				let u = createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
 				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-				addEnemy(u)
+				..hide()
+				addEnemy(u, w)
 			// Right
 			for i = 1 to 2
 				let u = createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
 				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-				addEnemy(u)
+				..hide()
+				addEnemy(u, w)
 			for i = 1 to 12
 				let u = createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
 				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-				addEnemy(u)
+				..hide()
+				addEnemy(u, w)
+
+	override function onRun(int waveNumber)
+		if waveNumber == 1
+			gate.kill()
+		delayWave = doAfter(delay) -> 
+			for u in getAliveEnemies()
+				u..show()
+				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
+			delayWave = null
 
 	override function onFinish()
 		skip
 
 	override function onReset()
+		destroy delayWave
 		gate.restoreLife(gate.getMaxLife(), true)
 
 
