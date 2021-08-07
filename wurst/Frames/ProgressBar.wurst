@@ -1,0 +1,77 @@
+package ProgressBar
+import ErrorHandling
+
+
+constant INSETS = 0.0025
+
+
+public class ProgressBar
+	private let frame = createFrame("ProgressBar")
+	private let bar = frame.getChild(1)
+	private let text = frame.getChild(2)
+	private var min = 0.0
+	private var max = 0.0
+	private var value = 0.0
+	
+	function setValue(real newValue)
+		if min < max
+			value = newValue.clamp(min, max)
+			let maxWidth = frame.getWidth() - INSETS * 2
+			let offsetX = -(maxWidth - value / max * maxWidth) - INSETS
+			bar..setPoint(FRAMEPOINT_TOPLEFT, frame, FRAMEPOINT_TOPLEFT, INSETS, -INSETS)
+			..setPoint(FRAMEPOINT_BOTTOMRIGHT, frame, FRAMEPOINT_BOTTOMRIGHT, offsetX, INSETS)
+
+	function getValue() returns real
+		return value
+
+	function getMin() returns real
+		return min
+
+	function getMax() returns real
+		return max
+
+	function setMinMax(real newMin, real newMax)
+		if newMin < newMax
+			min = newMin
+			max = newMax
+			setValue(value)
+
+	function setSize(real width, real height)
+		frame.setSize(width, height)
+
+	function setWidth(real width)
+		frame.setWidth(width)
+
+	function setHeight(real height)
+		frame.setHeight(height)
+
+	function setSize(vec2 newSize)
+		setSize(newSize.x, newSize.y)
+
+	function setPoint(framepointtype point, framehandle relative, framepointtype relativePoint, real offsetX, real offsetY)
+		frame.setPoint(point, relative, relativePoint, offsetX, offsetY)
+
+	function setPoint(framepointtype point, ProgressBar relative, framepointtype relativePoint, real offsetX, real offsetY)
+		frame.setPoint(point, relative.frame, relativePoint, offsetX, offsetY)
+
+	function setAbsPoint(framepointtype p, real offsetX, real offsetY)
+		frame.setAbsPoint(p, offsetX, offsetY)
+
+	function setAbsPoint(framepointtype p, vec2 offset)
+		setAbsPoint(p, offset.x, offset.y)
+
+	function setText(string s)
+		text.setText(s)
+
+	function hide()
+		frame.hide()
+
+	function show()
+		frame.show()
+
+	ondestroy
+		frame.remove()
+
+init
+	if not loadTOCFile("Frames\\ProgressBar\\ProgressBar.toc")
+		error("LevelProgressBar.toc has not been loaded")

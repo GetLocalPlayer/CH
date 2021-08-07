@@ -1,0 +1,36 @@
+Frame "FRAME" "ProgressBar" {
+    Width 0.2,
+    Height 0.014,
+
+    Frame "BACKDROP" "ProgressBarBorder" {
+        SetAllPoints,
+        BackdropBackground "Replaceabletextures\Teamcolor\Teamcolor27.blp",
+        BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+        BackdropCornerSize 0.008,
+        BackdropBackgroundInsets 0.0025 0.0025 0.0025 0.0025,
+        BackdropEdgeFile "UI\Widgets\ToolTips\Human\human-tooltip-border.blp",
+    }
+
+    Frame "BACKDROP" "ProgressBarStatus" {
+        Width 0.0,
+        SetPoint TOPLEFT, "ProgressBar", TOPLEFT, 0.0025, -0.0025,
+        SetPoint BOTTOMRIGHT, "ProgressBar", BOTTOMRIGHT, -0.0025, 0.0025,
+        BackdropBackground "Replaceabletextures\Teamcolor\Teamcolor13.blp",
+    }
+
+    Frame "TEXT" "ProgressBarText" {
+        UseActiveContext,
+        DecorateFileNames,
+        SetAllPoints,
+        FontFlags "FIXEDSIZE",
+        FontJustificationH JUSTIFYCENTER,
+        FontJustificationV JUSTIFYMIDDLE,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 1.0 1.0 1.0 1.0,
+        FontShadowColor 0.0 0.0 0.0 0.9,
+        FontShadowOffset 0.001 -0.001,
+        Text "%",
+    }
+}
+
+
