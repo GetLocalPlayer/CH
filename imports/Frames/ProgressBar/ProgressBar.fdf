@@ -1,6 +1,6 @@
 Frame "FRAME" "ProgressBar" {
-    Width 0.2,
-    Height 0.014,
+    Width 0.3,
+    Height 0.1,
 
     Frame "BACKDROP" "ProgressBarBorder" {
         SetAllPoints,
@@ -12,10 +12,10 @@ Frame "FRAME" "ProgressBar" {
     }
 
     Frame "BACKDROP" "ProgressBarStatus" {
-        Width 0.0,
-        SetPoint TOPLEFT, "ProgressBar", TOPLEFT, 0.0025, -0.0025,
-        SetPoint BOTTOMRIGHT, "ProgressBar", BOTTOMRIGHT, -0.0025, 0.0025,
-        BackdropBackground "Replaceabletextures\Teamcolor\Teamcolor13.blp",
+        Width 0.05,
+        SetPoint TOPLEFT, "ProgressBarBorder", TOPLEFT, 0.0025, -0.0025,
+        SetPoint BOTTOMLEFT, "ProgressBarBorder", BOTTOMLEFT, 0.0025, 0.0025,
+        BackdropBackground "Replaceabletextures\Teamcolor\Teamcolor01.blp",
     }
 
     Frame "TEXT" "ProgressBarText" {
@@ -25,11 +25,11 @@ Frame "FRAME" "ProgressBar" {
         FontFlags "FIXEDSIZE",
         FontJustificationH JUSTIFYCENTER,
         FontJustificationV JUSTIFYMIDDLE,
-        FrameFont "MasterFont", 0.009, "",
+        FrameFont "MasterFont", 0.011, "",
         FontColor 1.0 1.0 1.0 1.0,
         FontShadowColor 0.0 0.0 0.0 0.9,
         FontShadowOffset 0.001 -0.001,
-        Text "%",
+        Text "0%",
     }
 }
 

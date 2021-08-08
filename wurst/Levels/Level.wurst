@@ -121,8 +121,8 @@ public abstract class Level
 			for g in aliveEnemies
 				for u in g
 					max += u.getMaxHP()
-			progressBar..setValue(0)
-			..setMinMax(0, max)
+			progressBar..setMinMax(0, max)
+			..setValue(0)
 			..setText("0%")
 			..show()
 			runNextWave()
@@ -140,13 +140,13 @@ public abstract class Level
 		if finished
 			portal = new Portal(exit, (u) -> u == u.getOwner().getCustomHero())
 			..addDestination(baseEntranceRect)
+			progressBar.setValue(progressBar.getMax())
 
 	private function onEnemyDeath(unit u)
 		deadEnemies.get(waveCount - 1).add(u)
 		let alive = aliveEnemies.get(waveCount - 1)
 		alive.remove(u)
 		progressBar..setValue(progressBar.getValue() + u.getMaxHP())
-		..setText("{0}%".format((progressBar.getValue() / progressBar.getMax() * 100).ceil().toString()))
 		if alive.isEmpty()
 			if waveCount == maxWaves
 				finish()
@@ -222,10 +222,11 @@ public abstract class Level
 		return aliveCount == 0
 
 	protected static function initClass()
-		progressBar..setPoint(FRAMEPOINT_BOTTOMLEFT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPLEFT, 0, 0.025)
-		progressBar..setPoint(FRAMEPOINT_RIGHT, getOriginFrame(ORIGIN_FRAME_MINIMAP_BUTTON), FRAMEPOINT_RIGHT, 0, 0)
-		..setHeight(0.014)
-		..hide()
+		progressBar..setAbsPoint(FRAMEPOINT_TOP, 0.4, 0.55)
+		..setTextPoint(FRAMEPOINT_TOP, FRAMEPOINT_BOTTOM)
+		..setSize(0.3, 0.01)
+		..setMinMax(0, 100)
+		..setValue(0)
 
 		regTrg.addCondition(Condition(() -> begin
 			let u = EventData.getEnteringUnit()

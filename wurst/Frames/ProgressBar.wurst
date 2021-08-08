@@ -2,9 +2,6 @@ package ProgressBar
 import ErrorHandling
 
 
-constant INSETS = 0.0025
-
-
 public class ProgressBar
 	private let frame = createFrame("ProgressBar")
 	private let bar = frame.getChild(1)
@@ -16,10 +13,7 @@ public class ProgressBar
 	function setValue(real newValue)
 		if min < max
 			value = newValue.clamp(min, max)
-			let maxWidth = frame.getWidth() - INSETS * 2
-			let offsetX = -(maxWidth - value / max * maxWidth) - INSETS
-			bar..setPoint(FRAMEPOINT_TOPLEFT, frame, FRAMEPOINT_TOPLEFT, INSETS, -INSETS)
-			..setPoint(FRAMEPOINT_BOTTOMRIGHT, frame, FRAMEPOINT_BOTTOMRIGHT, offsetX, INSETS)
+			update()
 
 	function getValue() returns real
 		return value
@@ -36,29 +30,66 @@ public class ProgressBar
 			max = newMax
 			setValue(value)
 
+	private function update()
+		if min < max
+			let width = frame.getWidth() - 0.0025 * 2
+			let factor = (value - min) / (max - min)
+			bar.setWidth(factor * width)
+			text.setText("{0}%".format((factor * 100).toInt().toString()))
+
 	function setSize(real width, real height)
 		frame.setSize(width, height)
+		update()
 
 	function setWidth(real width)
 		frame.setWidth(width)
+		update()
 
 	function setHeight(real height)
 		frame.setHeight(height)
+		update()
 
 	function setSize(vec2 newSize)
 		setSize(newSize.x, newSize.y)
+		update()
 
 	function setPoint(framepointtype point, framehandle relative, framepointtype relativePoint, real offsetX, real offsetY)
 		frame.setPoint(point, relative, relativePoint, offsetX, offsetY)
+		update()
+
+	function setPoint(framepointtype point, framehandle relative, framepointtype relativePoint)
+		frame.setPoint(point, relative, relativePoint, 0, 0)
 
 	function setPoint(framepointtype point, ProgressBar relative, framepointtype relativePoint, real offsetX, real offsetY)
 		frame.setPoint(point, relative.frame, relativePoint, offsetX, offsetY)
 
-	function setAbsPoint(framepointtype p, real offsetX, real offsetY)
-		frame.setAbsPoint(p, offsetX, offsetY)
+	function setPoint(framepointtype point, ProgressBar relative, framepointtype relativePoint)
+		frame.setPoint(point, relative.frame, relativePoint, 0, 0)
 
-	function setAbsPoint(framepointtype p, vec2 offset)
-		setAbsPoint(p, offset.x, offset.y)
+	function setAbsPoint(framepointtype point, real offsetX, real offsetY)
+		frame.setAbsPoint(point, offsetX, offsetY)
+
+	function setAbsPoint(framepointtype point, vec2 offset)
+		setAbsPoint(point, offset.x, offset.y)
+
+	function setTextPoint(framepointtype point, framepointtype relativePoint, real offsetX, real offsetY)
+		text..clearAllPoints()
+		..setPoint(point, frame, relativePoint, offsetX, offsetY)
+
+	function setTextPoint(framepointtype point, framepointtype relativePoint, vec2 offset)
+		setTextPoint(point, relativePoint, offset.x, offset.y)
+
+	function setTextPoint(framepointtype point, framepointtype relativePoint)
+		setTextPoint(point, relativePoint, ZERO2)
+
+	function setTextPoint(framepointtype point, real offsetX, real offsetY)
+		setTextPoint(point, point, offsetX, offsetY)
+
+	function setTextPoint(framepointtype point, vec2 offset)
+		setTextPoint(point, offset.x, offset.y)
+
+	function setTextPoint(framepointtype p)
+		setTextPoint(p, ZERO2)
 
 	function setText(string s)
 		text.setText(s)
@@ -68,6 +99,9 @@ public class ProgressBar
 
 	function show()
 		frame.show()
+
+	function clearAllPoints()
+		frame.clearAllPoints()
 
 	ondestroy
 		frame.remove()
