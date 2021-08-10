@@ -23,7 +23,6 @@ public abstract class PortalFilter
 
 
 public abstract class PortalCallback
-	use LinkedListModule
 	abstract function run(unit u, vec2 target)
 
 
@@ -35,6 +34,7 @@ public class Portal
 	private let destinations = new LinkedList<rect>
 	private let unitCount = new HashMap<unit, int>
 	private PortalFilter filter
+	private PortalCallback cb = null
 	
 	private static let t = getTimer()
 
@@ -55,7 +55,7 @@ public class Portal
 			if u.isAlive() and (filter == null or filter.run(u))
 				var count = unitCount.has(u) ? unitCount.get(u) : 0
 				let dest = destinations.get(count).randomPoint()
-				for cb in PortalCallback
+				if cb != null
 					cb.run(u, dest)
 				if u.isInRange(pos, COLL_SIZE)
 					addEffect(FX_AREA, u.getPos())
@@ -76,6 +76,8 @@ public class Portal
 		destroy unitCount
 		if filter != null
 			destroy filter
+		if cb != null
+			destroy cb
 		if size == 0
 			t.pause()
 
@@ -96,7 +98,8 @@ public class Portal
 		fx.setPos(pos)
 
 	/** The unit isn't teleported yet. */
-	static function onEnter(PortalCallback cb) returns PortalCallback
+	function onEnter(PortalCallback cb) returns PortalCallback
+		this.cb = cb
 		return cb
 
 	function addDestination(vararg rect rects)

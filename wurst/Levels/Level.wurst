@@ -36,6 +36,7 @@ import ProgressBar
 	part of the bar is coresponding to the enemy's death.
 */
 
+constant PROGRESS_BAR_TEXT = "Progress: {0}%"
 
 let regionData = new HashMap<region, int>
 
@@ -123,7 +124,7 @@ public abstract class Level
 					max += u.getMaxHP()
 			progressBar..setMinMax(0, max)
 			..setValue(0)
-			..setText("0%")
+			..setText(PROGRESS_BAR_TEXT.format("0"))
 			..show()
 			runNextWave()
 
@@ -140,13 +141,17 @@ public abstract class Level
 		if finished
 			portal = new Portal(exit, (u) -> u == u.getOwner().getCustomHero())
 			..addDestination(baseEntranceRect)
-			progressBar.setValue(progressBar.getMax())
+			..onEnter() (unit u, vec2 target) ->
+				progressBar.hide(u.getOwner())
+			progressBar..setValue(progressBar.getMax())
+			..setText(PROGRESS_BAR_TEXT.format("100"))
 
 	private function onEnemyDeath(unit u)
 		deadEnemies.get(waveCount - 1).add(u)
 		let alive = aliveEnemies.get(waveCount - 1)
 		alive.remove(u)
 		progressBar..setValue(progressBar.getValue() + u.getMaxHP())
+		..setText(PROGRESS_BAR_TEXT.format((progressBar.getValue() / progressBar.getMax() * 100).toInt().toString()))
 		if alive.isEmpty()
 			if waveCount == maxWaves
 				finish()
@@ -222,11 +227,13 @@ public abstract class Level
 		return aliveCount == 0
 
 	protected static function initClass()
-		progressBar..setAbsPoint(FRAMEPOINT_TOP, 0.4, 0.55)
-		..setTextPoint(FRAMEPOINT_TOP, FRAMEPOINT_BOTTOM)
-		..setSize(0.3, 0.01)
+		progressBar..setPoint(FRAMEPOINT_BOTTOMLEFT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPLEFT, 0, 0.023)
+		..setPoint(FRAMEPOINT_BOTTOMRIGHT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPRIGHT, 0, 0.023)
+		..setTextPoint(FRAMEPOINT_BOTTOMLEFT, FRAMEPOINT_TOPLEFT, 0.002, 0)
+		..setHeight(0.012)
 		..setMinMax(0, 100)
 		..setValue(0)
+		..hide()
 
 		regTrg.addCondition(Condition(() -> begin
 			let u = EventData.getEnteringUnit()

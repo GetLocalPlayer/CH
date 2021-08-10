@@ -72,6 +72,9 @@ public class ProgressBar
 	function setAbsPoint(framepointtype point, vec2 offset)
 		setAbsPoint(point, offset.x, offset.y)
 
+	function clearAllPoints()
+		frame.clearAllPoints()
+
 	function setTextPoint(framepointtype point, framepointtype relativePoint, real offsetX, real offsetY)
 		text..clearAllPoints()
 		..setPoint(point, frame, relativePoint, offsetX, offsetY)
@@ -94,14 +97,23 @@ public class ProgressBar
 	function setText(string s)
 		text.setText(s)
 
+	function setTextFont(string fileName, real height, integer flags)
+		text.setFont(fileName, height, flags)
+
 	function hide()
 		frame.hide()
+
+	function hide(player p)
+		frame.hide(p)
 
 	function show()
 		frame.show()
 
-	function clearAllPoints()
-		frame.clearAllPoints()
+	function show(player p)
+		frame.show(p)
+
+	function isVisible() returns bool
+		return frame.isVisible()
 
 	ondestroy
 		frame.remove()
