@@ -26,6 +26,7 @@ constant int ATTACK_RANGE = 600
 constant ATTACK_TARGETS_ALLOWED = "ground,structure,debris,air,item,ward,enemy"
 constant int MINIMUM_ATTACK_RANGE = 250 // For ranged attacks
 constant MIMIMUM_RANGE_CIRCLE_COLOR = colorA(150, 150, 150, 100)
+constant DEFENSE_BASE = 0
 
 constant int MAX_HP = 350
 constant int MAX_MANA = 50
@@ -108,6 +109,7 @@ abstract class CustomHero
 			..setAttack1WeaponType(isMelee ? WeaponType.Normal : WeaponType.Missile)
 			..setAttack1ProjectileHomingEnabled(true)
 			..setAttacksEnabled(1)
+			..setDefenseBase(DEFENSE_BASE)
 			..setProjectileLaunchX(0)
 			..setProjectileLaunchY(0)
 			..setProjectileLaunchZ(100)

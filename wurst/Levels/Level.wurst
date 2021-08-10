@@ -52,7 +52,7 @@ public abstract class Level
 	private var waveCount = 0
 	private let entranceReg = CreateRegion()
 	private rect entranceRect  
-	private let readyCustomHeroes = CreateGroup()
+	private let readyHeroes = CreateGroup()
 	private let aliveEnemies = new LinkedList<group>
 	private let deadEnemies = new LinkedList<group>
 
@@ -86,7 +86,7 @@ public abstract class Level
 
 	ondestroy
 		entranceReg.destr()
-		readyCustomHeroes.destr()
+		readyHeroes.destr()
 		for i = 0 to maxWaves - 1
 			aliveEnemies.get(i).destr()
 			deadEnemies.get(i).destr()
@@ -106,7 +106,7 @@ public abstract class Level
 		for u in customHeroes
 			if u.isAlive()
 				aliveCount++
-		for u in readyCustomHeroes
+		for u in readyHeroes
 			if u.isAlive()
 				aliveCount--
 		if aliveCount == 0
@@ -169,7 +169,7 @@ public abstract class Level
 		started = false
 		onReset()
 		waveCount = 0
-		readyCustomHeroes.clear()
+		readyHeroes.clear()
 		for i = 0 to maxWaves - 1
 			for u from aliveEnemies.get(i)
 				u.remove()
@@ -188,8 +188,12 @@ public abstract class Level
 	function getCurrentWave() returns int
 		return waveCount
 
-	function getAliveEnemies() returns group
+	protected function getAliveEnemies() returns group
 		return not finished and started ? aliveEnemies.get(waveCount - 1) : null
+
+	/** Returns a value only during level initializing. */
+	protected function getReadyHeroes() returns group
+		return initializing ? readyHeroes : null
 
 	protected function addEnemy(unit u, int wave) returns bool
 		if not initializing
@@ -199,20 +203,20 @@ public abstract class Level
 		return aliveEnemies.get(wave - 1).add(u) > 0
 
 	private function onEnter(unit u)
-		if not finished and not started and not readyCustomHeroes.has(u)
-			readyCustomHeroes.add(u)
+		if not finished and not started and not readyHeroes.has(u)
+			readyHeroes.add(u)
 			if canStart()
 				start()
 
 	private function onCustomHeroDeath(unit u)
-		if not finished and not started and not readyCustomHeroes.has(u)
+		if not finished and not started and not readyHeroes.has(u)
 			if canStart()
 				start()
 
 	private function onPlayerLeave(player p)
 		if not finished and not started
 			let u = p.getCustomHero()
-			readyCustomHeroes.remove(u)
+			readyHeroes.remove(u)
 			if canStart()
 				start()
 
@@ -221,13 +225,13 @@ public abstract class Level
 		for u in customHeroes
 			if u.isAlive()
 				aliveCount++
-		for u in readyCustomHeroes
+		for u in readyHeroes
 			if u.isAlive()
 				aliveCount--
 		return aliveCount == 0
 
 	protected static function initClass()
-		progressBar..setPoint(FRAMEPOINT_BOTTOMLEFT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPLEFT, 0, 0.023)
+		progressBar..setPoint(FRAMEPOINT_BOTTOMLEFT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPLEFT, 0, 0.024)
 		..setPoint(FRAMEPOINT_BOTTOMRIGHT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPRIGHT, 0, 0.023)
 		..setTextPoint(FRAMEPOINT_BOTTOMLEFT, FRAMEPOINT_TOPLEFT, 0.002, 0)
 		..setHeight(0.012)

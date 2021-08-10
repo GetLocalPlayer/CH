@@ -13,6 +13,7 @@ MaxHeroLevel=28
 TradingIncLarge=0
 TradingIncSmall=0
 StrAttackBonus=0.00
+AgiDefenseBase=0.00
 AgiDefenseBonus=0.15
 PawnItemRate=0.85
 

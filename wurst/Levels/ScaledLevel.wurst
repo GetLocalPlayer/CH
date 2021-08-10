@@ -1,0 +1,42 @@
+package ScaledLevel
+import public Level
+
+
+/** 
+	Scales enemies' armor/attack power/hit points depending on 
+	the number of custom heroes involved.
+*/
+
+constant HP_BONUS_FACTOR = 0.8
+constant ATTACK_DAMAGE_BONUS_FACTOR = 0.15
+constant ATTACK_SPEED_BONUS_FACTOR = 0.1
+constant ARMOR_BONUS_FACTOR = 0.275
+
+
+public abstract class ScaledLevel extends Level
+	construct(rect entrance, vec2 exit, int waves)
+		super(entrance, exit, waves)
+
+	construct(rect entrance, vec2 exit)
+		super(entrance, exit, 1)
+
+	protected function addEnemy(unit u, int wave)
+		let factor = getReadyHeroes().size() - 1
+
+		let hp = (u.getMaxHP() * (1 + HP_BONUS_FACTOR * factor))
+		u..setMaxHP(hp.toInt())
+		..setHP(hp)
+
+		let damage = [	u.getBaseDamage(0) * (1 + ATTACK_DAMAGE_BONUS_FACTOR * factor),
+						u.getBaseDamage(1) * (1 + ATTACK_DAMAGE_BONUS_FACTOR * factor)]
+		u..setBaseDamage(damage[0].toInt(), 0)
+		..setBaseDamage(damage[1].toInt(), 1)
+
+		let attackSpeedBonus = ATTACK_SPEED_BONUS_FACTOR * factor
+		u..setAttackCooldownPercChange(attackSpeedBonus, 0)
+		..setAttackCooldownPercChange(attackSpeedBonus, 1)
+
+		let armor = u.getArmor() * (1 + ARMOR_BONUS_FACTOR * factor)
+		u.setArmor(armor)
+		
+		super.addEnemy(u, wave)

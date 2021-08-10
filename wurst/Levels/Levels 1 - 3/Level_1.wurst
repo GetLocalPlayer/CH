@@ -2,7 +2,7 @@ package Level_1
 import OrderIds
 import ForceProperties
 import ClosureTimers
-import public Level
+import public ScaledLevel
 
 
 
@@ -20,7 +20,7 @@ let waves = 2
 let delay = 4.
 
 
-class Level_1 extends Level
+class Level_1 extends ScaledLevel
 	private CallbackSingle delayWave = null
 	
 	construct(rect entrance, vec2 exit, int wavesCount)
