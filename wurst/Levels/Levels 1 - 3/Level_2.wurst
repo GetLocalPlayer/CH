@@ -1,0 +1,113 @@
+package Level_2
+import OrderIds
+import LinkedList
+import ForceProperties
+import ClosureTimers
+import public ScaledLevel
+import Preloader
+
+
+public Level level_2
+
+
+let normalId = 'n00E'
+let eliteId = 'n01G'
+
+// Per patrol rect
+let normalCount = 6
+let eliteCount = 2
+
+let entrance = gg_rct_Level_2_Entrance
+let exit = gg_rct_Level_2_Portal
+
+// Clouterclockwise
+let patrolRects = asList<rect>(
+	gg_rct_Level_2_Top_Left,
+	gg_rct_Level_2_Bottom_Left,
+	gg_rct_Level_2_Bottom_Right,
+	gg_rct_Level_2_Top_Right)
+
+let waves = 2
+let delay = 4.
+
+
+class Level_2 extends ScaledLevel
+	private CallbackSingle delayWave = null
+	private let patrols = new LinkedList<group> // counterclocwise as for patrolRects
+	
+	construct(rect entrance, vec2 exit, int wavesCount)
+		super(entrance, exit, wavesCount)
+		for i = 1 to patrolRects.size()
+			patrols.add(CreateGroup())
+
+	ondestroy
+		if delayWave != null
+			destroy delayWave
+		for g in patrols
+			g.destr()
+		destroy patrols
+	
+	override function onInit()
+		for w = 1 to getWaveCount()
+			for i = 0 to patrols.size() - 1
+				let r = patrolRects.get(i)
+				let g = patrols.get(i)
+				for j = 1 to normalCount
+					let u = createUnit(enemyPlayer, normalId, r.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+					..pause()
+					..setInvulnerable(true)
+					..hide()
+					g.add(u)
+					addEnemy(u, w)
+				for j = 1 to eliteCount
+					let u = createUnit(enemyPlayer, eliteId, r.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
+					..pause()
+					..setInvulnerable(true)
+					..hide()
+					g.add(u)
+					addEnemy(u, w)
+
+	override function onRun(int waveNumber)
+		let direction = GetRandomBoolean() ? 1 : -1
+		delayWave = doAfter(delay) -> 
+			delayWave = null
+			// Quite a moronic way to choose direciton
+			var i = 0
+			while i.abs() < patrols.size()
+				let index = i.abs() 
+				let r = patrolRects.get(index < patrolRects.size() - 1 ? index + 1 : 0)
+				let g = patrols.get(index)
+				i += direction
+				var eCount = eliteCount
+				var nCount = normalCount
+				for u in g
+					if nCount > 0 and u.getTypeId() == normalId
+						u..unpause()
+						..setInvulnerable(false)
+						..show()
+						..issuePointOrderById(OrderIds.attack, r.getCenter())
+						g.remove(u)
+						nCount--
+					if eCount > 0 and u.getTypeId() == eliteId
+						u..unpause()
+						..setInvulnerable(false)
+						..show()
+						..issuePointOrderById(OrderIds.attack, r.getCenter())
+						g.remove(u)
+						eCount--
+					if nCount == 0 and eCount == 0
+						break
+
+	override function onFinish()
+		skip
+
+	override function onReset()
+		destroy delayWave
+		for g in patrols
+			g.clear()
+
+
+init
+	level_2 = new Level_2(entrance, exit.getCenter(), waves)
+	preloadUnit(normalId)
+	preloadUnit(eliteId)

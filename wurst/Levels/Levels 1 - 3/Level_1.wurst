@@ -5,8 +5,8 @@ import ClosureTimers
 import public ScaledLevel
 
 
-
 public Level level_1
+
 
 let normalId = 'n00D'
 let eliteId = 'n01F'
