@@ -214,6 +214,12 @@ public abstract class Level
 	function getCurrentWave() returns int
 		return waveCount
 
+	function hideProgressBar()
+		progressBar.hide()
+
+	function showProgressBar()
+		progressBar.show()
+
 	function isInProgress() returns bool
 		return started and not finished and not initializing
 

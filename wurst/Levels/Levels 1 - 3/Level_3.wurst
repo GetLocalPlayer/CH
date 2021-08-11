@@ -1,11 +1,46 @@
 package Level_3
+import Assets
+import LinkedList
+import ClosureTimers
+import Interpolation
+import ForceProperties
+import InitCustomHero
 import ScaledLevel
+import SoundUtils
 
+
+constant UNIT_ID = 'n00G'
+constant LEAP_HEIGHT = 600.0
+constant LEAP_DAMAGE = 200.0
+constant LEAP_ATTACK_TYPE = ATTACK_TYPE_NORMAL
+constant LEAP_DAMAGE_TYPE = DAMAGE_TYPE_MAGIC
+constant LEAP_DURATION = 2.0
+constant LEAP_START_DELAY = 1.0
+constant LEAP_END_DELAY = 1.0 
+constant LEAP_LANDING_FX = Abilities.warStompCaster
+constant LEAP_ANIM_INDEX = 9
+
+let spawnSound = new SoundDefinition("Sound\\Interface\\QuestFailed.wav")
+
+let gates = udg_Level_3_Gates
 
 let entrance = gg_rct_Level_3_Entrance
 let exit = gg_rct_Level_3_Portal
 
-let waves = 1
+let spawn = gg_rct_Level_3_Spawn
+let battlefield = gg_rct_Level_3_Battlefield
+
+let initialLeapRects = asList<rect>(
+	gg_rct_Level_3_Leap_1,
+	gg_rct_Level_3_Leap_2,
+	gg_rct_Level_3_Leap_3)
+
+let deadLeapRects = asList<rect>(
+	gg_rct_Level_3_Dead_Leap_1,
+	gg_rct_Level_3_Dead_Leap_2,
+	gg_rct_Level_3_Dead_Leap_3)
+
+fogmodifier array vision
 
 
 public class Level_3 extends ScaledLevel	
@@ -15,13 +50,76 @@ public class Level_3 extends ScaledLevel
 		return instance
 
 	private construct()
-		super(entrance, exit.getCenter(), waves)
+		super(entrance, exit.getCenter(), 1)
+		gates..kill()
+		..setAnimation("death alternate")
+		for p in allyPlayers
+			vision[p.getId()] = createVision(p, battlefield, false)
+		createVision(enemyPlayer, battlefield, false)
 	
+	private unit boss
+
 	override function onInit()
+		boss = createUnit(enemyPlayer, UNIT_ID, spawn.getCenter(), 90 .asAngleDegrees())
+		..addAbility('Arav')
+		..removeAbility('Arav')
+		..setPathing(false)
+		..setInvulnerable(true)
+		..pause()
+		..hide()
+		addEnemy(boss, 1)
 
 	override function onRun(int waveNumber)
+		hideProgressBar()
+		doPeriodically(ANIMATION_PERIOD) (CallbackPeriodic cb) ->
+			var ready = true
+			for u in customHeroes
+				if u.isAlive() and not battlefield.contains(u.getPos())
+					ready = false
+					break
+			if ready
+				destroy cb
+				gates..restoreLife(100, false)
+				..setAnimation("stand")
+				for p in allyPlayers
+					vision[p.getId()].start()
+				spawnScene()
+			
+	private function spawnScene()
+		boss.show()
+		for u in customHeroes
+			u.pauseEx()
+			u.getOwner().setCameraTargetControllerNoZ(boss, ZERO2, false)
+			boss.shareVision(u.getOwner())
+		for i = 0 to initialLeapRects.size() - 1
+			doAfter((LEAP_DURATION + LEAP_END_DELAY) * i) -> 
+				if i == 0
+					spawnSound.play()
+				let a = boss.getPos3Real()
+				let b = initialLeapRects.get(i).getCenter().withTerrainZ()
+				let control = a.lerp(b, 0.5).add(0, 0, 2 * LEAP_HEIGHT - 0.5 * b.z - 0.5 * a.z)
+				boss.setAnimation(LEAP_ANIM_INDEX)
+				doPeriodicallyTimed(ANIMATION_PERIOD, LEAP_DURATION) (CallbackCounted cb) ->
+					boss.setPosReal(a.bezier3(control, b, cb.progress()))
+					if cb.isLast()
+						flashEffect(LEAP_LANDING_FX, b)
+						if i == initialLeapRects.size() - 1
+							doAfter(LEAP_END_DELAY) -> 
+								startFight()
+
+	private function startFight()
+		boss..setInvulnerable(false)
+		..setPathing(true)
+		..unpause()
+		for u in customHeroes
+			u.unpauseEx()
+			u.getOwner().stopCamera()
 
 	override function onFinish()
+		for p in allyPlayers
+			vision[p.getId()].stop()
 
 	override function onReset()
+		for p in allyPlayers
+			vision[p.getId()].stop()
 		
