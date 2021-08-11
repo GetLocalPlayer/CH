@@ -66,11 +66,10 @@ public class Level_2 extends ScaledLevel
 				g.add(createUnit(enemyPlayer, normalId, entrance.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
 			for i = 1 to eliteCount * patrolRects.size()
 				g.add(createUnit(enemyPlayer, eliteId, entrance.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
-			print("init g size = " + g.size().toString())
 			for u from g
 				u..pause()
 				..setInvulnerable(true)
-				//..hide()
+				..hide()
 				addEnemy(u, w)
 		g.destr()
 
@@ -95,32 +94,29 @@ public class Level_2 extends ScaledLevel
 				counterclockwise in each wave, so I randomly revert
 				the list on each wave. */
 				for i = 1 to patrolRects.size() - 1
-					//patrolRects.addtoStart(patrolRects.removeAt(i))
-			let g = CreateGroup()
-			var a = 0
-			var b = 0
+					patrolRects.addtoStart(patrolRects.removeAt(i))
+			let normal = CreateGroup()
+			let elites = CreateGroup()
+			for u in getAliveEnemies(waveNumber)
+				if u.getTypeId() == normalId
+					normal.add(u)
+				if u.getTypeId() == eliteId
+					elites.add(u)
 			for r in patrolRects
-				var eCount = eliteCount
-				var nCount = normalCount
-				for u in getAliveEnemies(waveNumber)
-					if nCount > 0 and u.getTypeId() == normalId
-						g.add(u)
-						nCount--
-					if eCount > 0 and u.getTypeId() == eliteId
-						g.add(u)
-						eCount--
-					if nCount == 0 and eCount == 0
-						break
-				for u from g
-					u..unpause()
+				for i = 1 to normalCount
+					normal.next()
+					..unpause()
 					..setInvulnerable(false)
 					..show()
 					..setXY(r.getCenter())
-					b++
-				a++
-			print("a = {0}".format(a.toString()))
-			print("b = {0}".format(b.toString()))
-			g.destr()
+				for i = 1 to eliteCount
+					elites.next()
+					..unpause()
+					..setInvulnerable(false)
+					..show()
+					..setXY(r.getCenter())
+			normal.destr()
+			elites.destr()
 
 	override function onFinish()
 		if delayWaveCb != null

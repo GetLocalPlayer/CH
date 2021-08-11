@@ -170,7 +170,7 @@ public abstract class Level
 		let alive = aliveEnemies.get(waveCount - 1)
 		alive.remove(u)
 		progressBar..setValue(progressBar.getValue() + u.getMaxHP())
-		..setText(PROGRESS_BAR_TEXT.format((progressBar.getValue() / progressBar.getMax() * 100).toInt().toString()))
+		..setText(PROGRESS_BAR_TEXT.format((progressBar.getValue() / progressBar.getMax() * 100).ceil().toString()))
 		if alive.isEmpty()
 			if waveCount == maxWaves
 				finish()
@@ -264,7 +264,6 @@ public abstract class Level
 
 	protected static function staticInit()
 		progressBar..setPoint(FRAMEPOINT_BOTTOMLEFT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPLEFT, 0, 0.024)
-		//..setPoint(FRAMEPOINT_BOTTOMRIGHT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPRIGHT, 0, 0.023)
 		..setTextPoint(FRAMEPOINT_BOTTOMLEFT, FRAMEPOINT_TOPLEFT, 0.002, 0)
 		..setSize(0.15, 0.012)
 		..setMinMax(0, 100)

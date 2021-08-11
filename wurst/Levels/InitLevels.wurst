@@ -73,10 +73,9 @@ init
 		cb = ChatCommand.register(COMMAND_RESET_ALL_LEVELS) (string subcommand) ->
 			var allReset = true
 			for i = 0 to levels.size() - 1
-				print(" ")
-				print("Reset level {0}.".format((i + 1).toString()))
+				print("Resetting level {0}.".format((i + 1).toString()))
 				allReset = allReset and levels.get(i).reset()
-			if baseRect.contains(localPlayer.getCustomHero().getPos())
+			if not baseRect.contains(localPlayer.getCustomHero().getPos())
 				localPlayer.getCustomHero().setPos(baseEntranceRect.randomPoint())
 
 		ChatCommand.register(COMMAND_RESET_ALL_LEVELS_SHORT, cb)

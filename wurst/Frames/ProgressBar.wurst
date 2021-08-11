@@ -34,7 +34,8 @@ public class ProgressBar
 		if min < max
 			let width = frame.getWidth() - 0.0025 * 2
 			let factor = (value - min) / (max - min)
-			bar.setWidth(factor * width)
+			let barWidth = factor * width
+			bar.setWidth(barWidth != 0 ? barWidth : 0.00001)
 			text.setText("{0}%".format((factor * 100).toInt().toString()))
 
 	function setSize(real width, real height)
