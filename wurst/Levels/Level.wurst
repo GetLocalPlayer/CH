@@ -161,6 +161,7 @@ public abstract class Level
 				addEffect(FX_PORTAL_TARGET, target)
 				..setScale(FX_PORTAL_TARGET_SCALE)
 				..destr()
+				u.getOwner().panCameraToTimed(target, 0)
 			portalFx = addEffect(FX_PORTAL, portal.getPos())
 			progressBar..setValue(progressBar.getMax())
 			..setText(PROGRESS_BAR_TEXT.format("100"))

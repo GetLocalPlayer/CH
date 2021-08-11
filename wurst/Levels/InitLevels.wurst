@@ -57,6 +57,7 @@ init
 			index = index == levels.size() - 1 ? 0 : index + 1
 			enteringIndex.put(u, index)
 			p.setDestination(levels.get(index).getEntrance())
+			u.getOwner().panCameraToTimed(target, 0)
 		portals.put(u, p)
 
 	if bj_isSinglePlayer
