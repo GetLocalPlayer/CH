@@ -1,13 +1,84 @@
 package InitLevels
+import Assets
+import LinkedList
+import HashMap
 import Portal
 import InitCustomHero
+import ChatCommand
+import Base
 
+import Level
 import Level_1
 import Level_2
 
 
-init
-	new Portal(gg_rct_LevelPortal.getCenter(), (u) -> customHeroes.has(u))
-	.addDestination(level_2.getEntrance())
+constant COMMAND_SET_LEVEL = "SetLevel"
+constant COMMAND_SET_LEVEL_SHORT = "sl"
+constant COMMAND_RESET_ALL_LEVELS = "ResetAllLevels"
+constant COMMAND_RESET_ALL_LEVELS_SHORT = "ral"
 
+
+constant FX_PORTAL = Abilities.massTeleportTo
+constant real FX_PORTAL_SCALE = 1.1
+constant FX_PORTAL_AREA = Abilities.massTeleportCaster
+constant real FX_PORTAL_AREA_SCALE = 1
+constant FX_PORTAL_TARGET = Abilities.massTeleportTarget
+constant real FX_PORTAL_TARGET_SCALE = 1
+constant real PORTAL_AOE = 55
+
+constant BASE_EXIT = gg_rct_LevelPortal
+
+
+let levels = asList<Level>(
+	Level_1.instance(),
+	Level_2.instance())
+
+
+init
+	addEffect(FX_PORTAL, BASE_EXIT.getCenter())
+	..setScale(FX_PORTAL_SCALE)
+
+	let enteringIndex = new HashMap<unit, int>
+	let portals = new HashMap<unit, Portal>
+
+	for u in customHeroes
+		enteringIndex.put(u, 0)
+
+		let p = new Portal(BASE_EXIT.getCenter(), PORTAL_AOE, (enteringUnit) -> enteringUnit == u)
+		p..setDestination(levels.get(0).getEntrance())
+		..onEnter() (unit enteringUnit, vec2 target) ->
+			addEffect(FX_PORTAL_AREA, enteringUnit.getPos())
+			..setScale(FX_PORTAL_AREA_SCALE)
+			..destr()
+			addEffect(FX_PORTAL_TARGET, target)
+			..setScale(FX_PORTAL_TARGET_SCALE)
+			..destr()
+			var index = enteringIndex.get(u)
+			index = index == levels.size() - 1 ? 0 : index + 1
+			enteringIndex.put(u, index)
+			p.setDestination(levels.get(index).getEntrance())
+		portals.put(u, p)
+
+	if bj_isSinglePlayer
+		var cb = ChatCommand.register(COMMAND_SET_LEVEL) (string subcommand) ->
+			let i = subcommand.toInt()
+			if i.isBetween(1, levels.size())
+				enteringIndex.put(localPlayer.getCustomHero(), i - 1)
+				portals.get(localPlayer.getCustomHero()).setDestination(levels.get(i - 1).getEntrance())
+			else	
+				print("Only {0} levels exist.".format(levels.size().toString()))
+	
+		ChatCommand.register(COMMAND_SET_LEVEL_SHORT, cb)
+			
+		cb = ChatCommand.register(COMMAND_RESET_ALL_LEVELS) (string subcommand) ->
+			var allReset = true
+			for i = 0 to levels.size() - 1
+				print(" ")
+				print("Reset level {0}.".format((i + 1).toString()))
+				allReset = allReset and levels.get(i).reset()
+			if baseRect.contains(localPlayer.getCustomHero().getPos())
+				localPlayer.getCustomHero().setPos(baseEntranceRect.randomPoint())
+
+		ChatCommand.register(COMMAND_RESET_ALL_LEVELS_SHORT, cb)
+				
 		

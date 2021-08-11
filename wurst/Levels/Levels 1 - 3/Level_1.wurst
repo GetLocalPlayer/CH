@@ -2,80 +2,72 @@ package Level_1
 import OrderIds
 import ForceProperties
 import ClosureTimers
-import public ScaledLevel
-
-
-public Level level_1
+import ScaledLevel
 
 
 let normalId = 'n00D'
 let eliteId = 'n01F'
-let gate = gg_dest_ZTd5_0357
+
+// Per spawn rect
+let normalCount = 12
+let eliteCount = 4
+
 let entrance = gg_rct_Level_1_Entrance
+let exit = gg_rct_Level_1_Portal
+
 let leftSpawn = gg_rct_Level_1_Left
 let rightSpawn = gg_rct_Level_1_Right
-let exit = gg_rct_Level_1_Portal
 
 let waves = 2
 let delay = 4.
 
+let gate = gg_dest_ZTd5_0357
 
-class Level_1 extends ScaledLevel
-	private CallbackSingle delayWave = null
+
+public class Level_1 extends ScaledLevel
+	private CallbackSingle delayWaveCb = null
 	
-	construct(rect entrance, vec2 exit, int wavesCount)
-		super(entrance, exit, wavesCount)
+	private static let instance = new Level_1
 
-	ondestroy
-		if delayWave != null
-			destroy delayWave
+	static function instance() returns Level_1
+		return instance
+
+	private construct()
+		super(entrance, exit.getCenter(), waves)
 	
 	override function onInit()
-		for w = 1 to getWaveCount()
-			for i = 1 to 2
-				let u = createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-				..pause()
+		let g = CreateGroup()
+		for w = 1 to getMaxWaves()
+			// Left
+			for i = 1 to eliteCount
+				g.add(createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+				g.add(createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for i = 1 to normalCount
+				g.add(createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+				g.add(createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for u from g
+				u..pause()
 				..setInvulnerable(true)
 				..hide()
 				addEnemy(u, w)
-			for i = 1 to 12
-				let u = createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-				..pause()
-				..setInvulnerable(true)
-				..hide()
-				addEnemy(u, w)
-			// Right
-			for i = 1 to 2
-				let u = createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-				..pause()
-				..setInvulnerable(true)
-				..hide()
-				addEnemy(u, w)
-			for i = 1 to 12
-				let u = createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees())
-				..pause()
-				..setInvulnerable(true)
-				..hide()
-				addEnemy(u, w)
+		g.destr()
 
 	override function onRun(int waveNumber)
 		if waveNumber == 1
 			gate.kill()
-		delayWave = doAfter(delay) -> 
+		delayWaveCb = doAfter(delay) -> 
+			delayWaveCb = null
 			for u in getAliveEnemies()
 				u..setInvulnerable(false)
 				..unpause()
 				..show()
 				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
-			delayWave = null
 
 	override function onFinish()
-		skip
+		if delayWaveCb != null
+			destroy delayWaveCb
 
 	override function onReset()
-		destroy delayWave
+		if delayWaveCb != null
+			destroy delayWaveCb
 		gate.restoreLife(gate.getMaxLife(), true)
-
-
-init
-	level_1 = new Level_1(entrance, exit.getCenter(), waves)

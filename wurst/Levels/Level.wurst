@@ -1,5 +1,5 @@
 package Level
-import Portal
+import Assets
 import LinkedList
 import ClosureEvents
 import HashMap
@@ -7,6 +7,7 @@ import InitCustomHero
 import ErrorHandling
 import Base
 import ProgressBar
+import Portal
 
 
 /**
@@ -38,6 +39,15 @@ import ProgressBar
 
 constant PROGRESS_BAR_TEXT = "Progress: {0}%"
 
+constant FX_PORTAL = Abilities.massTeleportTo
+constant real FX_PORTAL_SCALE = 1.1
+constant FX_PORTAL_AREA = Abilities.massTeleportCaster
+constant real FX_PORTAL_AREA_SCALE = 1
+constant FX_PORTAL_TARGET = Abilities.massTeleportTarget
+constant real FX_PORTAL_TARGET_SCALE = 1
+constant real PORTAL_AOE = 55
+
+
 let regionData = new HashMap<region, int>
 
 function region.setData<T>(T data)
@@ -60,6 +70,7 @@ public abstract class Level
 	private var finished = false
 	private var initializing = false
 	private Portal portal = null
+	private effect portalFx
 	private vec2 exit
 
 	private static let regTrg = CreateTrigger()
@@ -95,6 +106,7 @@ public abstract class Level
 		destroy portal
 		levels.remove(this)
 		destroy progressBar
+		portalFx.destr()
 
 	abstract function onInit()
 	abstract function onRun(int waveNumber)
@@ -122,10 +134,10 @@ public abstract class Level
 			for g in aliveEnemies
 				for u in g
 					max += u.getMaxHP()
-			progressBar..setMinMax(0, max)
+			progressBar..show()
+			..setMinMax(0, max)
 			..setValue(0)
 			..setText(PROGRESS_BAR_TEXT.format("0"))
-			..show()
 			runNextWave()
 
 	private function runNextWave()
@@ -139,14 +151,21 @@ public abstract class Level
 		started = false
 		onFinish()
 		if finished
-			portal = new Portal(exit, (u) -> u == u.getOwner().getCustomHero())
-			..addDestination(baseEntranceRect)
+			portal = new Portal(exit, PORTAL_AOE, (u) -> u == u.getOwner().getCustomHero())
+			..setDestination(baseEntranceRect)
 			..onEnter() (unit u, vec2 target) ->
 				progressBar.hide(u.getOwner())
+				addEffect(FX_PORTAL_AREA, u.getPos())
+				..setScale(FX_PORTAL_AREA_SCALE)
+				..destr()
+				addEffect(FX_PORTAL_TARGET, target)
+				..setScale(FX_PORTAL_TARGET_SCALE)
+				..destr()
+			portalFx = addEffect(FX_PORTAL, portal.getPos())
 			progressBar..setValue(progressBar.getMax())
 			..setText(PROGRESS_BAR_TEXT.format("100"))
 
-	private function onEnemyDeath(unit u)
+	protected function onEnemyDeath(unit u)
 		deadEnemies.get(waveCount - 1).add(u)
 		let alive = aliveEnemies.get(waveCount - 1)
 		alive.remove(u)
@@ -158,13 +177,17 @@ public abstract class Level
 			else
 				runNextWave()
 
-	private function onEnemyRevived(unit u)
+	protected function onEnemyRevived(unit u)
 		deadEnemies.get(waveCount - 1).remove(u)
 		aliveEnemies.get(waveCount - 1).add(u)
 
-	function reset()
-		if not finished
-			error("Cannot reset a level that's not finished.")
+	function reset() returns bool
+		if isInProgress()
+			print("Cannot reset a level in progress.")
+			return false
+		if initializing
+			print("Cannot reset a level during its initialization.")
+			return false
 		finished = false
 		started = false
 		onReset()
@@ -178,18 +201,27 @@ public abstract class Level
 		if portal != null
 			destroy portal
 			portal = null
+		portalFx.destr()
+		return true
 
 	function getEntrance() returns rect
 		return entranceRect
 	
-	function getWaveCount() returns int
+	function getMaxWaves() returns int
 		return maxWaves
 
 	function getCurrentWave() returns int
 		return waveCount
 
+	function isInProgress() returns bool
+		return started and not finished and not initializing
+
+	protected function getAliveEnemies(int wave) returns group
+		return not finished and started and wave <= maxWaves and wave > 0 ? aliveEnemies.get(wave - 1) : null
+
+	/** Returns alive enemies of the current wave. */
 	protected function getAliveEnemies() returns group
-		return not finished and started ? aliveEnemies.get(waveCount - 1) : null
+		return getAliveEnemies(getCurrentWave())
 
 	/** Returns a value only during level initializing. */
 	protected function getReadyHeroes() returns group
@@ -200,7 +232,7 @@ public abstract class Level
 			error("`addEnemy(unit)` can be called only during level initialization.")
 		if wave > maxWaves
 			error("This level can have only {0} waves, but {1} given!".format(maxWaves.toString(), wave.toString()))
-		return aliveEnemies.get(wave - 1).add(u) > 0
+		return u.isAlive() ? aliveEnemies.get(wave - 1).add(u) > 0 : deadEnemies.get(wave - 1).add(u) > 0
 
 	private function onEnter(unit u)
 		if not finished and not started and not readyHeroes.has(u)
@@ -230,11 +262,11 @@ public abstract class Level
 				aliveCount--
 		return aliveCount == 0
 
-	protected static function initClass()
+	protected static function staticInit()
 		progressBar..setPoint(FRAMEPOINT_BOTTOMLEFT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPLEFT, 0, 0.024)
-		..setPoint(FRAMEPOINT_BOTTOMRIGHT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPRIGHT, 0, 0.023)
+		//..setPoint(FRAMEPOINT_BOTTOMRIGHT, getOriginFrame(ORIGIN_FRAME_MINIMAP), FRAMEPOINT_TOPRIGHT, 0, 0.023)
 		..setTextPoint(FRAMEPOINT_BOTTOMLEFT, FRAMEPOINT_TOPLEFT, 0.002, 0)
-		..setHeight(0.012)
+		..setSize(0.15, 0.012)
 		..setMinMax(0, 100)
 		..setValue(0)
 		..hide()
@@ -273,4 +305,4 @@ public abstract class Level
 
 	
 init
-	Level.initClass()
+	Level.staticInit()
