@@ -10,6 +10,7 @@ import Base
 import Level
 import Level_1
 import Level_2
+import Level_3
 
 
 constant COMMAND_SET_LEVEL = "SetLevel"
@@ -31,7 +32,8 @@ constant BASE_EXIT = gg_rct_LevelPortal
 
 let levels = asList<Level>(
 	Level_1.instance(),
-	Level_2.instance())
+	Level_2.instance(),
+	Level_3.instance())
 
 
 init

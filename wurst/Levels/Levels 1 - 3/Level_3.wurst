@@ -1,0 +1,27 @@
+package Level_3
+import ScaledLevel
+
+
+let entrance = gg_rct_Level_3_Entrance
+let exit = gg_rct_Level_3_Portal
+
+let waves = 1
+
+
+public class Level_3 extends ScaledLevel	
+	private static let instance = new Level_3
+
+	static function instance() returns Level_3
+		return instance
+
+	private construct()
+		super(entrance, exit.getCenter(), waves)
+	
+	override function onInit()
+
+	override function onRun(int waveNumber)
+
+	override function onFinish()
+
+	override function onReset()
+		
