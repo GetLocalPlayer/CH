@@ -1,25 +1,93 @@
 package Level_3
 import Assets
+import AbilityObjEditing
+import BuffObjEditing
+import ItemObjEditing
+import ObjectIdGenerator
+import ObjectIds
+import Preloader
+
 import LinkedList
-import ClosureTimers
+import ClosureForGroups
 import Interpolation
+import OrderIds
+import SoundUtils
 import ForceProperties
 import InitCustomHero
 import ScaledLevel
-import SoundUtils
+import LevelTimerModule
 
 
-constant UNIT_ID = 'n00G'
-constant LEAP_HEIGHT = 600.0
-constant LEAP_DAMAGE = 200.0
+constant BOSS_ID = 'n00G'
+constant LEAP_HEIGHT = 550.
+constant LEAP_CD = 22.
+constant LEAP_DAMAGE = 200.
+constant LEAP_DAMAGE_AOE = 250.
 constant LEAP_ATTACK_TYPE = ATTACK_TYPE_NORMAL
 constant LEAP_DAMAGE_TYPE = DAMAGE_TYPE_MAGIC
-constant LEAP_DURATION = 2.0
-constant LEAP_START_DELAY = 1.0
-constant LEAP_END_DELAY = 1.0 
+constant LEAP_WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
+constant LEAP_DURATION = 1.5
+constant LEAP_START_DELAY = 0.3 // Waiting after animation begining
+constant LEAP_ANIM_SWITCH_DELAY = 1.4 // when change START animation to MOVE
+constant LEAP_END_DELAY = 0.3
 constant LEAP_LANDING_FX = Abilities.warStompCaster
-constant LEAP_ANIM_INDEX = 9
+constant LEAP_LANDING_FX_SCALE = 1.1
+constant LEAP_START_ANIM_INDEX = 5
+constant LEAP_WINDWALK_ITEM_ID = compiletime(ITEM_ID_GEN.next())
 
+@compiletime
+function builWindwalkItem()
+	let buffDef = new BuffDefinition(BUFF_ID_GEN.next(), BuffIds.windWalk)
+	..setTooltipNormal("Leap")
+	..setTooltipNormalExtended("Flying")
+	let abilDef = new AbilityDefinitionWindWalk(ABIL_ID_GEN.next())
+	..setLevels(1)
+	..setManaCost(1, 0)
+	..setDurationHero(1, LEAP_DURATION)
+	..setBackstabDamage(1, 0)
+	..setTransitionTime(1, -1)
+	..setEffectSound("")
+	..setBuffs(1, buffDef.getNewId().toRawCode())
+	new ItemDefinition(LEAP_WINDWALK_ITEM_ID, ItemIds.goldCoins)
+	..setAbilities(abilDef.getNewId().toRawCode())
+	..setModelUsed("_.mdl")
+
+init
+	preloadUnit(BOSS_ID)
+	preloadAbility(LEAP_WINDWALK_ITEM_ID)
+
+
+constant CLOUD_UNIT_ID = compiletime(UNIT_ID_GEN.next())
+constant CLOUD_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+constant CLOUD_AOE = 150.
+constant CLOUD_DPS = 200
+constant CLOUD_DAMAGE_INTERVAL = 0.1
+constant CLOUD_DURATION = 6.
+constant CLOUD_SPAWN_DURATION = 5.
+constant CLOUD_SPAWN_INTERVAL = 0.25
+
+@compiletime
+function buildCloud()
+	let buffDef = new BuffDefinition(BUFF_ID_GEN.next(), BuffIds.cloakofFlames)
+	..setIconNormal(1, Icons.bTNPlagueCloud)
+	..setTooltipNormal(1, "Plague")
+	..setTooltipNormalExtended(1, "Damage over time")
+	..setArtSpecial(1, Abilities.slowTarget)
+	..setSpecialAttachmentPoint(1, "origin")
+	new AbilityDefinitionItemCloakOfFlames(CLOUD_ABIL_ID)
+	..setDamagePerDuration(1, (CLOUD_DPS * CLOUD_DAMAGE_INTERVAL).ceil())
+	..setDurationNormal(1, CLOUD_DAMAGE_INTERVAL)
+	..setDurationHero(1, CLOUD_DAMAGE_INTERVAL)
+	..setAreaofEffect(1, CLOUD_AOE)
+	..setBuffs(1, buffDef.getNewId().toRawCode())
+	new UnitDefinition(CLOUD_UNIT_ID, UnitIds.plagueward)
+	..setUpgradesUsed("")
+	..setNormalAbilities(commaList(CLOUD_ABIL_ID, AbilityIds.locust))
+
+init
+	preloadUnit(CLOUD_UNIT_ID)
+
+	
 let spawnSound = new SoundDefinition("Sound\\Interface\\QuestFailed.wav")
 
 let gates = udg_Level_3_Gates
@@ -38,12 +106,20 @@ let initialLeapRects = asList<rect>(
 let deadLeapRects = asList<rect>(
 	gg_rct_Level_3_Dead_Leap_1,
 	gg_rct_Level_3_Dead_Leap_2,
-	gg_rct_Level_3_Dead_Leap_3)
+	gg_rct_Level_3_Dead_Leap_3,
+	gg_rct_Level_3_Dead_Leap_4)
+
 
 fogmodifier array vision
+fogmodifier array blackMask
 
 
 public class Level_3 extends ScaledLevel	
+	use LevelTimerModule
+
+	private unit boss = null
+	private let killedDestructables = new LinkedList<destructable>
+
 	private static let instance = new Level_3
 
 	static function instance() returns Level_3
@@ -54,24 +130,25 @@ public class Level_3 extends ScaledLevel
 		gates..kill()
 		..setAnimation("death alternate")
 		for p in allyPlayers
-			vision[p.getId()] = createVision(p, battlefield, false)
+			vision[p.getId()] = createVision(p, battlefield, false)			
+			blackMask[p.getId()] = createBlackMask(p, battlefield, false, false)
+			..start()
+			..stop()
+
 		createVision(enemyPlayer, battlefield, false)
-	
-	private unit boss
 
 	override function onInit()
-		boss = createUnit(enemyPlayer, UNIT_ID, spawn.getCenter(), 90 .asAngleDegrees())
-		..addAbility('Arav')
-		..removeAbility('Arav')
+		boss = createUnit(enemyPlayer, BOSS_ID, spawn.getCenter(), 90 .asAngleDegrees())
 		..setPathing(false)
 		..setInvulnerable(true)
 		..pause()
 		..hide()
 		addEnemy(boss, 1)
-
+		enemyPlayer.setAbilityAvailable(CLOUD_ABIL_ID, true)
+	
 	override function onRun(int waveNumber)
 		hideProgressBar()
-		doPeriodically(ANIMATION_PERIOD) (CallbackPeriodic cb) ->
+		doPeriodically(ANIMATION_PERIOD) (cb) ->
 			var ready = true
 			for u in customHeroes
 				if u.isAlive() and not battlefield.contains(u.getPos())
@@ -83,43 +160,133 @@ public class Level_3 extends ScaledLevel
 				..setAnimation("stand")
 				for p in allyPlayers
 					vision[p.getId()].start()
-				spawnScene()
+					blackMask[p.getId()].stop()
+				spawnScene()	
 			
 	private function spawnScene()
 		boss.show()
 		for u in customHeroes
-			u.pauseEx()
-			u.getOwner().setCameraTargetControllerNoZ(boss, ZERO2, false)
-			boss.shareVision(u.getOwner())
-		for i = 0 to initialLeapRects.size() - 1
-			doAfter((LEAP_DURATION + LEAP_END_DELAY) * i) -> 
-				if i == 0
-					spawnSound.play()
-				let a = boss.getPos3Real()
-				let b = initialLeapRects.get(i).getCenter().withTerrainZ()
-				let control = a.lerp(b, 0.5).add(0, 0, 2 * LEAP_HEIGHT - 0.5 * b.z - 0.5 * a.z)
-				boss.setAnimation(LEAP_ANIM_INDEX)
-				doPeriodicallyTimed(ANIMATION_PERIOD, LEAP_DURATION) (CallbackCounted cb) ->
-					boss.setPosReal(a.bezier3(control, b, cb.progress()))
-					if cb.isLast()
-						flashEffect(LEAP_LANDING_FX, b)
-						if i == initialLeapRects.size() - 1
-							doAfter(LEAP_END_DELAY) -> 
-								startFight()
+			u..issueImmediateOrderById(OrderIds.stop)
+			..pause()
+			.getOwner().setCameraTargetControllerNoZ(boss, ZERO2, false)
+		spawnSound.play()
+		leap(initialLeapRects.get(0).getCenter(), false)
+		doPeriodicallyCounted((LEAP_START_DELAY + LEAP_DURATION + LEAP_END_DELAY), initialLeapRects.size()) cb ->
+			if not cb.isLast()
+				let i = initialLeapRects.size() - cb.getCount() + 1
+				leap(initialLeapRects.get(i).getCenter(), false)
+			else
+				startFight()
+
+	private function leap(vec2 target, bool doDamage)
+		boss..setFacing(boss.getPos().angleTo(target))
+		..pauseEx()
+		..addAbility(AbilityIds.stormCrowForm)
+		..removeAbility(AbilityIds.stormCrowForm)
+		..setAnimation(LEAP_START_ANIM_INDEX)
+		doAfter(LEAP_START_DELAY) ->
+			let a = boss.getPos3Real()
+			let b = target.withTerrainZ()
+			let control = a.lerp(b, 0.5).add(0, 0, 2 * LEAP_HEIGHT - 0.5 * b.z - 0.5 * a.z)
+			 doPeriodicallyTimed(ANIMATION_PERIOD, LEAP_DURATION) (cb) ->
+				if not cb.isLast()
+					boss.setXYZReal(a.bezier3(control, b, cb.progress()))
+				else
+					addEffect(LEAP_LANDING_FX, b)
+					..setScale(LEAP_LANDING_FX_SCALE)
+					..destr()
+					boss.setXYZReal(b)
+					if doDamage
+						forUnitsInRange(b.toVec2(), LEAP_DAMAGE_AOE, true) (unit u) ->
+							if u.isAlive() and u.isEnemyOf(boss)
+								boss.damageTarget(u, LEAP_DAMAGE, false, false, LEAP_ATTACK_TYPE, LEAP_DAMAGE_TYPE, LEAP_WEAPON_TYPE)
+					forDestructablesInRange(target, LEAP_DAMAGE_AOE) (destructable d) ->
+						if d != gates
+							d.kill()
+							killedDestructables.add(d)
+					doAfter(LEAP_END_DELAY) -> 
+						boss.unpauseEx()
 
 	private function startFight()
 		boss..setInvulnerable(false)
 		..setPathing(true)
 		..unpause()
+		..setMana(0)
 		for u in customHeroes
-			u.unpauseEx()
-			u.getOwner().stopCamera()
-
+			u..unpause()
+			.getOwner().resetToGameCamera(0)
+		doPeriodically(LEAP_CD) (cb) ->
+			boss.addItemById(LEAP_WINDWALK_ITEM_ID)
+			let g = CreateGroup()
+			for u in customHeroes
+				if u.isAlive()
+					g.add(u)
+			if not g.isEmpty()
+				let u = g.getRandom()
+				leap(u.getPos(), true)
+			g.destr()
+			doAfter(LEAP_START_DELAY + LEAP_DURATION + LEAP_END_DELAY) -> 
+				doPeriodicallyTimed(CLOUD_SPAWN_INTERVAL, CLOUD_SPAWN_DURATION) (cb) ->
+					for i = 1 to 4
+						let p = boss.getPos()
+						createUnit(enemyPlayer, CLOUD_UNIT_ID, p.polarOffset((360 / 4 * i).asAngleDegrees(), CLOUD_AOE * 0.8), angle(0))
+						.setTimedLife(CLOUD_DURATION)
+			
 	override function onFinish()
+		enemyPlayer.setAbilityAvailable(CLOUD_ABIL_ID, false)
+		clearTimers()
+		boss.hide()
+		boss = createUnit(enemyPlayer, BOSS_ID, boss.getPos(), boss.getFacingAngle())
+		..setPathing(false)
+		..addAbility(AbilityIds.cargoHold)
+		..addAbility(AbilityIds.locust)
+		for u in customHeroes
+			u..pause()
+			.getOwner().setCameraTargetControllerNoZ(boss, ZERO2, false)
+			boss.shareVision(u.getOwner())
+		doDeathScene()
+
+	private function doDeathScene()
+		let bloodCb = doPeriodically(0.65) ( cb) ->
+			flashEffect("Objects\\Spawnmodels\\Demon\\DemonSmallDeathExplode\\DemonSmallDeathExplode.mdl", boss, "chest")
+		
+		doPeriodicallyCounted(LEAP_START_DELAY + LEAP_DURATION + LEAP_END_DELAY, deadLeapRects.size() + 1) (cb) ->
+			if not cb.isLast()
+				let i = deadLeapRects.size() - cb.getCount() + 1
+				leap(deadLeapRects.get(i).randomPoint(), false)
+				if i == 3
+					gates.kill()
+			else
+				destroy bloodCb
+				boss.kill()
+				let pos = boss.getPos()
+				let i = 10
+				doPeriodicallyCounted(0.5, i) (cb) ->
+					for j = 1 to i - cb.getCount()
+						let p = pos.polarOffset(((360 / (i - cb.getCount())) * j).asAngleDegrees(), CLOUD_AOE * 0.8)
+						createUnit(enemyPlayer, CLOUD_UNIT_ID, p, angle(0))
+						.setTimedLife(CLOUD_DURATION)
+					if cb.isLast()
+						for u in customHeroes
+							u..unpause()
+							.getOwner().resetToGameCamera(0)
+
 		for p in allyPlayers
 			vision[p.getId()].stop()
+
 
 	override function onReset()
+		clearTimers()
 		for p in allyPlayers
 			vision[p.getId()].stop()
+			blackMask[p.getId()]..start()
+			..stop()
+		gates..kill()
+		..setAnimation("death alternate")
+		boss.remove()
+		while not killedDestructables.isEmpty()
+			let d = killedDestructables.pop()
+			d.restoreLife(d.getMaxLife(), false)
+		for u in customHeroes
+			u.unpause()
 		

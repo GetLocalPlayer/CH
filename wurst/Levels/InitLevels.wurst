@@ -13,10 +13,12 @@ import Level_2
 import Level_3
 
 
-constant COMMAND_SET_LEVEL = "SetLevel"
-constant COMMAND_SET_LEVEL_SHORT = "sl"
+constant COMMAND_GO_LEVEL = "GoLevel"
+constant COMMAND_GO_LEVEL_SHORT = "gl"
 constant COMMAND_RESET_ALL_LEVELS = "ResetAllLevels"
 constant COMMAND_RESET_ALL_LEVELS_SHORT = "ral"
+constant COMMAND_RESET_LEVEL = "ResetLevel"
+constant COMMAND_RESET_LEVEL_SHORT = "rl"
 
 
 constant FX_PORTAL = Abilities.massTeleportTo
@@ -34,6 +36,37 @@ let levels = asList<Level>(
 	Level_1.instance(),
 	Level_2.instance(),
 	Level_3.instance())
+
+
+function initChatCommands()
+	var cb = ChatCommand.register(COMMAND_GO_LEVEL) (string subcommand) ->
+		let i = subcommand.toInt()
+		if i.isBetween(1, levels.size())
+			EventData.getTriggerPlayer().getCustomHero().setPos(levels.get(i - 1).getEntrance().randomPoint())
+		else	
+			print("Only {0} levels exist.".format(levels.size().toString()))
+
+	ChatCommand.register(COMMAND_GO_LEVEL_SHORT, cb)
+		
+	cb = ChatCommand.register(COMMAND_RESET_ALL_LEVELS) (string subcommand) ->
+		var allReset = true
+		for i = 0 to levels.size() - 1
+			print("Resetting level {0}.".format((i + 1).toString()))
+			allReset = allReset and levels.get(i).reset()
+		if not baseRect.contains(localPlayer.getCustomHero().getPos())
+			localPlayer.getCustomHero().setPos(baseEntranceRect.randomPoint())
+
+	ChatCommand.register(COMMAND_RESET_ALL_LEVELS_SHORT, cb)
+
+	cb = ChatCommand.register(COMMAND_RESET_LEVEL) (string subcommand) ->
+		let i = subcommand.toInt()
+		if i.isBetween(1, levels.size())
+			print("Resetting level {0}.".format((i).toString()))
+			levels.get(i - 1).reset()
+		else
+			print("Only {0} levels exist.".format(levels.size().toString()))
+
+	ChatCommand.register(COMMAND_RESET_LEVEL_SHORT, cb)
 
 
 init
@@ -63,24 +96,6 @@ init
 		portals.put(u, p)
 
 	if bj_isSinglePlayer
-		var cb = ChatCommand.register(COMMAND_SET_LEVEL) (string subcommand) ->
-			let i = subcommand.toInt()
-			if i.isBetween(1, levels.size())
-				enteringIndex.put(localPlayer.getCustomHero(), i - 1)
-				portals.get(localPlayer.getCustomHero()).setDestination(levels.get(i - 1).getEntrance())
-			else	
-				print("Only {0} levels exist.".format(levels.size().toString()))
-	
-		ChatCommand.register(COMMAND_SET_LEVEL_SHORT, cb)
-			
-		cb = ChatCommand.register(COMMAND_RESET_ALL_LEVELS) (string subcommand) ->
-			var allReset = true
-			for i = 0 to levels.size() - 1
-				print("Resetting level {0}.".format((i + 1).toString()))
-				allReset = allReset and levels.get(i).reset()
-			if not baseRect.contains(localPlayer.getCustomHero().getPos())
-				localPlayer.getCustomHero().setPos(baseEntranceRect.randomPoint())
-
-		ChatCommand.register(COMMAND_RESET_ALL_LEVELS_SHORT, cb)
+		initChatCommands()
 				
 		

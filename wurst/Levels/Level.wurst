@@ -179,13 +179,11 @@ public abstract class Level
 				runNextWave()
 
 	protected function onEnemyRevived(unit u)
-		deadEnemies.get(waveCount - 1).remove(u)
-		aliveEnemies.get(waveCount - 1).add(u)
+		if isInProgress()
+			deadEnemies.get(waveCount - 1).remove(u)
+			aliveEnemies.get(waveCount - 1).add(u)
 
 	function reset() returns bool
-		if isInProgress()
-			print("Cannot reset a level in progress.")
-			return false
 		if initializing
 			print("Cannot reset a level during its initialization.")
 			return false
@@ -300,13 +298,13 @@ public abstract class Level
 		EventListener.add(EVENT_PLAYER_UNIT_DEATH) -> 
 			let u = EventData.getDyingUnit()
 			for level in levels
-				if not level.finished and level.started and level.aliveEnemies.get(level.waveCount - 1).has(u)
+				if level.isInProgress() and level.aliveEnemies.get(level.waveCount - 1).has(u)
 					level.onEnemyDeath(u)
 
 		EventListener.add(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
 			let u = EventData.getTriggerUnit()
 			for level in levels
-				if not level.finished and level.started and level.deadEnemies.get(level.waveCount - 1).has(u)
+				if level.isInProgress() and level.deadEnemies.get(level.waveCount - 1).has(u)
 					level.onEnemyRevived(u)
 
 	

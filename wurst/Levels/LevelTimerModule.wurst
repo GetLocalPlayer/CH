@@ -1,0 +1,114 @@
+package LevelTimerModule
+import LinkedList
+import TimerUtils
+import ClosureTimers
+
+
+/* I bet I will regret this. 
+
+I need to use timer callbacks within Level classes for
+periodic events. Yet, I have to manually store  each single
+timer callback to destroy it later in `onReset`/`onFinish`
+methods. So I wrote this module that provides methods with
+the same names:
+
+	doAfter
+	doPeriodically
+	doPeriodicallyCounted
+	doPeriodicallyTimed
+
+Callbacks created in these methods are automatically added
+in corresponing lists of the module. Then I need only call
+`clearTimers` method of the module to destroy all the callbacks
+stored. The callbacks remove themselves from the lists when
+they're destroyed. 
+This is a crap, but this crap lets me write less code. There's
+no desctructor in the module so there's no memory freeing and
+I use this only because all my levels won't have more than one
+instance each of which is never destroyed.
+The only warning is NOT TO CALL `clearTimers` before destroying
+a timer callback in the callback's body, since you will try to
+destroy a destroyed callback after it was destroyed in `clearTimers`.
+
+	MyLevel.doPeriodicaly(time) cb ->
+		...
+		clearTimers() 	// <- `clearTimer` will destroy current
+						// callback (cb)
+		destroy cb		// <- A runtime error, an attempt to 
+						// destroy a callback that was destroyed 
+						// in `clearTimers`
+		...
+
+Because of this I use CallbackCounted instead of CallbackSingle
+in `doAfter` method, since the nature of Periodic and Counted
+callbacks destroys them in next timer tic and not right after
+the callbacks executions. */
+
+
+module CallbackModule
+	protected LinkedList<thistype> list
+
+	ondestroy
+		if list != null
+			list.remove(this)
+
+
+abstract class Single extends CallbackCounted
+	use CallbackModule
+
+	abstract protected function _call()
+
+	override protected function call(CallbackCounted cb)
+		_call()
+
+
+abstract class Periodic extends CallbackPeriodic
+	use CallbackModule
+
+
+abstract class Counted extends CallbackCounted
+	use CallbackModule
+
+
+public module LevelTimerModule
+	private let singleList = new LinkedList<Single>
+	private let periodicList = new LinkedList<Periodic>
+	private let countedList = new LinkedList<Counted>
+
+	protected function doAfter(real timeToWait, Single cb) returns Single
+		getTimer().doPeriodicallyCounted(timeToWait, 1, cb)		
+		singleList.add(cb)
+		cb.list = singleList
+		return cb
+
+	protected function doPeriodically(real timeToWait, Periodic cb) returns Periodic
+		getTimer().doPeriodically(timeToWait, cb)
+		periodicList.add(cb)
+		cb.list = periodicList
+		return cb
+
+	protected function doPeriodicallyCounted(real time, int callAmount, Counted cb) returns Counted
+		getTimer().doPeriodicallyCounted(time, callAmount, cb)
+		countedList.add(cb)
+		cb.list = countedList
+		return cb
+
+	protected function doPeriodicallyTimed(real interval, real timerDuration, Counted cb) returns CallbackCounted
+		return doPeriodicallyCounted(interval, (timerDuration / interval + 0.5).toInt(), cb)
+			
+	protected function clearTimers()
+		for cb in singleList
+			cb.list = null
+			destroy cb
+		for cb in  periodicList
+			cb.list = null
+			destroy cb
+		for cb in countedList
+			cb.list = null
+			destroy cb
+		singleList.clear()
+		periodicList.clear()
+		countedList.clear()
+
+			
+	
