@@ -3,7 +3,7 @@ import OrderIds
 import LinkedList
 import HashMap
 import ForceProperties
-import ClosureTimers
+import LevelTimerModule
 import ScaledLevel
 import Preloader
 
@@ -29,8 +29,7 @@ let delay = 4.
 
 
 public class Level_2 extends ScaledLevel
-	private CallbackSingle delayWaveCb = null
-	private CallbackPeriodic orderCheckCb = null
+	use LevelTimerModule
 	private let orders = new HashMap<unit, rect>
 
 	private static let instance = new Level_2(entrance, exit.getCenter(), waves)
@@ -79,7 +78,7 @@ public class Level_2 extends ScaledLevel
 
 	override function onRun(int waveNumber)
 		if waveNumber == 1
-			orderCheckCb = doPeriodically(0.5) (CallbackPeriodic cb) ->
+			doPeriodically(0.5) (cb) ->
 				for i = 1 to getMaxWaves()
 					for u in getAliveEnemies(i)
 						u..setX(u.getX())
@@ -87,8 +86,7 @@ public class Level_2 extends ScaledLevel
 						if u.getCurrentOrder() == OrderIds.stop or u.getCurrentOrder() == 0
 							u.issuePointOrderById(OrderIds.attack, orders.get(u).getCenter())
 
-		delayWaveCb = doAfter(delay) -> 
-			delayWaveCb = null
+		doAfter(delay) -> 
 			if GetRandomBoolean()
 				/* I want to move the creeps randomly clockwise or
 				counterclockwise in each wave, so I randomly revert
@@ -119,18 +117,10 @@ public class Level_2 extends ScaledLevel
 			elites.destr()
 
 	override function onFinish()
-		if delayWaveCb != null
-			destroy delayWaveCb
-			delayWaveCb = null
-		destroy orderCheckCb
-		orderCheckCb = null
+		clearTimers()
 
 	override function onReset()
-		if delayWaveCb != null
-			destroy delayWaveCb
-			delayWaveCb = null
-		if orderCheckCb != null
-			destroy orderCheckCb
+		clearTimers()
 		orders.flush()
 
 init

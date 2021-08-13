@@ -1,7 +1,7 @@
 package Level_1
 import OrderIds
 import ForceProperties
-import ClosureTimers
+import LevelTimerModule
 import ScaledLevel
 
 
@@ -25,7 +25,7 @@ let gate = gg_dest_ZTd5_0357
 
 
 public class Level_1 extends ScaledLevel
-	private CallbackSingle delayWaveCb = null
+	use LevelTimerModule
 	
 	private static let instance = new Level_1
 
@@ -55,8 +55,7 @@ public class Level_1 extends ScaledLevel
 	override function onRun(int waveNumber)
 		if waveNumber == 1
 			gate.kill()
-		delayWaveCb = doAfter(delay) -> 
-			delayWaveCb = null
+		doAfter(delay) -> 
 			for u in getAliveEnemies()
 				u..setInvulnerable(false)
 				..unpause()
@@ -64,10 +63,8 @@ public class Level_1 extends ScaledLevel
 				..issuePointOrderById(OrderIds.patrol, entrance.randomPoint())
 
 	override function onFinish()
-		if delayWaveCb != null
-			destroy delayWaveCb
+		clearTimers()
 
 	override function onReset()
-		if delayWaveCb != null
-			destroy delayWaveCb
+		clearTimers()
 		gate.restoreLife(gate.getMaxLife(), true)
