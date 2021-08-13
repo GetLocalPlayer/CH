@@ -254,8 +254,8 @@ public class Level_3 extends ScaledLevel
 			if not cb.isLast()
 				let i = deadLeapRects.size() - cb.getCount() + 1
 				leap(deadLeapRects.get(i).randomPoint(), false)
-				if i == 3
-					gates.kill()
+				if i == 2
+					doAfter(LEAP_START_DELAY + LEAP_DURATION, () -> gates.kill())
 			else
 				destroy bloodCb
 				boss.kill()
@@ -263,7 +263,7 @@ public class Level_3 extends ScaledLevel
 				let i = 10
 				doPeriodicallyCounted(0.5, i) (cb) ->
 					for j = 1 to i - cb.getCount()
-						let p = pos.polarOffset(((360 / (i - cb.getCount())) * j).asAngleDegrees(), CLOUD_AOE * 0.8)
+						let p = pos.polarOffset(((360 / (i - cb.getCount())) * j).asAngleDegrees(), CLOUD_AOE * 0.8 * (i - cb.getCount()))
 						createUnit(enemyPlayer, CLOUD_UNIT_ID, p, angle(0))
 						.setTimedLife(CLOUD_DURATION)
 					if cb.isLast()

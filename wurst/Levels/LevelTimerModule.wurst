@@ -97,18 +97,18 @@ public module LevelTimerModule
 		return doPeriodicallyCounted(interval, (timerDuration / interval + 0.5).toInt(), cb)
 			
 	protected function clearTimers()
-		for cb in singleList
+		while not singleList.isEmpty()
+			let cb = singleList.pop()
 			cb.list = null
 			destroy cb
-		for cb in  periodicList
+		while not periodicList.isEmpty()
+			let cb = periodicList.pop()
 			cb.list = null
 			destroy cb
-		for cb in countedList
+		while not countedList.isEmpty()
+			let cb = countedList.pop()
 			cb.list = null
 			destroy cb
-		singleList.clear()
-		periodicList.clear()
-		countedList.clear()
 
 			
 	
