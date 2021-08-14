@@ -1,0 +1,26 @@
+package Defeat
+import ClosureEvents
+import InitCustomHero
+
+
+init
+	EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+		let dyingUnit = EventData.getDyingUnit()
+		if customHeroes.has(dyingUnit)
+			var i = customHeroes.size()
+			for u in customHeroes
+				if not u.isAlive()
+					i--
+			if i == 0
+				for u in customHeroes
+					CustomDefeatBJ(u.getOwner(), "Defeat!")
+
+	EventListener.add(EVENT_PLAYER_LEAVE) ->
+		let p = EventData.getTriggerPlayer()
+		var i = customHeroes.size() - 1
+		for u in customHeroes
+			if u.getOwner() != p and not u.isAlive()
+				i--
+		if i == 0
+			for u in customHeroes
+				CustomDefeatBJ(u.getOwner(), "Defeat!")
