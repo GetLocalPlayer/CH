@@ -1,5 +1,4 @@
 package InitLevels
-import Assets
 import LinkedList
 import HashMap
 import Portal
@@ -8,9 +7,11 @@ import ChatCommand
 import Base
 
 import Level
+
 import Level_1
 import Level_2
 import Level_3
+import Level_4
 
 
 constant COMMAND_GO_LEVEL = "GoLevel"
@@ -21,13 +22,13 @@ constant COMMAND_RESET_LEVEL = "ResetLevel"
 constant COMMAND_RESET_LEVEL_SHORT = "rl"
 
 
-constant FX_PORTAL = Abilities.massTeleportTo
-constant real FX_PORTAL_SCALE = 1.1
-constant FX_PORTAL_AREA = Abilities.massTeleportCaster
-constant real FX_PORTAL_AREA_SCALE = 1
-constant FX_PORTAL_TARGET = Abilities.massTeleportTarget
-constant real FX_PORTAL_TARGET_SCALE = 1
-constant real PORTAL_AOE = 55
+constant PORTAL_FX = LEVEL_PORTAL_FX
+constant real PORTAL_FX_SCALE = LEVEL_PORTAL_FX_SCALE
+constant PORTAL_FX_AREA = LEVEL_PORTAL_FX_AREA
+constant real PORTAL_FX_AREA_SCALE = LEVEL_PORTAL_FX_AREA_SCALE
+constant PORTAL_FX_TARGET = LEVEL_PORTAL_FX_TARGET
+constant real PORTAL_FX_TARGET_SCALE = LEVEL_PORTAL_FX_TARGET_SCALE
+constant real PORTAL_AOE = LEVEL_PORTAL_AOE
 
 constant BASE_EXIT = gg_rct_LevelPortal
 
@@ -35,7 +36,8 @@ constant BASE_EXIT = gg_rct_LevelPortal
 let levels = asList<Level>(
 	Level_1.instance(),
 	Level_2.instance(),
-	Level_3.instance())
+	Level_3.instance(),
+	Level_4.instance())
 
 
 function initChatCommands()
@@ -70,8 +72,8 @@ function initChatCommands()
 
 
 init
-	addEffect(FX_PORTAL, BASE_EXIT.getCenter())
-	..setScale(FX_PORTAL_SCALE)
+	addEffect(PORTAL_FX, BASE_EXIT.getCenter())
+	..setScale(PORTAL_FX_SCALE)
 
 	let enteringIndex = new HashMap<unit, int>
 	let portals = new HashMap<unit, Portal>
@@ -82,11 +84,11 @@ init
 		let p = new Portal(BASE_EXIT.getCenter(), PORTAL_AOE, (enteringUnit) -> enteringUnit == u)
 		p..setDestination(levels.get(0).getEntrance())
 		..onEnter() (unit enteringUnit, vec2 target) ->
-			addEffect(FX_PORTAL_AREA, enteringUnit.getPos())
-			..setScale(FX_PORTAL_AREA_SCALE)
+			addEffect(PORTAL_FX_AREA, enteringUnit.getPos())
+			..setScale(PORTAL_FX_AREA_SCALE)
 			..destr()
-			addEffect(FX_PORTAL_TARGET, target)
-			..setScale(FX_PORTAL_TARGET_SCALE)
+			addEffect(PORTAL_FX_TARGET, target)
+			..setScale(PORTAL_FX_TARGET_SCALE)
 			..destr()
 			var index = enteringIndex.get(u)
 			index = index == levels.size() - 1 ? 0 : index + 1

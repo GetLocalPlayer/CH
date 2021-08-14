@@ -1,0 +1,155 @@
+package Level_4
+import OrderIds
+import LinkedList
+import ClosureForGroups
+import ForceProperties
+import LevelTimerModule
+import ScaledLevel
+import InitCustomHero
+
+
+constant NORMAL_ID = 'n00H'
+constant ELITE_ID = 'n01H'
+
+// Per wave
+constant NORMAL_COUNT = 20
+constant ELITE_COUNT = 4
+constant SPAWN_INTERVAL = 2.
+constant RANDOM_TREE_SHAKING_INTERVAL = 0.05
+constant WAVES = 2
+constant DELAY = 4.
+
+constant FAKE_PORTAL_FX = LEVEL_PORTAL_FX
+constant FAKE_PORTAL_FX_SCALE = LEVEL_PORTAL_FX_SCALE
+constant FAKE_PORTAL_FX_TARGET = LEVEL_PORTAL_FX_TARGET
+constant FAKE_PORTAL_FX_TARGET_SCALE = LEVEL_PORTAL_FX_TARGET_SCALE
+constant FAKE_PORTAL_AOE = LEVEL_PORTAL_AOE
+constant FAKE_PORTAL_PING_DURATION = LEVEL_PORTAL_PING_DURATION
+constant FAKE_PORTAL_COLOR = color(255, 0, 0)
+
+let entrance = gg_rct_Level_4_Entrance
+let exit = gg_rct_Level_4_Portal
+
+let spawnRect = gg_rct_Level_4_Spawn
+let destroyTreesRect = gg_rct_Level_4_Destroy_Trees
+let treeShakingRect = gg_rct_Level_4_Tree_Shaking
+
+
+public class Level_4 extends ScaledLevel
+	use LevelTimerModule
+	private let killedDestructables = new LinkedList<destructable>
+	private let enumDestructables = new LinkedList<destructable>
+	private let enumGroup = CreateGroup()
+	private effect fakePortal
+	
+	private static let instance = new Level_4
+
+	static function instance() returns Level_4
+		return instance
+
+	private construct()
+		super(entrance, exit.getCenter(), WAVES)
+	
+	override function onInit()
+		enumGroup.clear()
+		fakePortal = addEffect(FAKE_PORTAL_FX, getExit())
+		..setScale(FAKE_PORTAL_FX_SCALE)
+		for w = 1 to getMaxWaves()
+			// Left
+			for i = 1 to ELITE_COUNT
+				enumGroup.add(createUnit(enemyPlayer, ELITE_ID, getEntrance().getCenter(), GetRandomReal(1, 360).asAngleDegrees()))
+			for i = 1 to NORMAL_COUNT
+				enumGroup.add(createUnit(enemyPlayer, NORMAL_ID, getEntrance().randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for u from enumGroup
+				u..pause()
+				..setInvulnerable(true)
+				..hide()
+				addEnemy(u, w)
+		for u in customHeroes
+			u.shareVision(enemyPlayer)
+
+	override function onRun(int waveNumber)
+		if waveNumber == 1
+			let bar = getProgressBar()
+			var max = 0.
+			for u in getAliveEnemies()
+				max += u.getMaxHP()
+			bar.setMinMax(0, max)
+			bar.setText(LEVEL_PROGRESS_BAR_TEXT.format("0"))
+			doAfter(DELAY) -> 
+				enumGroup..clear()
+				..add(getAliveEnemies(waveNumber))
+				doPeriodically(SPAWN_INTERVAL) (cb) ->
+					let u = enumGroup.getRandom()
+					..setInvulnerable(false)
+					..unpause()
+					..setPos(spawnRect.randomPoint())		
+					..show()
+					enumGroup.remove(u)
+					if enumGroup.isEmpty()
+						destroy cb
+				doPeriodically(RANDOM_TREE_SHAKING_INTERVAL) (cb) ->
+					forDestructablesInRect(treeShakingRect) (destructable d) ->
+						enumDestructables.add(d)
+					enumDestructables.getRandomElement().setAnimation("stand hit")
+					enumDestructables.clear()
+
+		if waveNumber == 2
+			clearTimers()
+			doAfter(DELAY / 2) -> 
+				forDestructablesInRect(destroyTreesRect) (destructable d) ->
+					d.kill()
+					killedDestructables.add(d)
+				PingMinimap(getExit().x, getExit().y, FAKE_PORTAL_PING_DURATION)
+			doPeriodically(ANIMATION_PERIOD) (cb) ->
+				var started = false
+				for u in customHeroes
+					if u.isAlive() and u.isInRange(getExit(), FAKE_PORTAL_AOE)
+						started = true
+						break
+				if started
+					clearTimers()
+					doPeriodicallyTimed(ANIMATION_PERIOD, DELAY / 2) (cb) ->
+						let i = 255
+						fakePortal.setColor(
+							i.lerp(255, cb.progress()),
+							i.lerp(0, 	cb.progress()),
+							i.lerp(0, 	cb.progress()))
+						if cb.isLast()
+							let bar = getProgressBar()
+							for u in getAliveEnemies(waveNumber)
+								bar.setMinMax(0, bar.getMax() + u.getMaxHP())
+							bar.setText(LEVEL_PROGRESS_BAR_TEXT.format(((bar.getValue() / bar.getMax()).ceil().toString())))
+							enumGroup.clear()
+							enumGroup.add(getAliveEnemies(waveNumber))
+							doPeriodicallyCounted(SPAWN_INTERVAL, enumGroup.size()) (cb) ->
+								let u = enumGroup.getRandom()
+								..setPos(getExit())
+								..setInvulnerable(false)
+								..unpause()
+								..show()
+								..issuePointOrderById(OrderIds.patrol, getEntrance().randomPoint())
+								enumGroup.remove(u)
+								addEffect(FAKE_PORTAL_FX_TARGET, u.getPos())
+								..setScale(FAKE_PORTAL_FX_TARGET_SCALE)
+								..destr()
+						
+	override function onFinish()
+		clearTimers()
+		fakePortal.destr()
+		enumDestructables.clear()
+		enumGroup.clear()
+		for u in customHeroes
+			u.shareVision(enemyPlayer, false)
+
+	override function onReset()
+		clearTimers()
+		fakePortal.destr()
+		enumDestructables.clear()
+		enumGroup.clear()
+		for u in customHeroes
+			u.shareVision(enemyPlayer, false)
+		while not killedDestructables.isEmpty()
+			let d = killedDestructables.pop()
+			d.restoreLife(d.getMaxLife(), false)
+		

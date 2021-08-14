@@ -37,15 +37,15 @@ import Portal
 	part of the bar is coresponding to the enemy's death.
 */
 
-constant PROGRESS_BAR_TEXT = "Progress: {0}%"
-
-constant FX_PORTAL = Abilities.massTeleportTo
-constant real FX_PORTAL_SCALE = 1.1
-constant FX_PORTAL_AREA = Abilities.massTeleportCaster
-constant real FX_PORTAL_AREA_SCALE = 1
-constant FX_PORTAL_TARGET = Abilities.massTeleportTarget
-constant real FX_PORTAL_TARGET_SCALE = 1
-constant real PORTAL_AOE = 55
+public constant LEVEL_PROGRESS_BAR_TEXT = "Progress: {0}%"
+public constant LEVEL_PORTAL_FX = Abilities.massTeleportTo
+public constant real LEVEL_PORTAL_FX_SCALE = 1.1
+public constant LEVEL_PORTAL_FX_AREA = Abilities.massTeleportCaster
+public constant real LEVEL_PORTAL_FX_AREA_SCALE = 1
+public constant LEVEL_PORTAL_FX_TARGET = Abilities.massTeleportTarget
+public constant real LEVEL_PORTAL_FX_TARGET_SCALE = 1
+public constant real LEVEL_PORTAL_AOE = 55
+public constant real LEVEL_PORTAL_PING_DURATION = 5
 
 
 let regionData = new HashMap<region, int>
@@ -137,7 +137,7 @@ public abstract class Level
 			progressBar..show()
 			..setMinMax(0, max)
 			..setValue(0)
-			..setText(PROGRESS_BAR_TEXT.format("0"))
+			..setText(LEVEL_PROGRESS_BAR_TEXT.format("0"))
 			runNextWave()
 
 	private function runNextWave()
@@ -151,27 +151,28 @@ public abstract class Level
 		started = false
 		onFinish()
 		if finished
-			portal = new Portal(exit, PORTAL_AOE, (u) -> u == u.getOwner().getCustomHero())
+			portal = new Portal(exit, LEVEL_PORTAL_AOE, (u) -> u == u.getOwner().getCustomHero())
 			..setDestination(baseEntranceRect)
 			..onEnter() (unit u, vec2 target) ->
 				progressBar.hide(u.getOwner())
-				addEffect(FX_PORTAL_AREA, u.getPos())
-				..setScale(FX_PORTAL_AREA_SCALE)
+				addEffect(LEVEL_PORTAL_FX_AREA, u.getPos())
+				..setScale(LEVEL_PORTAL_FX_AREA_SCALE)
 				..destr()
-				addEffect(FX_PORTAL_TARGET, target)
-				..setScale(FX_PORTAL_TARGET_SCALE)
+				addEffect(LEVEL_PORTAL_FX_TARGET, target)
+				..setScale(LEVEL_PORTAL_FX_TARGET_SCALE)
 				..destr()
 				u.getOwner().panCameraToTimed(target, 0)
-			portalFx = addEffect(FX_PORTAL, portal.getPos())
+			portalFx = addEffect(LEVEL_PORTAL_FX, portal.getPos())
 			progressBar..setValue(progressBar.getMax())
-			..setText(PROGRESS_BAR_TEXT.format("100"))
+			..setText(LEVEL_PROGRESS_BAR_TEXT.format("100"))
+			PingMinimap(portal.getPos().x, portal.getPos().y, LEVEL_PORTAL_PING_DURATION)
 
 	protected function onEnemyDeath(unit u)
 		deadEnemies.get(waveCount - 1).add(u)
 		let alive = aliveEnemies.get(waveCount - 1)
 		alive.remove(u)
 		progressBar..setValue(progressBar.getValue() + u.getMaxHP())
-		..setText(PROGRESS_BAR_TEXT.format((progressBar.getValue() / progressBar.getMax() * 100).ceil().toString()))
+		..setText(LEVEL_PROGRESS_BAR_TEXT.format((progressBar.getValue() / progressBar.getMax() * 100).ceil().toString()))
 		if alive.isEmpty()
 			if waveCount == maxWaves
 				finish()
@@ -205,6 +206,9 @@ public abstract class Level
 
 	function getEntrance() returns rect
 		return entranceRect
+
+	function getExit() returns vec2
+		return exit
 	
 	function getMaxWaves() returns int
 		return maxWaves
@@ -217,6 +221,9 @@ public abstract class Level
 
 	function showProgressBar()
 		progressBar.show()
+
+	function getProgressBar() returns ProgressBar
+		return progressBar
 
 	function isInProgress() returns bool
 		return started and not finished and not initializing
