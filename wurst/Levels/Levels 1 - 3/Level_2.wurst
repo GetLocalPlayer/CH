@@ -7,12 +7,16 @@ import LevelTimerModule
 import ScaledLevel
 import Preloader
 
-let normalId = 'n00E'
-let eliteId = 'n01G'
+
+constant NORMAL_ID = 'n00E'
+constant ELITE_ID = 'n01G'
 
 // Per patrol rect
-let normalCount = 6
-let eliteCount = 2
+constant NORMAL_COUNT = 6
+constant ELITE_COUNT = 2
+
+constant WAVES = 2
+constant DELAY = 4.
 
 let entrance = gg_rct_Level_2_Entrance
 let exit = gg_rct_Level_2_Portal
@@ -24,15 +28,12 @@ let patrolRects = asList<rect>(
 	gg_rct_Level_2_Bottom_Right,
 	gg_rct_Level_2_Top_Right)
 
-let waves = 2
-let delay = 4.
-
 
 public class Level_2 extends ScaledLevel
 	use LevelTimerModule
 	private let orders = new HashMap<unit, rect>
 
-	private static let instance = new Level_2(entrance, exit.getCenter(), waves)
+	private static let instance = new Level_2(entrance, exit.getCenter(), WAVES)
 
 	static function instance() returns Level_2
 		return instance
@@ -43,7 +44,7 @@ public class Level_2 extends ScaledLevel
 			let u = EventData.getTriggerUnit()
 			return 	Level_2.instance().isInProgress()
 					and u.isAlive()
-					and (u.getTypeId() == normalId or u.getTypeId() == eliteId)
+					and (u.getTypeId() == NORMAL_ID or u.getTypeId() == ELITE_ID)
 					and u.getOwner() == enemyPlayer
 
 		for rct in patrolRects
@@ -61,10 +62,10 @@ public class Level_2 extends ScaledLevel
 	override function onInit()
 		let g = CreateGroup()
 		for w = 1 to getMaxWaves()
-			for i = 1 to normalCount * patrolRects.size()
-				g.add(createUnit(enemyPlayer, normalId, entrance.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
-			for i = 1 to eliteCount * patrolRects.size()
-				g.add(createUnit(enemyPlayer, eliteId, entrance.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for i = 1 to NORMAL_COUNT * patrolRects.size()
+				g.add(createUnit(enemyPlayer, NORMAL_ID, entrance.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for i = 1 to ELITE_COUNT * patrolRects.size()
+				g.add(createUnit(enemyPlayer, ELITE_ID, entrance.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
 			for u from g
 				u..pause()
 				..setInvulnerable(true)
@@ -86,7 +87,7 @@ public class Level_2 extends ScaledLevel
 						if u.getCurrentOrder() == OrderIds.stop or u.getCurrentOrder() == 0
 							u.issuePointOrderById(OrderIds.attack, orders.get(u).getCenter())
 
-		doAfter(delay) -> 
+		doAfter(DELAY) -> 
 			if GetRandomBoolean()
 				/* I want to move the creeps randomly clockwise or
 				counterclockwise in each wave, so I randomly revert
@@ -96,18 +97,18 @@ public class Level_2 extends ScaledLevel
 			let normal = CreateGroup()
 			let elites = CreateGroup()
 			for u in getAliveEnemies(waveNumber)
-				if u.getTypeId() == normalId
+				if u.getTypeId() == NORMAL_ID
 					normal.add(u)
-				if u.getTypeId() == eliteId
+				if u.getTypeId() == ELITE_ID
 					elites.add(u)
 			for r in patrolRects
-				for i = 1 to normalCount
+				for i = 1 to NORMAL_COUNT
 					normal.next()
 					..unpause()
 					..setInvulnerable(false)
 					..show()
 					..setXY(r.getCenter())
-				for i = 1 to eliteCount
+				for i = 1 to ELITE_COUNT
 					elites.next()
 					..unpause()
 					..setInvulnerable(false)
@@ -124,6 +125,6 @@ public class Level_2 extends ScaledLevel
 		orders.flush()
 
 init
-	preloadUnit(normalId)
-	preloadUnit(eliteId)
+	preloadUnit(NORMAL_ID)
+	preloadUnit(ELITE_ID)
 			

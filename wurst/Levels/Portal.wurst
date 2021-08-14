@@ -40,7 +40,7 @@ public class Portal
 				if cb != null
 					cb.run(u, destPoint)
 				if u.isInRange(pos, range)
-					u..setPos(destPoint)
+					u..setXY(destPoint)
 					..setFacing(GetRandomReal(1, 360).asAngleDegrees())
 
 	ondestroy

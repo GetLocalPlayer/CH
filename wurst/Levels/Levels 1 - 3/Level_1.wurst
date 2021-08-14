@@ -5,21 +5,21 @@ import LevelTimerModule
 import ScaledLevel
 
 
-let normalId = 'n00D'
-let eliteId = 'n01F'
+constant NORMAL_ID = 'n00D'
+constant ELITE_ID = 'n01F'
 
 // Per spawn rect
-let normalCount = 12
-let eliteCount = 4
+constant NORMAL_COUNT = 12
+constant ELITE_COUNT = 4
+
+constant WAVES = 2
+constant DELAY = 4.
 
 let entrance = gg_rct_Level_1_Entrance
 let exit = gg_rct_Level_1_Portal
 
 let leftSpawn = gg_rct_Level_1_Left
 let rightSpawn = gg_rct_Level_1_Right
-
-let waves = 2
-let delay = 4.
 
 let gate = gg_dest_ZTd5_0357
 
@@ -33,18 +33,18 @@ public class Level_1 extends ScaledLevel
 		return instance
 
 	private construct()
-		super(entrance, exit.getCenter(), waves)
+		super(entrance, exit.getCenter(), WAVES)
 	
 	override function onInit()
 		let g = CreateGroup()
 		for w = 1 to getMaxWaves()
 			// Left
-			for i = 1 to eliteCount
-				g.add(createUnit(enemyPlayer, eliteId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
-				g.add(createUnit(enemyPlayer, eliteId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
-			for i = 1 to normalCount
-				g.add(createUnit(enemyPlayer, normalId, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
-				g.add(createUnit(enemyPlayer, normalId, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for i = 1 to ELITE_COUNT
+				g.add(createUnit(enemyPlayer, ELITE_ID, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+				g.add(createUnit(enemyPlayer, ELITE_ID, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+			for i = 1 to NORMAL_COUNT
+				g.add(createUnit(enemyPlayer, NORMAL_ID, leftSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
+				g.add(createUnit(enemyPlayer, NORMAL_ID, rightSpawn.randomPoint(), GetRandomReal(1, 360).asAngleDegrees()))
 			for u from g
 				u..pause()
 				..setInvulnerable(true)
@@ -55,7 +55,7 @@ public class Level_1 extends ScaledLevel
 	override function onRun(int waveNumber)
 		if waveNumber == 1
 			gate.kill()
-		doAfter(delay) -> 
+		doAfter(DELAY) -> 
 			for u in getAliveEnemies()
 				u..setInvulnerable(false)
 				..unpause()
