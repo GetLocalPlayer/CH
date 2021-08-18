@@ -1,12 +1,14 @@
 package BaseRestoration
 import Base
 import ClosureEvents
+import ChatCommand
+import TestMode
 
 
-constant COMMAND_OFF = "-DisableBaseRestoration"
-constant SHORT_COMMAND_OFF = "-dbr"
-constant COMMAND_ON = "-EnableBaseRestoration"
-constant SHORT_COMMAND_ON = "-ebr"
+constant COMMAND_OFF = "DisableBaseRestoration"
+constant SHORT_COMMAND_OFF = "dbr"
+constant COMMAND_ON = "EnableBaseRestoration"
+constant SHORT_COMMAND_ON = "ebr"
 constant RESTORATION_INTERVAL = 0.2
 
 
@@ -22,13 +24,14 @@ init
 	let t = CreateTimer()
 	..startPeriodic(RESTORATION_INTERVAL, function healBase)
 	
+	TestMode.onEnable() -> 
+		var cb = ChatCommand.register(COMMAND_OFF) (string subcommand) ->
+			print("Restoration at the base has been disabled")
 
-	EventListener.add(EVENT_PLAYER_CHAT_FILTER) () ->
-		if bj_isSinglePlayer
-			let msg = EventData.getChatMessage().toLowerCase()
-			if msg == COMMAND_OFF.toLowerCase() or msg == SHORT_COMMAND_OFF.toLowerCase()
-				t.pause()
-				print("Restoration at the base has been disabled")
-			if msg == COMMAND_ON.toLowerCase() or msg == SHORT_COMMAND_ON.toLowerCase()
-				t.startPeriodic(RESTORATION_INTERVAL, function healBase)
-				print("Restoration at the base has been enabled")
+		ChatCommand.register(SHORT_COMMAND_OFF, cb)
+
+		cb = ChatCommand.register(COMMAND_ON) subcommand ->
+			t.startPeriodic(RESTORATION_INTERVAL, function healBase)
+			print("Restoration at the base has been enabled")
+			
+		ChatCommand.register(SHORT_COMMAND_ON, cb)

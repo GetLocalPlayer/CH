@@ -1,0 +1,31 @@
+package TestMode
+import ChatCommand
+import LinkedListModule
+
+
+constant COMMAND = "TestMode"
+constant COMMAND_SHORT = "tm"
+
+var enabled = false
+
+
+public abstract class TestMode
+	use LinkedListModule
+	
+	static function onEnable(TestMode cb) returns TestMode
+		return cb
+
+	abstract function call()
+
+
+init
+	let chatCb = ChatCommand.register(COMMAND) (string subcommand) ->
+		if not enabled
+			enabled = true
+			print("Test mode is enabled")
+			for cb in TestMode
+				cb.call()
+
+	ChatCommand.register(COMMAND_SHORT, chatCb)
+		
+		

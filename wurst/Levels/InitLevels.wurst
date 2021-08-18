@@ -4,6 +4,7 @@ import HashMap
 import Portal
 import InitCustomHero
 import ChatCommand
+import TestMode
 import Base
 
 import Level
@@ -42,13 +43,14 @@ let levels = asList<Level>(
 	Level_5.instance())
 
 
-function initChatCommands()
+function initTestMode()
 	var cb = ChatCommand.register(COMMAND_GO_LEVEL) (string subcommand) ->
 		let i = subcommand.toInt()
 		if i.isBetween(1, levels.size())
-			EventData.getTriggerPlayer().getCustomHero().setPos(levels.get(i - 1).getEntrance().randomPoint())
+			for u in customHeroes
+				u.setPos(levels.get(i - 1).getEntrance().randomPoint())
 		else	
-			print("Only {0} levels exist.".format(levels.size().toString()))
+			printTimedToPlayer("Only {0} levels exist.".format(levels.size().toString()), 15, EventData.getTriggerPlayer())
 
 	ChatCommand.register(COMMAND_GO_LEVEL_SHORT, cb)
 		
@@ -57,8 +59,9 @@ function initChatCommands()
 		for i = 0 to levels.size() - 1
 			print("Resetting level {0}.".format((i + 1).toString()))
 			allReset = allReset and levels.get(i).reset()
-		if not baseRect.contains(localPlayer.getCustomHero().getPos())
-			localPlayer.getCustomHero().setPos(baseEntranceRect.randomPoint())
+		for u in customHeroes
+			if not baseRect.contains(u.getPos())
+				u.setPos(baseEntranceRect.randomPoint())
 
 	ChatCommand.register(COMMAND_RESET_ALL_LEVELS_SHORT, cb)
 
@@ -99,7 +102,7 @@ init
 			u.getOwner().panCameraToTimed(target, 0)
 		portals.put(u, p)
 
-	if bj_isSinglePlayer
-		initChatCommands()
+	TestMode.onEnable() -> 
+		initTestMode()
 				
 		

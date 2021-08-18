@@ -23,9 +23,22 @@ Command | Purpose
 -dmg hide | disables showing damage as floating text
 -dmg show | enables showing damage as floating text
 
-### Test Commands
+#### Damage Info
 
-The commands below can be used in singleplayer mode to test the map. Non-case sensitive.
+Can be used in multiplayer.
+
+Command | Short | Purpose
+--- | --- | ---
+-ShowDamageInfo | -sdi | the player will receive detailed info about dealing and taken damage
+-HideDamageInfo | -hdi | the player won't receive detailed about dealing and taken damage
+
+### Test Mode
+
+Command | Purpose
+--- | ---
+-TestMode | enables the test mode
+
+The commands below can be used only in the test mode.
 
 #### Base Restoration
 
@@ -45,14 +58,12 @@ Command | Short | Purpose
 -SetTestGhoulHitPoints N | -stghp N | sets ghouls' amount of hit points to N
 -SetTestGhoulArmor N | -stga N | sets ghouls' armor value to N
 
-#### Damage Info
+### Resources
 
-Can be used in multiplayer.
-
-Command | Short | Purpose
---- | --- | ---
--ShowDamageInfo | -sdi | the player will receive messages about dealing and taken damage
--HideDamageInfo | -hdi | the player won't receive messages about dealing and taken damage
+Command | Purpose
+--- | ---
+-Gold N | sets the player's gold to N
+-Lumber N | sets the player's lumber to N
 
 #### Heroes
 
@@ -61,3 +72,20 @@ Command | Short | Purpose
 -CreateAllCustomHeroes | -cach | adds all built custom heroes on the map
 -CreateCustomHero N | -cch N | adds a built hero on the map by name N (not proper name) (non-case sensitive)
 -RemoveCustomHeroes | -rch | removes all the added heroes from the map
+
+Command | Short | Purpose
+--- | --- | ---
+-DisableAttack | -da | disables attack for the player's hero
+-EnableAttack | -ea | enables attack for the player's hero
+
+Command | Short | Purpose
+--- | --- | ---
+-SetHeroLevel N1 N2 | -shl | Set the player's hero's level to N1 and gives him N2 experience points.
+
+#### Levels
+
+Command | Short | Purpose
+--- | --- | ---
+-GoLevel N | -gl N | sends all custom heroes to level N
+-ResetLevel N | -rl N | resets level N
+-ResetAllLevels | -ral | resets all levels and returns heroes to the base

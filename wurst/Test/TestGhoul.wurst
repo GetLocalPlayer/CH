@@ -7,6 +7,7 @@ import AbilityObjEditing
 import ClosureEvents
 import StringUtils
 import ChatCommand
+import TestMode
 
 
 constant COMMAND_CREATE = "CreateTestGhoul"
@@ -37,7 +38,7 @@ constant ARMOR = 0.0
 var maxLife = MAX_LIFE
 var armor = ARMOR
 
-function onInit()
+function initTestMode()
 	let ghouls = CreateGroup()
 
 	EventListener.add(EVENT_PLAYER_UNIT_DEATH) () ->
@@ -90,5 +91,5 @@ function onInit()
 
 
 init
-	if bj_isSinglePlayer
-		onInit()
+	TestMode.onEnable() -> 
+		initTestMode()

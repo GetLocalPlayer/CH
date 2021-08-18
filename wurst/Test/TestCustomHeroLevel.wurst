@@ -1,0 +1,24 @@
+package TestCustomHeroLevel
+import InitCustomHero
+import StringUtils
+import ChatCommand
+import TestMode
+
+
+constant COMMAND = "SetHeroLevel"
+constant SHORT_COMMAND = "shl"
+
+
+init
+	TestMode.onEnable() -> 
+		let cb = ChatCommand.register(COMMAND) (string subcommand) ->
+			let p = EventData.getTriggerPlayer()
+			let list = subcommand.split(" ")
+			if list.size() > 0
+				let level = list.get(0).toInt()
+				if level > 0
+					p.getCustomHero().setLevel(level, true)
+			if list.size() > 1
+				let exp = list.get(1).toInt()
+				p.getCustomHero().addXp(exp, true)
+			destroy list

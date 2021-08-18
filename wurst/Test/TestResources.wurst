@@ -1,0 +1,15 @@
+package TestResources
+import ChatCommand
+import TestMode
+
+constant GOLD = "Gold"
+constant WOOD = "Lumber"
+
+
+init
+	TestMode.onEnable() -> 
+		ChatCommand.register(GOLD) (string subcommand) ->
+			EventData.getTriggerPlayer().setGold(subcommand.toInt())
+
+		ChatCommand.register(WOOD) (string subcommand) ->
+			EventData.getTriggerPlayer().setLumber(subcommand.toInt())
