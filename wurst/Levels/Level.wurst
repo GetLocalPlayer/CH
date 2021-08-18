@@ -253,7 +253,7 @@ public abstract class Level
 				start()
 
 	private function onCustomHeroDeath(unit u)
-		if not finished and not started and not readyHeroes.has(u)
+		if not finished and not started and not initializing and not readyHeroes.has(u)
 			if canStart()
 				start()
 
@@ -269,6 +269,8 @@ public abstract class Level
 		for u in customHeroes
 			if u.isAlive()
 				aliveCount++
+		if aliveCount == 0
+			return false
 		for u in readyHeroes
 			if u.isAlive()
 				aliveCount--

@@ -1,9 +1,21 @@
 package Defeat
 import ClosureEvents
 import InitCustomHero
+import ChatCommand
+import TestMode
+import Base
+
+
+constant REVIVE = "revive"
 
 
 init
+	TestMode.onEnable() -> 
+		ChatCommand.register(REVIVE) (string subcommand) ->
+			for u in customHeroes
+				if not u.isAlive()
+					u.revive(baseEntranceRect.randomPoint(), true)
+
 	EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
 		let dyingUnit = EventData.getDyingUnit()
 		if customHeroes.has(dyingUnit)
@@ -12,8 +24,12 @@ init
 				if not u.isAlive()
 					i--
 			if i == 0
-				for u in customHeroes
-					CustomDefeatBJ(u.getOwner(), "Defeat!")
+				if TestMode.isEnabled()
+					print("Defeat!")
+				else
+					for u in customHeroes
+						CustomDefeatBJ(u.getOwner(), "Defeat!")
+
 
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
 		let p = EventData.getTriggerPlayer()
@@ -22,5 +38,8 @@ init
 			if u.getOwner() != p and not u.isAlive()
 				i--
 		if i == 0
-			for u in customHeroes
-				CustomDefeatBJ(u.getOwner(), "Defeat!")
+			if TestMode.isEnabled()
+				print("Defeat!")
+			else
+				for u in customHeroes
+					CustomDefeatBJ(u.getOwner(), "Defeat!")

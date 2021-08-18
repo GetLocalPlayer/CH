@@ -9,6 +9,7 @@ import ItemTooltipGenerator
 
 import ClosureEvents
 import ClosureTimers
+import ClosureForGroups
 import MapBounds
 import InitCustomHero
 import Preloader
@@ -87,6 +88,10 @@ public class HeroCorpse
 				let i = GetEnumItem()
 				if (i.getTypeId() == ID or i.getTypeId() == ALIAS_ID) and i.getPlayer() == EventData.getTriggerPlayer()
 					i.remove()
+			forUnitsAll() (unit u) ->
+				let i = u.getItemById(ID)
+				if i.getTypeId() == ID and i.getPlayer() == EventData.getTriggerPlayer()
+					i.remove()
 					
 		EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
 			let u = EventData.getTriggerUnit()
@@ -98,9 +103,24 @@ public class HeroCorpse
 
 		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
 			let u = EventData.getDyingUnit()
-			if u == u.getOwner().getCustomHero()
+			if customHeroes.has(u)
 				createItem(ALIAS_ID, u.getPos())
 				..setPlayer(u.getOwner(), true)
+			for i in u.inventory()
+				if i.getTypeId() == ID
+					u.dropItemPoint(i, u.getPos())
+
+		EventListener.add(EVENT_PLAYER_HERO_REVIVE_FINISH) ->
+			let u = EventData.getTriggerUnit()
+			if customHeroes.has(u)
+				EnumItemsInRect(playableMapRect, null) ->
+					let i = GetEnumItem()
+					if (i.getTypeId() == ID or i.getTypeId() == ALIAS_ID) and i.getPlayer() == EventData.getTriggerUnit().getOwner()
+						i.remove()
+				forUnitsAll() (unit u) ->
+					let i = u.getItemById(ID)
+					if i.getTypeId() == ID and i.getPlayer() == u.getOwner()
+						i.remove()
 
 		let reg = CreateRegion()
 		reg.addRect(SCAN_RECT)
