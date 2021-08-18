@@ -80,7 +80,11 @@ Command | Short | Purpose
 
 Command | Short | Purpose
 --- | --- | ---
--SetHeroLevel N1 N2 | -shl | Set the player's hero's level to N1 and gives him N2 experience points.
+-SetHeroLevel N1 N2 | -shl | set the player's hero's level to N1 and gives him N2 experience points.
+
+Command | Purpose
+--- | ---
+-Revive | revives all dead custom heroes at the base
 
 #### Levels
 
