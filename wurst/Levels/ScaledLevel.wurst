@@ -20,7 +20,7 @@ public abstract class ScaledLevel extends Level
 	construct(rect entrance, vec2 exit)
 		super(entrance, exit, 1)
 
-	protected function addEnemy(unit u, int wave)
+	override protected function addEnemy(unit u, int wave) returns bool
 		let factor = getReadyHeroes().size() - 1
 
 		let hp = (u.getMaxHP() * (1 + HP_BONUS_FACTOR * factor))
@@ -39,4 +39,4 @@ public abstract class ScaledLevel extends Level
 		let armor = u.getArmor() * (1 + ARMOR_BONUS_FACTOR * factor)
 		u.setArmor(armor)
 		
-		super.addEnemy(u, wave)
+		return super.addEnemy(u, wave)

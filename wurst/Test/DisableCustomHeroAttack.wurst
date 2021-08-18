@@ -1,0 +1,23 @@
+package DisableCustomHeroAttack
+import Assets
+import ChatCommand
+import InitCustomHero
+
+
+constant COMMAND_DISABLE = "DisableAttack"
+constant COMMAND_DISABLE_SHORT = "da"
+constant COMMAND_ENABLE = "EnableAttack"
+constant COMMAND_ENABLE_SHORT = "ea"
+
+
+init
+	if bj_isSinglePlayer
+		var cb = ChatCommand.register(COMMAND_DISABLE) (string subcommand) ->
+			EventData.getTriggerPlayer().getCustomHero().addAbility(AbilityIds.cargoHold)
+
+		ChatCommand.register(COMMAND_DISABLE_SHORT, cb)
+
+		cb = ChatCommand.register(COMMAND_ENABLE) (string subcommand) ->
+			EventData.getTriggerPlayer().getCustomHero().removeAbility(AbilityIds.cargoHold)
+			
+		ChatCommand.register(COMMAND_ENABLE_SHORT, cb)

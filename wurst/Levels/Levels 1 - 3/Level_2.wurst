@@ -82,8 +82,7 @@ public class Level_2 extends ScaledLevel
 			doPeriodically(0.5) (cb) ->
 				for i = 1 to getMaxWaves()
 					for u in getAliveEnemies(i)
-						u..setX(u.getX())
-						..setY(u.getY())
+						u.setPos(u.getPos())
 						if u.getCurrentOrder() == OrderIds.stop or u.getCurrentOrder() == 0
 							u.issuePointOrderById(OrderIds.attack, orders.get(u).getCenter())
 

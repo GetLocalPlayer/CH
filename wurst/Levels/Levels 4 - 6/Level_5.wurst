@@ -1,0 +1,248 @@
+package Level_5
+import Assets
+import AbilityObjEditing
+import ObjectIdGenerator
+import BuffObjEditing
+import ClosureForGroups
+import OrderIds
+import LinkedList
+import ClosureEvents
+import ForceProperties
+import LevelTimerModule
+import ScaledLevel
+import InitCustomHero
+import Preloader
+
+constant NORMAL_ID = 'n00I'
+constant ELITE_ID = 'n01I'
+constant EXTRA_ELITE_ID = 'n000'
+
+constant WATER_SHIELD_BUFF = compiletime(createDummyBuffObject("Water Shield", "Damage taken is reduced", Icons.bTNNeutralManaShield, Abilities.manaShieldCaster, "origin"))
+constant WATER_SHIELD_DAMAGE_FACTOR = 0.1
+
+constant IMPALE_ID = compiletime(ABIL_ID_GEN.next())
+constant real IMPALE_CD = 12
+constant real IMPALE_CAST_RANGE = 600
+constant real IMPALE_DAMAGE = 150
+constant real IMPALE_DURATION = 2
+
+@compiletime
+function buildImpale()
+	new AbilityDefinitionImpaleCreep(IMPALE_ID)
+	..setCooldown(1, 99999)
+	..setManaCost(1, 0)
+	..setCastRange(1, IMPALE_CAST_RANGE)
+	..setDurationHero(1, IMPALE_DURATION)
+	..setDurationNormal(1, IMPALE_DURATION)
+	..setDamageDealt(1, IMPALE_DAMAGE)
+
+constant SMALL_COUNT = 5
+constant EXTRA_ELITE_COUNT = 3
+// Per spawn 
+constant NORMAL_COUNT = 18
+constant ELITE_COUNT = 2
+
+constant SPAWN_COUNT = 2
+constant real SMALL_SPAWN_DELAY = 4.
+constant real FIRST_SPAWN_DELAY = 16
+constant real SPAWN_INTERVAL = 3
+
+constant SPAWN_FX = Objects.impaleTargetDust
+
+let entrance = gg_rct_Level_5_Entrance
+let exit = gg_rct_Level_5_Portal
+
+let waterShieldRects = asList<rect>(
+	gg_rct_Level_5_Water_Shield_1,
+	gg_rct_Level_5_Water_Shield_2,
+	gg_rct_Level_5_Water_Shield_3,
+	gg_rct_Level_5_Water_Shield_4,
+	gg_rct_Level_5_Water_Shield_5,
+	gg_rct_Level_5_Water_Shield_6)
+
+let listenerRect = gg_rct_Level_5_Listener
+let listenerRectExtra = gg_rct_Level_5_Listener_Extra
+
+let destroyTreesRect = gg_rct_Level_5_Destroy_Trees
+
+let smallSpawnRect = gg_rct_Level_5_Small_Spawn
+let spawnRectTop = gg_rct_Level_5_Spawn_1
+let spawnRectBot = gg_rct_Level_5_Spawn_2
+let spawnRectExtra = gg_rct_Level_5_Spawn_Extra
+
+
+public class Level_5 extends ScaledLevel
+	use LevelTimerModule
+
+	private let killedDestructables = new LinkedList<destructable>
+	private let enumGroup = CreateGroup()
+	private let normal = CreateGroup()
+	private let elite = CreateGroup()
+	private let extraElite = CreateGroup()
+
+	private let bottomListenerTrg = CreateTrigger()
+	private let extraListenerTrg = CreateTrigger()
+	
+	private static let instance = new Level_5
+
+	static function instance() returns Level_5
+		return instance
+
+	private construct()
+		super(entrance, exit.getCenter(), 1)
+
+		preloadUnit(NORMAL_ID)
+		preloadUnit(ELITE_ID)
+		preloadUnit(EXTRA_ELITE_ID)
+		preloadAbility(IMPALE_ID)
+		preloadAbility(WATER_SHIELD_BUFF.abilId)
+
+		let filter = Filter() ->
+			let unitTypeId = GetFilterUnit().getTypeId()
+			return unitTypeId == NORMAL_ID or unitTypeId == ELITE_ID or unitTypeId == EXTRA_ELITE_ID
+
+		let reg = CreateRegion()
+		for rct in waterShieldRects
+			reg.addRect(rct)
+
+		CreateTrigger()
+		..registerEnterRegion(reg, filter)
+		..addAction() ->
+			EventData.getEnteringUnit()
+			..addAbility(WATER_SHIELD_BUFF.abilId)
+
+		CreateTrigger()
+		..registerLeaveRegion(reg, filter)
+		..addAction() ->
+			EventData.getLeavingUnit()
+			..removeAbility(WATER_SHIELD_BUFF.abilId)
+			..removeAbility(WATER_SHIELD_BUFF.buffId)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) ->
+			let u = EventData.getTriggerUnit()
+			if u.hasAbility(WATER_SHIELD_BUFF.abilId)
+				EventData.setDamage(EventData.getEventDamage() * WATER_SHIELD_DAMAGE_FACTOR)
+
+		let regListener = CreateRegion()
+		..addRect(listenerRect)
+		bottomListenerTrg..disable()
+		..registerEnterRegion(regListener, null)
+		..addAction() ->
+			let u = EventData.getEnteringUnit()
+			let p = u.getOwner()
+			if p.getController() == MAP_CONTROL_USER and p.getSlotState() == PLAYER_SLOT_STATE_PLAYING
+				GetTriggeringTrigger().disable()
+				instance().startBottomSpawn()
+
+		let regListenerExtra = CreateRegion()
+		..addRect(listenerRectExtra)
+		extraListenerTrg..disable()
+		..registerEnterRegion(regListenerExtra, null)
+		..addAction() ->
+			let u = EventData.getEnteringUnit()
+			let p = u.getOwner()
+			if p.getController() == MAP_CONTROL_USER and p.getSlotState() == PLAYER_SLOT_STATE_PLAYING
+				GetTriggeringTrigger().disable()
+				instance().startExtraSpawn()
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) ->
+			if instance().isInProgress()
+				let u = EventData.getTriggerUnit()
+				if extraElite.has(u) and u.isPaused()
+					instance.startExtraSpawn()
+	
+	override function onInit()
+		for i = 1 to ELITE_COUNT * SPAWN_COUNT
+			elite.add(createUnit(enemyPlayer, ELITE_ID, getExit(), GetRandomReal(1, 360).asAngleDegrees()))
+		for i = 1 to NORMAL_COUNT * SPAWN_COUNT + SMALL_COUNT
+			normal.add(createUnit(enemyPlayer, NORMAL_ID, getExit(), GetRandomReal(1, 360).asAngleDegrees()))
+		for i = 1 to EXTRA_ELITE_COUNT
+			extraElite.add(createUnit(enemyPlayer, EXTRA_ELITE_ID, getExit(), GetRandomReal(1, 360).asAngleDegrees()))
+		enumGroup.add(elite, normal, extraElite)
+		for u from enumGroup
+			u..pause()
+			..setInvulnerable(true)
+			..hide()
+			addEnemy(u, 1)
+		bottomListenerTrg.enable()
+		extraListenerTrg.enable()
+
+	override function onRun(int waveNumber)
+		doPeriodically(5) (cb) ->
+			for u in getAliveEnemies()
+				u.setPos(u.getPos())
+
+		doAfter(SMALL_SPAWN_DELAY) -> 
+			forDestructablesInRect(destroyTreesRect) (destructable d) ->
+				d.kill()
+				killedDestructables.add(d)
+
+			for i = 1 to SMALL_COUNT
+				normal.next()
+				setUnit(normal.next(), smallSpawnRect.randomPoint())
+
+		doAfter(FIRST_SPAWN_DELAY) -> 	
+			doPeriodicallyCounted(SPAWN_INTERVAL, NORMAL_COUNT) cb ->
+				let u = normal.next()
+				setUnit(u, spawnRectTop.randomPoint())
+				flashEffect(SPAWN_FX, u.getPos())
+			doPeriodicallyCounted(GetRandomReal(SPAWN_INTERVAL, NORMAL_COUNT * SPAWN_INTERVAL), ELITE_COUNT) cb ->
+				let u = elite.next()
+				setUnit(u, spawnRectTop.randomPoint())
+				flashEffect(SPAWN_FX, u.getPos())
+		
+		for i = 1 to extraElite.size()
+			let u = extraElite.get(i - 1)
+			let center = spawnRectExtra.getCenter()
+			let p = center.polarOffset((360 / extraElite.size() * i).asAngleDegrees(), 200)
+			u..setPos(p)
+			..setFacing(p.angleTo(center))
+			..setInvulnerable(false)
+			..show()
+
+	private function startBottomSpawn()
+		doPeriodicallyCounted(SPAWN_INTERVAL, NORMAL_COUNT) cb ->
+			let u = normal.next()
+			setUnit(u, spawnRectBot.randomPoint())
+			flashEffect(SPAWN_FX, u.getPos())
+		for i = 1 to ELITE_COUNT
+			doAfter(GetRandomReal(SPAWN_INTERVAL, NORMAL_COUNT * SPAWN_INTERVAL)) ->
+				let u = elite.next()
+				setUnit(u, spawnRectBot.randomPoint())
+				flashEffect(SPAWN_FX, u.getPos())
+
+	private function setUnit(unit u, vec2 pos)
+		u..setPos(pos)
+		..setInvulnerable(false)
+		..unpause()
+		..show()
+
+	private function startExtraSpawn()
+		for u from extraElite
+			u..unpause()
+			..addAbility(IMPALE_ID)
+			BlzStartUnitAbilityCooldown(u, IMPALE_ID, 99999)
+			doPeriodically(IMPALE_CD * (extraElite.size() + 1)) (cb) ->
+				forUnitsInRange(u.getPos(), IMPALE_CAST_RANGE, true) (unit u) ->
+					if customHeroes.has(u) and u.isAlive()
+						enumGroup.add(u)
+				if not enumGroup.isEmpty()
+					u..endAbilityCooldown(IMPALE_ID)
+					..issuePointOrderById(OrderIds.impale, enumGroup.getRandom().getPos())
+				enumGroup.clear()
+					
+	override function onFinish()
+		clearTimers()
+		enumGroup.clear()
+
+	override function onReset()
+		clearTimers()
+		bottomListenerTrg.disable()
+		extraListenerTrg.disable()
+		while not killedDestructables.isEmpty()
+			let d = killedDestructables.pop()
+			d.restoreLife(d.getMaxLife(), false)
+		enumGroup.clear()
+		normal.clear()
+		elite.clear()
+		extraElite.clear()
