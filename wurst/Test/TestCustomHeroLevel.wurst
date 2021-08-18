@@ -11,7 +11,7 @@ constant SHORT_COMMAND = "shl"
 
 init
 	TestMode.onEnable() -> 
-		let cb = ChatCommand.register(COMMAND) (string subcommand) ->
+		ChatCommand.register(COMMAND) (string subcommand) ->
 			let p = EventData.getTriggerPlayer()
 			let list = subcommand.split(" ")
 			if list.size() > 0

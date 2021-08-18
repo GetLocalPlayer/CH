@@ -1,6 +1,5 @@
 package BaseRestoration
 import Base
-import ClosureEvents
 import ChatCommand
 import TestMode
 
