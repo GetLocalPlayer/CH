@@ -14,7 +14,7 @@ constant COMMAND_ENABLE_SHORT = "ea"
 init
 	TestMode.onEnable() -> 
 		var cb = ChatCommand.register(COMMAND_DISABLE) (string subcommand) ->
-			EventData.getTriggerPlayer().getCustomHero().addAbility(AbilityIds.cargoHold)
+			EventData.getTriggerPlayer().getCustomHero().addPermanentAbility(AbilityIds.cargoHold)
 
 		ChatCommand.register(COMMAND_DISABLE_SHORT, cb)
 

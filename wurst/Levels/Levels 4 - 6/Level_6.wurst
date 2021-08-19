@@ -1,0 +1,176 @@
+package Level_6
+import Assets
+import OrderIds
+import LinkedList
+import ClosureEvents
+import ClosureForGroups
+
+import ForceProperties
+import LevelTimerModule
+import ScaledLevel
+import LigthingEx
+import InitCustomHero
+
+
+constant BOSS_ID = 'n012'
+
+constant SPLASH_ATTACK_TYPE = ATTACK_TYPE_NORMAL
+constant SPLASH_DAMAGE_TYPE = DAMAGE_TYPE_LIGHTNING
+constant SPLASH_WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
+constant real SPLASH_AOE = 250
+constant real SPLASH_DAMAGE_FACTOR = 0.5
+constant int SPLASH_MAX_TARGETS = 5
+constant SPLASH_LIGHTNING = LIGHTNING_CHAIN_LIGHTNING_PRIMARY
+constant real SPLASH_LIGHTNING_LIFETIME = 1
+constant real SPLASH_LIGHTNING_FADEPOINT = 0.5
+constant SPLASH_LIGHTING_IMPACT_OFFSET = vec3(0, 0, 50)
+constant SPLASH_HIT_FX = Abilities.manaFlareBoltImpact
+constant SPLASH_HIT_FX_ATTACH = "origin"
+
+constant TORNADO_FX = Abilities.tornadoElementalSmall
+constant real TORNADO_FX_SCALE = 1.2
+constant real TORNADO_DAMAGE = 150
+constant real TORNADO_AOE = 100
+constant real TORNADO_SPEED = 360
+constant real TORNADO_MAX_DISTANCE = 600 // Max distance from the center of the battlefield
+constant real TORNADO_CAST_TIME = 2
+constant TORNADO_CAST_ANIM = "spell"
+
+constant PATH_BLOCKER_ID = 'B006'
+
+let entrance = gg_rct_Level_6_Entrance
+let exit = gg_rct_Level_6_Portal
+
+let spawn = gg_rct_Level_6_Spawn.getCenter()
+let battlefield = gg_rct_Level_6_Battlefield
+let battlefieldCenter = gg_rct_Level_6_Battlefield_Center.getCenter()
+let pathBlockersRect = gg_rct_Level_6_Path_Blocker
+
+fogmodifier array vision
+fogmodifier array blackMask
+
+
+public class Level_6 extends ScaledLevel
+	use LevelTimerModule
+
+	private let pathBlockers = new LinkedList<destructable>
+	private let enumGroup = CreateGroup()
+	private let effects = new LinkedList<effect>
+	private unit boss
+	
+	private static let instance = new Level_6
+
+	static function instance() returns Level_6
+		return instance
+
+	private construct()
+		super(entrance, exit.getCenter(), 1)
+		forDestructablesInRect(pathBlockersRect) (destructable d) ->
+			if d.getTypeId() == PATH_BLOCKER_ID
+				pathBlockers.add(d)
+				d..kill()
+				..show(false)
+		for u in customHeroes
+			vision[u.getOwner().getId()] = createVision(u.getOwner(), battlefield, false)
+			blackMask[u.getOwner().getId()] = createBlackMask(u.getOwner(), battlefield, false, false)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
+			let attacker = EventData.getEventDamageSource()
+			if attacker == boss and BlzGetEventIsAttack()
+				let target = EventData.getTriggerUnit()
+				let damage = EventData.getEventDamage() * SPLASH_DAMAGE_FACTOR
+				forUnitsInRange(target.getPos(), SPLASH_AOE, true) (unit u) ->
+					if u.isEnemyOf(attacker) and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isAlive() and u != target
+						enumGroup.add(u)
+				while enumGroup.size() > SPLASH_MAX_TARGETS
+					enumGroup.remove(enumGroup.getRandom())
+				for u from enumGroup
+					attacker.damageTarget(u, damage, false, false, SPLASH_ATTACK_TYPE, SPLASH_DAMAGE_TYPE, SPLASH_WEAPON_TYPE)
+					new LigthingEx(SPLASH_LIGHTNING, target, u, SPLASH_LIGHTING_IMPACT_OFFSET, SPLASH_LIGHTING_IMPACT_OFFSET)
+					..setLifetime(SPLASH_LIGHTNING_LIFETIME)
+					..setFadepoint(SPLASH_LIGHTNING_FADEPOINT)
+					flashEffect(SPLASH_HIT_FX, u, SPLASH_HIT_FX_ATTACH)
+	
+	override function onInit()
+		for d in pathBlockers
+			d..kill()
+			..show(false)
+		boss = createUnit(enemyPlayer, BOSS_ID, spawn, 270 .asAngleDegrees())
+		..pause()
+		..hide()
+		..setInvulnerable(true)
+		addEnemy(boss, 1)
+
+	override function onRun(int waveNumber)
+		doPeriodically(ANIMATION_PERIOD) (cb) ->
+			var ready = true
+			for u in customHeroes
+				if u.isAlive() and not battlefield.contains(u.getPos())
+					ready = false
+					break
+			if ready
+				destroy cb
+				for u in customHeroes
+					vision[u.getOwner().getId()].stop()
+				for d in pathBlockers
+					d..show(true)
+					..restoreLife(d.getMaxLife(), true)
+				hideProgressBar()
+				startSpawnScene()
+
+	private function startSpawnScene()
+		let tornadoCount = 6
+		let fallDuration = 8.
+		let fallHeight = 1200.
+		let rotSpeed = (80).asAngleDegrees()
+
+		boss..show()
+		..setFlyHeight(boss.getFlyHeight() + fallHeight, 0)
+		..setFlyHeight(boss.getFlyHeight() - fallHeight, fallHeight / fallDuration)
+
+		for i = 1 to tornadoCount
+			let p = boss.getPos().polarOffset((360 / tornadoCount * i).asAngleDegrees(), TORNADO_AOE + 50)
+			let e = addEffect(TORNADO_FX, p)
+			..setScale(TORNADO_FX_SCALE)
+			effects.add(e)
+
+		doPeriodicallyTimed(ANIMATION_PERIOD, fallDuration) (cbFall) ->
+			for i = 1 to effects.size() 
+				let e = effects.get(i - 1)
+				let a = (360 / tornadoCount * i).asAngleDegrees() + rotSpeed * fallDuration * cbFall.progress()
+				let p = boss.getPos().polarOffset(a, boss.getPos().distanceTo(e.getPos()))
+				e.setPos(p)
+			if cbFall.isLast()
+				doPeriodicallyTimed(ANIMATION_PERIOD, TORNADO_MAX_DISTANCE / TORNADO_SPEED) (cbTornado) ->
+					for e in effects
+						let p = e.getPos().moveTowards(boss.getPos(), -TORNADO_SPEED * ANIMATION_PERIOD)
+						e.setPos(p)
+					if cbTornado.isLast()
+						for e in effects
+							e.destr()
+						startFight()
+
+	private function startFight()
+		boss..setInvulnerable(false)
+		..unpause()
+
+	override function onFinish()
+		clearTimers()
+		for e in effects
+			e.destr()
+		for d in pathBlockers
+			d.kill()
+		for u in customHeroes
+			vision[u.getOwner().getId()].stop()
+			blackMask[u.getOwner().getId()].stop()
+
+	override function onReset()
+		clearTimers()
+		for e in effects
+			e.destr()
+		for d in pathBlockers
+			d.kill()
+		for u in customHeroes
+			vision[u.getOwner().getId()].stop()
+			blackMask[u.getOwner().getId()]..start()
+			..stop()

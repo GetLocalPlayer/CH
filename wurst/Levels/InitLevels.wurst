@@ -14,6 +14,7 @@ import Level_2
 import Level_3
 import Level_4
 import Level_5
+import Level_6
 
 
 constant COMMAND_GO_LEVEL = "GoLevel"
@@ -40,7 +41,8 @@ let levels = asList<Level>(
 	Level_2.instance(),
 	Level_3.instance(),
 	Level_4.instance(),
-	Level_5.instance())
+	Level_5.instance(),
+	Level_6.instance())
 
 
 function initTestMode()

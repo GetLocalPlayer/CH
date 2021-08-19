@@ -41,4 +41,5 @@ init
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
 		let p = EventData.getTriggerPlayer()
 		customHeroes.remove(p.getCustomHero())
+		p.getCustomHero().remove()
 		playerCustomHero[p.getId()] = null

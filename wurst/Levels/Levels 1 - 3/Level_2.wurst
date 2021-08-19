@@ -79,10 +79,9 @@ public class Level_2 extends ScaledLevel
 
 	override function onRun(int waveNumber)
 		if waveNumber == 1
-			doPeriodically(0.5) (cb) ->
+			doPeriodically(5) (cb) ->
 				for i = 1 to getMaxWaves()
-					for u in getAliveEnemies(i)
-						u.setPos(u.getPos())
+					for u in getAliveEnemies(i)					
 						if u.getCurrentOrder() == OrderIds.stop or u.getCurrentOrder() == 0
 							u.issuePointOrderById(OrderIds.attack, orders.get(u).getCenter())
 
