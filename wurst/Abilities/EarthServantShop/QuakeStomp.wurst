@@ -24,6 +24,8 @@ public class QuakeStomp
 	static constant NAME = "Quake Stomp"
 	static constant DESC = "Slams the ground, dealing damage to nearby enemies, causing an earthquake in the affected area that slows enemies and deals the same amount of damage for its duration."
 	static constant BUFF_DESC = "Movement speed of this unit is reduced."
+	static constant FX_AREA = Abilities.warStompCaster
+	static constant real FX_AREA_SCALE = 1
 
 	static constant TARGETS_ALLOWED = "ground,enemy"
 	static constant real array AOE = [200, 200, 200, 200, 200]
@@ -53,6 +55,7 @@ public class QuakeStomp
 		..presetHotkey(HOTKEY)
 		..setHeroAbility(true)
 		..setRequirements("")
+		..setArtCaster("")
 		..setRace(Race.Human)
 		..registerTooltipGenerator(tooltipGen)
 		..tooltipStartListen()
@@ -91,6 +94,9 @@ public class QuakeStomp
 			let pos = caster.getPos()
 			let aoe = AOE[lvl - 1]
 			let damage = DAMAGE[lvl - 1]
+			addEffect(FX_AREA, pos)
+			..setScale(FX_AREA_SCALE)
+			..destr()
 			forUnitsInRange(pos, aoe, true) (unit u) ->
 				if u.isAlive() and u.isEnemyOf(caster)
 					caster.damageTarget(u, damage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE)
