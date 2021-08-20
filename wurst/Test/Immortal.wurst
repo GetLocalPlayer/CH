@@ -1,0 +1,42 @@
+package Immortal
+import ClosureEvents
+import ChatCommand
+import TestMode
+
+
+constant COMMAND = "immortal"
+constant COMMAND_SHORT = "imm"
+
+bool array enabled
+
+
+init
+	for i = 0 to MAX_PLAYER_COLORS - 1
+		enabled[i] = false
+
+	TestMode.onEnable() -> 
+		let cb = ChatCommand.register(COMMAND) (string subcommand) ->
+			let i = EventData.getTriggerPlayer().getId()
+			enabled[i] = not enabled[i]
+			if enabled[i]
+				printTimedToPlayer("Immortal mode enabled", 15, EventData.getTriggerPlayer())
+
+		ChatCommand.register(COMMAND_SHORT, cb)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGED) -> 
+			let u = EventData.getTriggerUnit()
+			let i = u.getOwner().getId()
+			if enabled[i]
+				EventData.setDamage(0)
+				u.setMana(u.getMaxMana())
+
+		let eventCb = EventListener.add(EVENT_PLAYER_UNIT_SPELL_EFFECT) ->
+			let u = EventData.getTriggerUnit()
+			let i = u.getOwner().getId()
+			if enabled[i]
+				u.setMana(u.getMaxMana())
+		
+		EventListener.add(EVENT_PLAYER_UNIT_SPELL_FINISH, eventCb)
+		EventListener.add(EVENT_PLAYER_UNIT_SPELL_CAST, eventCb)
+		EventListener.add(EVENT_PLAYER_UNIT_SPELL_ENDCAST, eventCb)
+			
