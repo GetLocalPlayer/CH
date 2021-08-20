@@ -12,6 +12,8 @@ public abstract class TestMode
 	private static var enabled = false
 	
 	static function onEnable(TestMode cb) returns TestMode
+		if bj_isSinglePlayer
+			cb.call()
 		return cb
 
 	static function isEnabled() returns bool
@@ -26,11 +28,14 @@ public abstract class TestMode
 			cb.call()
 
 	protected static function onInit()
-		let chatCb = ChatCommand.register(COMMAND) (string subcommand) ->
-			if not enabled
-				enable()
+		if bj_isSinglePlayer
+			enable()
+		else
+			let chatCb = ChatCommand.register(COMMAND) (string subcommand) ->
+				if not enabled
+					enable()
 
-		ChatCommand.register(COMMAND_SHORT, chatCb)
+			ChatCommand.register(COMMAND_SHORT, chatCb)
 
 
 init

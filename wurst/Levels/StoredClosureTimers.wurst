@@ -76,21 +76,21 @@ public module MStoredClosureTimers
 	private let countedList = new LinkedList<StoredCallbackCounted>
 
 	protected function doAfter(real timeToWait, StoredCallbackSingle cb) returns StoredCallbackSingle
-		getTimer().doPeriodicallyCounted(timeToWait, 1, cb)		
 		singleList.add(cb)
 		cb.list = singleList
+		cb.start(getTimer(), timeToWait, 1)
 		return cb
 
 	protected function doPeriodically(real timeToWait, StoredCallbackPeriodic cb) returns StoredCallbackPeriodic
-		getTimer().doPeriodically(timeToWait, cb)
 		periodicList.add(cb)
 		cb.list = periodicList
+		cb.start(getTimer(), timeToWait)
 		return cb
 
 	protected function doPeriodicallyCounted(real time, int callAmount, StoredCallbackCounted cb) returns StoredCallbackCounted
-		getTimer().doPeriodicallyCounted(time, callAmount, cb)
 		countedList.add(cb)
 		cb.list = countedList
+		cb.start(getTimer(), time, callAmount)
 		return cb
 
 	protected function doPeriodicallyTimed(real interval, real timerDuration, StoredCallbackCounted cb) returns CallbackCounted
