@@ -44,7 +44,7 @@ public class LavaSpawn
 	static constant real SPAWN_BIRTH_ANIM_DURATION = 0.667
 
 	static constant PROJECTILE_MODEL = Abilities.lavaSpawnBirthMissile
-	static constant real PROJECTILE_ARC_HEIGHT = 300.
+	static constant real PROJECTILE_ARC_HEIGHT = 250.
 	static constant real PROJECTILE_FLIGHT_TIME = 1.5
 
 	static constant ID = compiletime(HERO_ID_GEN.next())
@@ -105,31 +105,29 @@ public class LavaSpawn
 		EventListener.onPointCast(ID) (unit caster, vec2 target) ->
 			let lvl = caster.getAbilityLevel(ID)
 			let cbChanneling = doPeriodicallyTimed(SPAWN_INTERVAL, CHANNELING_TIME[lvl - 1]) cbChanneling ->
-				let start = caster.getPos().polarOffset(GetRandomReal(PI, -PI).asAngleRadians(), AOE * 0.5).withTerrainZ(50)
-				let finish = target.polarOffset(GetRandomReal(PI, -PI).asAngleRadians(), GetRandomReal(0, AOE - SPAWN_COLLISION_SIZE)).withTerrainZ()
-				let control = start.lerp(finish, 0.5).add(0, 0, 2 * PROJECTILE_ARC_HEIGHT - 0.5 * finish.z - 0.5 * start.z)
-				let projectile = addEffect(PROJECTILE_MODEL, start)
-				..setYaw(start.angleTo2d(finish))
+				let a = caster.getPos().polarOffset(GetRandomReal(PI, -PI).asAngleRadians(), AOE * 0.5).withTerrainZ(50)
+				let b = target.polarOffset(GetRandomReal(PI, -PI).asAngleRadians(), GetRandomReal(0, AOE - SPAWN_COLLISION_SIZE)).withTerrainZ()
+				let mid = a.lerp(b, 0.5)
+				let control = vec3(mid.x, mid.y, 2 * (mid.z + PROJECTILE_ARC_HEIGHT) - 0.5 * (a.z + b.z))
+				let projectile = addEffect(PROJECTILE_MODEL, a)
+				..setYaw(a.angleTo2d(b))
 				..setScale(SPAWN_SCALE)
-				var elapsed = 0.
-				addEffect(PROJECTILE_MODEL, start)..setScale(SPAWN_SCALE)..destr()
+				addEffect(PROJECTILE_MODEL, a)..setScale(SPAWN_SCALE)..destr()
 				doPeriodicallyTimed(ANIMATION_PERIOD, PROJECTILE_FLIGHT_TIME) cbProjectile ->
 					if not cbProjectile.isLast()
-						elapsed += ANIMATION_PERIOD
-						projectile.setPos(start.bezier3(control, finish, elapsed/PROJECTILE_FLIGHT_TIME))
+						projectile.setPos(a.bezier3(control, b, cbProjectile.progress()))
 					else
-						projectile..setPos(finish)
-						..destr()
-						forUnitsInRange(finish.toVec2(), LANDING_AOE) (unit target) ->
+						projectile.destr()
+						forUnitsInRange(b.toVec2(), LANDING_AOE) (unit target) ->
 							if caster.isEnemyOf(target.getOwner())
 								caster.damageTarget(target, LANDING_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, WEAPON_TYPE_WHOKNOWS)
-						let spawn = createUnit(caster.getOwner(), UNIT_ID, finish, start.angleTo2d(finish))
+						let spawn = createUnit(caster.getOwner(), UNIT_ID, b, a.angleTo2d(b))
 						..setTimedLife(SPAWN_LIFETIME)
 						..setAnimation("birth")
 						..setBaseDamage(SPAWN_DAMAGE_BASE[lvl - 1], 0)
 						doAfter(SPAWN_BIRTH_ANIM_DURATION) () ->
 							spawn.setAnimation("stand")
-						flashEffect(PROJECTILE_MODEL, finish)
+						flashEffect(PROJECTILE_MODEL, b)
 				if cbChanneling.isLast()
 					channelingUnits.remove(caster)
 					destroy cbChanneling

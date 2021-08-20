@@ -53,12 +53,12 @@ public class StormHammer
 	static constant MARK_DAMAGE_MULTIPLIER = 2
 
 	static constant PROJECTILE_MODEL =  "Abilities\\StromHammer\\StormHammerMissile.mdx" // Uses "birth" animation for the flight and "stand" for the lightning attacks.
-	static constant PROJECTILE_SCALE = 1.5
-	static constant PROJECTILE_BIRTH_TIME_SCALE = 3.5
-	static constant PROJECTILE_STAND_TIME_SCALE = 1.
-	static constant PROJECTILE_DEATH_TIME_SCALE = 1.
-	static constant PROJECTILE_SPEED = 375.
-	static constant PROJECTILE_ARC = 450./CAST_RANGE
+	static constant real PROJECTILE_SCALE = 1.5
+	static constant real PROJECTILE_BIRTH_TIME_SCALE = 3.5
+	static constant real PROJECTILE_STAND_TIME_SCALE = 1.
+	static constant real PROJECTILE_DEATH_TIME_SCALE = 1.
+	static constant real PROJECTILE_SPEED = 375.
+	static constant real PROJECTILE_ARC_FACTOR = 0.6 // factor for distance to the target
 
 	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
 
@@ -116,29 +116,29 @@ public class StormHammer
 	private static let markedUnits = new HashMap<unit, CallbackSingle>
 
 	construct(unit caster, vec3 target, int level)
-		let launchPos = caster.getPos3Real()
-		let dist2d = launchPos.distanceTo2d(target)
-		let control = launchPos.lerp(target, 1.).add(0, 0, 2 * dist2d * PROJECTILE_ARC - 0.5 * target.z - 0.5 * launchPos.z)
-		let proj = addEffect(PROJECTILE_MODEL, launchPos)
+		let a = caster.getPos3Real()
+		let b = target
+		let mid = a.lerp(b, 0.5)
+		let dist2d = a.distanceTo2d(b)
+		let control = vec3(mid.x, mid.y, 2 * (mid.z + PROJECTILE_ARC_FACTOR * dist2d) - 0.5 * (a.z + b.z))
+		let proj = addEffect(PROJECTILE_MODEL, a)
 		..setScale(PROJECTILE_SCALE)
 		..playAnimation(ANIM_TYPE_BIRTH, PROJECTILE_BIRTH_TIME_SCALE)
-		..setYaw(launchPos.angleTo2d(target))
+		..setYaw(a.angleTo2d(b))
 		let callAmount = (dist2d / PROJECTILE_SPEED / ANIMATION_PERIOD).toInt()
-		var _currCall = 0
 		
 		this.caster = caster
-		pos = launchPos.toVec2()
+		pos = a.toVec2()
 		
 		doPeriodicallyCounted(ANIMATION_PERIOD, callAmount) (projCb) ->
 			pos = proj.getPos()
 			if not projCb.isLast()
-				proj.setPos(launchPos.bezier3(control, target, _currCall/callAmount))
-				_currCall += 1
+				proj.setPos(a.bezier3(control, b, projCb.progress()))
 			else
-				proj..setPos(target)
+				proj..setPos(b)
 				..playAnimation(ANIM_TYPE_STAND, PROJECTILE_STAND_TIME_SCALE)
-				flashEffect(LANDING_EFFECT, target)
-				forUnitsInRange(target.toVec2(), AOE, true) (unit u) ->
+				flashEffect(LANDING_EFFECT, b)
+				forUnitsInRange(b.toVec2(), AOE, true) (unit u) ->
 					if isValidTarget(caster, u)
 						if markedUnits.has(u)
 							damageTarget(caster, u, LANDING_DAMAGE[level - 1] * MARK_DAMAGE_MULTIPLIER)
@@ -157,7 +157,7 @@ public class StormHammer
 					else
 						enumGroup.clear()
 						enumUnmarked.clear()
-						forUnitsInRange(target.toVec2(), AOE, true) (unit u) ->
+						forUnitsInRange(b.toVec2(), AOE, true) (unit u) ->
 							if isValidTarget(caster, u)
 								enumGroup.add(u)
 								if not u.hasAbility(MARK_BUFF.buffId)
@@ -168,7 +168,7 @@ public class StormHammer
 								destroy markedUnits.get(random)
 							flashEffect(LIGHTNING_IMPACT_EFFECT, random, LIGHTNING_IMPACT_ATTACH)
 							damageTarget(caster, random, LIGHTNING_DAMAGE[level - 1])
-							let light = new LigthingEx(LIGHTNING_CODE, target, random, LIGHTNING_IMPACT_OFFSET)
+							let light = new LigthingEx(LIGHTNING_CODE, b, random, LIGHTNING_IMPACT_OFFSET)
 							let clr = light.getColor()
 							light..setColor(colorA(clr.red, clr.green, clr.blue, (clr.alpha / 2).toInt()))
 							..setLifetime(LIGHTNING_INTERVAL)
