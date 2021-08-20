@@ -42,6 +42,7 @@ public class Portal
 				if u.isInRange(pos, range)
 					u..setXY(destPoint)
 					..setFacing(GetRandomReal(1, 360).asAngleDegrees())
+					..issueImmediateOrder("stop")
 
 	ondestroy
 		if filter != null
