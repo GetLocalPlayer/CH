@@ -52,6 +52,7 @@ function initTestMode()
 		for i = 1 to count > 0 ? count : 1
 			let u = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ID, SPAWN_RECT.randomPoint(), GetRandomInt(0, 359).toReal().asAngleDegrees())
 			..setMaxHP(maxLife)
+			..setLife(maxLife.toReal())
 			..setArmor(armor)
 			ghouls.add(u)
 		destroy list
