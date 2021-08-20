@@ -6,7 +6,7 @@ import ClosureEvents
 import ClosureForGroups
 
 import ForceProperties
-import LevelTimerModule
+import StoredClosureTimers
 import ScaledLevel
 import LigthingEx
 import InitCustomHero
@@ -51,7 +51,7 @@ fogmodifier array blackMask
 
 
 public class Level_6 extends ScaledLevel
-	use LevelTimerModule
+	use MStoredClosureTimers
 
 	private let pathBlockers = new LinkedList<destructable>
 	private let enumGroup = CreateGroup()
@@ -102,6 +102,7 @@ public class Level_6 extends ScaledLevel
 		addEnemy(boss, 1)
 
 	override function onRun(int waveNumber)
+		hideProgressBar()
 		doPeriodically(ANIMATION_PERIOD) (cb) ->
 			var ready = true
 			for u in customHeroes
@@ -115,7 +116,6 @@ public class Level_6 extends ScaledLevel
 				for d in pathBlockers
 					d..show(true)
 					..restoreLife(d.getMaxLife(), true)
-				hideProgressBar()
 				startSpawnScene()
 
 	private function startSpawnScene()
@@ -154,22 +154,21 @@ public class Level_6 extends ScaledLevel
 		boss..setInvulnerable(false)
 		..unpause()
 
-	override function onFinish()
+	private function clear()
 		clearTimers()
 		for e in effects
 			e.destr()
 		for d in pathBlockers
 			d.kill()
+							
+	override function onFinish()
+		clear()
 		for u in customHeroes
 			vision[u.getOwner().getId()].stop()
 			blackMask[u.getOwner().getId()].stop()
 
 	override function onReset()
-		clearTimers()
-		for e in effects
-			e.destr()
-		for d in pathBlockers
-			d.kill()
+		clear()
 		for u in customHeroes
 			vision[u.getOwner().getId()].stop()
 			blackMask[u.getOwner().getId()]..start()

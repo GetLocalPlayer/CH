@@ -8,7 +8,7 @@ import OrderIds
 import LinkedList
 import ClosureEvents
 import ForceProperties
-import LevelTimerModule
+import StoredClosureTimers
 import ScaledLevel
 import InitCustomHero
 import Preloader
@@ -72,7 +72,7 @@ let spawnRectExtra = gg_rct_Level_5_Spawn_Extra
 
 
 public class Level_5 extends ScaledLevel
-	use LevelTimerModule
+	use MStoredClosureTimers
 
 	private let killedDestructables = new LinkedList<destructable>
 	private let enumGroup = CreateGroup()
@@ -168,7 +168,7 @@ public class Level_5 extends ScaledLevel
 		extraListenerTrg.enable()
 
 	override function onRun(int waveNumber)
-		doPeriodically(5) (cb) ->
+		doPeriodically(15) (cb) ->
 			for u in getAliveEnemies()
 				u.setPos(u.getPos())
 

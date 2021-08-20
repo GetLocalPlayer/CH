@@ -1,7 +1,7 @@
 package Level_1
 import OrderIds
 import ForceProperties
-import LevelTimerModule
+import StoredClosureTimers
 import ScaledLevel
 
 
@@ -25,7 +25,7 @@ let gate = gg_dest_ZTd5_0357
 
 
 public class Level_1 extends ScaledLevel
-	use LevelTimerModule
+	use MStoredClosureTimers
 	
 	private static let instance = new Level_1
 

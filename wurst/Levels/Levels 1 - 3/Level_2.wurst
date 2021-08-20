@@ -3,7 +3,7 @@ import OrderIds
 import LinkedList
 import HashMap
 import ForceProperties
-import LevelTimerModule
+import StoredClosureTimers
 import ScaledLevel
 import Preloader
 
@@ -30,7 +30,7 @@ let patrolRects = asList<rect>(
 
 
 public class Level_2 extends ScaledLevel
-	use LevelTimerModule
+	use MStoredClosureTimers
 	private let orders = new HashMap<unit, rect>
 
 	private static let instance = new Level_2(entrance, exit.getCenter(), WAVES)

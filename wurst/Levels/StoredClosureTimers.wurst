@@ -1,4 +1,4 @@
-package LevelTimerModule
+package StoredClosureTimers
 import LinkedList
 import TimerUtils
 import ClosureTimers
@@ -40,21 +40,21 @@ destroy a destroyed callback after it was destroyed in `clearTimers`.
 		...
 
 Because of this I use CallbackCounted instead of CallbackSingle
-in `doAfter` method, since the nature of Periodic and Counted
+in `doAfter` method, since the nature of CallbackPeriodic and Counted
 callbacks destroys them in next timer tic and not right after
 the callbacks executions. */
 
 
-module CallbackModule
-	protected LinkedList<thistype> list
+module MStoreCallback
+	protected LinkedList<thistype> list = null
 
 	ondestroy
 		if list != null
 			list.remove(this)
 
 
-abstract class Single extends CallbackCounted
-	use CallbackModule
+public abstract class StoredCallbackSingle extends CallbackCounted
+	use MStoreCallback
 
 	abstract protected function _call()
 
@@ -62,38 +62,38 @@ abstract class Single extends CallbackCounted
 		_call()
 
 
-abstract class Periodic extends CallbackPeriodic
-	use CallbackModule
+public abstract class StoredCallbackPeriodic extends CallbackPeriodic
+	use MStoreCallback
 
 
-abstract class Counted extends CallbackCounted
-	use CallbackModule
+public abstract class StoredCallbackCounted extends CallbackCounted
+	use MStoreCallback
 
 
-public module LevelTimerModule
-	private let singleList = new LinkedList<Single>
-	private let periodicList = new LinkedList<Periodic>
-	private let countedList = new LinkedList<Counted>
+public module MStoredClosureTimers
+	private let singleList = new LinkedList<StoredCallbackSingle>
+	private let periodicList = new LinkedList<StoredCallbackPeriodic>
+	private let countedList = new LinkedList<StoredCallbackCounted>
 
-	protected function doAfter(real timeToWait, Single cb) returns Single
+	protected function doAfter(real timeToWait, StoredCallbackSingle cb) returns StoredCallbackSingle
 		getTimer().doPeriodicallyCounted(timeToWait, 1, cb)		
 		singleList.add(cb)
 		cb.list = singleList
 		return cb
 
-	protected function doPeriodically(real timeToWait, Periodic cb) returns Periodic
+	protected function doPeriodically(real timeToWait, StoredCallbackPeriodic cb) returns StoredCallbackPeriodic
 		getTimer().doPeriodically(timeToWait, cb)
 		periodicList.add(cb)
 		cb.list = periodicList
 		return cb
 
-	protected function doPeriodicallyCounted(real time, int callAmount, Counted cb) returns Counted
+	protected function doPeriodicallyCounted(real time, int callAmount, StoredCallbackCounted cb) returns StoredCallbackCounted
 		getTimer().doPeriodicallyCounted(time, callAmount, cb)
 		countedList.add(cb)
 		cb.list = countedList
 		return cb
 
-	protected function doPeriodicallyTimed(real interval, real timerDuration, Counted cb) returns CallbackCounted
+	protected function doPeriodicallyTimed(real interval, real timerDuration, StoredCallbackCounted cb) returns CallbackCounted
 		return doPeriodicallyCounted(interval, (timerDuration / interval + 0.5).toInt(), cb)
 			
 	protected function clearTimers()

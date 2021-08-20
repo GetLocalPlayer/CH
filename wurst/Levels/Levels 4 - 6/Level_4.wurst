@@ -3,7 +3,7 @@ import OrderIds
 import LinkedList
 import ClosureForGroups
 import ForceProperties
-import LevelTimerModule
+import StoredClosureTimers
 import ScaledLevel
 import InitCustomHero
 
@@ -36,7 +36,7 @@ let treeShakingRect = gg_rct_Level_4_Tree_Shaking
 
 
 public class Level_4 extends ScaledLevel
-	use LevelTimerModule
+	use MStoredClosureTimers
 	private let killedDestructables = new LinkedList<destructable>
 	private let enumDestructables = new LinkedList<destructable>
 	private let enumGroup = CreateGroup()

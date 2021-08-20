@@ -15,7 +15,7 @@ import SoundUtils
 import ForceProperties
 import InitCustomHero
 import ScaledLevel
-import LevelTimerModule
+import StoredClosureTimers
 
 
 constant BOSS_ID = 'n00G'
@@ -115,7 +115,7 @@ fogmodifier array blackMask
 
 
 public class Level_3 extends ScaledLevel	
-	use LevelTimerModule
+	use MStoredClosureTimers
 
 	private unit boss = null
 	private let killedDestructables = new LinkedList<destructable>
