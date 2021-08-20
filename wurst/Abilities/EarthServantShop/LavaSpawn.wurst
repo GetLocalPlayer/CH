@@ -122,11 +122,17 @@ public class LavaSpawn
 							if caster.isEnemyOf(target.getOwner())
 								caster.damageTarget(target, LANDING_DAMAGE, false, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_MAGIC, WEAPON_TYPE_WHOKNOWS)
 						let spawn = createUnit(caster.getOwner(), UNIT_ID, b, a.angleTo2d(b))
-						..setTimedLife(SPAWN_LIFETIME)
 						..setAnimation("birth")
 						..setBaseDamage(SPAWN_DAMAGE_BASE[lvl - 1], 0)
+						..pauseEx()
 						doAfter(SPAWN_BIRTH_ANIM_DURATION) () ->
-							spawn.setAnimation("stand")
+							spawn..setAnimation("stand")
+							..setTimedLife(SPAWN_LIFETIME)
+							..unpauseEx()
+						// By unknown reasons the spawn getting fly height
+						// equal to its z-coord even tho the model stands
+						// on the right height.
+						spawn.setFlyHeight(0, 0)
 						flashEffect(PROJECTILE_MODEL, b)
 				if cbChanneling.isLast()
 					channelingUnits.remove(caster)

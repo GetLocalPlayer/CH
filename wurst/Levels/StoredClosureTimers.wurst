@@ -45,7 +45,7 @@ callbacks destroys them in next timer tic and not right after
 the callbacks executions. */
 
 
-module MStoreCallback
+module MStoredCallback
 	protected LinkedList<thistype> list = null
 
 	ondestroy
@@ -54,7 +54,7 @@ module MStoreCallback
 
 
 public abstract class StoredCallbackSingle extends CallbackCounted
-	use MStoreCallback
+	use MStoredCallback
 
 	abstract protected function _call()
 
@@ -63,11 +63,11 @@ public abstract class StoredCallbackSingle extends CallbackCounted
 
 
 public abstract class StoredCallbackPeriodic extends CallbackPeriodic
-	use MStoreCallback
+	use MStoredCallback
 
 
 public abstract class StoredCallbackCounted extends CallbackCounted
-	use MStoreCallback
+	use MStoredCallback
 
 
 public module MStoredClosureTimers
