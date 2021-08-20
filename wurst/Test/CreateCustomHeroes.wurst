@@ -37,8 +37,10 @@ function initTestMode()
 	ChatCommand.register(CREATE_BY_NAME_SHORT, cb)
 
 	cb = ChatCommand.register(REMOVE_ALL) (string subcommand) ->
+		let p = EventData.getTriggerPlayer()
 		for hero in createdHeroes
-			hero.remove()
+			if hero.getOwner() == p
+				hero.remove()
 
 	ChatCommand.register(REMOVE_ALL_SHORT, cb)
 
