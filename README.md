@@ -82,6 +82,10 @@ Command | Short | Purpose
 --- | --- | ---
 -SetHeroLevel N1 N2 | -shl | set the player's hero's level to N1 and gives him N2 experience points.
 
+Command | Short | Purpose
+--- | --- | ---
+-Immortal | -imm | the player's units have infinite hp and mana
+
 Command | Purpose
 --- | ---
 -Revive | revives all dead custom heroes at the base
