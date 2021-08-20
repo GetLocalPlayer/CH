@@ -60,7 +60,7 @@ public abstract class StoredCallbackSingle extends CallbackCounted
 
 	override protected function call(CallbackCounted cb)
 		_call()
-
+		
 
 public abstract class StoredCallbackPeriodic extends CallbackPeriodic
 	use MStoredCallback
@@ -93,7 +93,7 @@ public module MStoredClosureTimers
 		cb.start(getTimer(), time, callAmount)
 		return cb
 
-	protected function doPeriodicallyTimed(real interval, real timerDuration, StoredCallbackCounted cb) returns CallbackCounted
+	protected function doPeriodicallyTimed(real interval, real timerDuration, StoredCallbackCounted cb) returns StoredCallbackCounted
 		return doPeriodicallyCounted(interval, (timerDuration / interval + 0.5).toInt(), cb)
 			
 	protected function clearTimers()

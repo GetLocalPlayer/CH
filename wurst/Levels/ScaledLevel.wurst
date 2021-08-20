@@ -14,29 +14,32 @@ constant ARMOR_BONUS_FACTOR = 0.275
 
 
 public abstract class ScaledLevel extends Level
+	private var scalingFactor = 0
+
 	construct(rect entrance, vec2 exit, int waves)
 		super(entrance, exit, waves)
 
 	construct(rect entrance, vec2 exit)
 		super(entrance, exit, 1)
 
-	override protected function addEnemy(unit u, int wave) returns bool
-		let factor = getReadyHeroes().size() - 1
-
-		let hp = (u.getMaxHP() * (1 + HP_BONUS_FACTOR * factor))
+	protected function scaleUnit(unit u)
+		let hp = (u.getMaxHP() * (1 + HP_BONUS_FACTOR * scalingFactor))
 		u..setMaxHP(hp.toInt())
 		..setHP(hp)
 
-		let damage = [	u.getBaseDamage(0) * (1 + ATTACK_DAMAGE_BONUS_FACTOR * factor),
-						u.getBaseDamage(1) * (1 + ATTACK_DAMAGE_BONUS_FACTOR * factor)]
+		let damage = [	u.getBaseDamage(0) * (1 + ATTACK_DAMAGE_BONUS_FACTOR * scalingFactor),
+						u.getBaseDamage(1) * (1 + ATTACK_DAMAGE_BONUS_FACTOR * scalingFactor)]
 		u..setBaseDamage(damage[0].toInt(), 0)
 		..setBaseDamage(damage[1].toInt(), 1)
 
-		let attackSpeedBonus = ATTACK_SPEED_BONUS_FACTOR * factor
+		let attackSpeedBonus = ATTACK_SPEED_BONUS_FACTOR * scalingFactor
 		u..setAttackCooldownPercChange(attackSpeedBonus, 0)
 		..setAttackCooldownPercChange(attackSpeedBonus, 1)
 
-		let armor = u.getArmor() * (1 + ARMOR_BONUS_FACTOR * factor)
+		let armor = u.getArmor() * (1 + ARMOR_BONUS_FACTOR * scalingFactor)
 		u.setArmor(armor)
-		
+
+	override protected function addEnemy(unit u, int wave) returns bool
+		scalingFactor = getReadyHeroes().size() - 1
+		scaleUnit(u)
 		return super.addEnemy(u, wave)
