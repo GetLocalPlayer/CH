@@ -3,6 +3,7 @@ import HashMap
 import CustomHero
 import ChatCommand
 import TestMode
+import InitCustomHero
 
 
 constant CREATE_ALL = "CreateAllCustomHeroes"
@@ -11,8 +12,6 @@ constant CREATE_BY_NAME = "CreateCustomHero"
 constant CREATE_BY_NAME_SHORT = "cch"
 constant REMOVE_ALL = "RemoveCustomHeroes"
 constant REMOVE_ALL_SHORT = "rch"
-constant TEST_RECT = gg_rct_BaseEntrance
-
 
 let heroByName = new IterableMap<string, int>
 let createdHeroes = CreateGroup()
@@ -21,17 +20,19 @@ let createdHeroes = CreateGroup()
 function initTestMode()
 	var cb = ChatCommand.register(CREATE_ALL) subcommand ->
 		for name in heroByName
-			let hero = createUnit(localPlayer, heroByName.get(name), TEST_RECT.randomPoint(), GetRandomReal(-180, 180).asAngleDegrees())
+			let p = EventData.getTriggerPlayer()
+			let hero = createUnit(p, heroByName.get(name), p.getCustomHero().getPos(), GetRandomReal(-180, 180).asAngleDegrees())
 			createdHeroes.add(hero)
 
 	ChatCommand.register(CREATE_ALL_SHORT, cb) 
 
 	cb = ChatCommand.register(CREATE_BY_NAME) name ->
 		if heroByName.has(name)
-			let hero = createUnit(localPlayer, heroByName.get(name), TEST_RECT.randomPoint(), GetRandomReal(-180, 180).asAngleDegrees())
+			let p = EventData.getTriggerPlayer()
+			let hero = createUnit(p, heroByName.get(name), p.getCustomHero().getPos(), GetRandomReal(-180, 180).asAngleDegrees())
 			createdHeroes.add(hero)
 		else
-			print("No hero with such name.")
+			printTimedToPlayer("No hero with such name.", 15, EventData.getTriggerPlayer())
 
 	ChatCommand.register(CREATE_BY_NAME_SHORT, cb)
 
