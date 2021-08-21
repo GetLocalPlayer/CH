@@ -29,7 +29,7 @@ constant SPLASH_WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
 constant real SPLASH_AOE = 250
 constant real SPLASH_DAMAGE_FACTOR = 0.25
 constant int SPLASH_MAX_TARGETS = 5
-constant real SPLASH_MANA_PER_HIT = 0.1
+constant real SPLASH_MANA_PER_HIT = 0.003 // Factor from max mana
 constant SPLASH_LIGHTNING = LIGHTNING_CHAIN_LIGHTNING_PRIMARY
 constant real SPLASH_LIGHTNING_LIFETIME = 1
 constant real SPLASH_LIGHTNING_FADEPOINT = 0.5
@@ -57,6 +57,8 @@ init
 	Preload(TORNADO_FX)
 	Preload(TORNADO_DAMAGE_FX)
 
+constant real STORM_TORNADO_INTERVAL = 1.8
+constant real STROM_DURATION = 12
 
 constant GUARDIAN_ID = 'n001'
 constant GUARDIAN_SPAWN_FX = Objects.impaleTargetDust
@@ -145,6 +147,7 @@ public class Level_6 extends ScaledLevel
 	private let enumGroup = CreateGroup()
 	private let effects = new LinkedList<effect>
 	private let guardians = CreateGroup()
+	private var storming = false
 	private unit boss
 	
 	private static let instance = new Level_6
@@ -174,6 +177,8 @@ public class Level_6 extends ScaledLevel
 		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
 			let attacker = EventData.getEventDamageSource()
 			if attacker == boss and BlzGetEventIsAttack()
+				let manaRestored = attacker.getMaxMana() * SPLASH_MANA_PER_HIT
+				attacker.addMana(manaRestored)
 				let target = EventData.getTriggerUnit()
 				let damage = EventData.getEventDamage() * SPLASH_DAMAGE_FACTOR
 				forUnitsInRange(target.getPos(), SPLASH_AOE, true) (unit u) ->
@@ -187,6 +192,10 @@ public class Level_6 extends ScaledLevel
 					..setLifetime(SPLASH_LIGHTNING_LIFETIME)
 					..setFadepoint(SPLASH_LIGHTNING_FADEPOINT)
 					flashEffect(SPLASH_HIT_FX, u, SPLASH_HIT_FX_ATTACH)
+					attacker.addMana(manaRestored)
+				if attacker.getMana().ceil() >= attacker.getMaxMana().toInt()
+					attacker.setMana(attacker.getMaxMana())
+					startStorm()
 	
 	override function onInit()
 		for d in pathBlockers
@@ -198,6 +207,7 @@ public class Level_6 extends ScaledLevel
 		..setInvulnerable(true)
 		..setMana(0)
 		addEnemy(boss, 1)
+		storming = false
 
 	override function onRun(int waveNumber)
 		hideProgressBar()
@@ -223,10 +233,10 @@ public class Level_6 extends ScaledLevel
 	private function startSpawnScene()
 		spawnSound.play()
 		
-		let tornadoCount = 6
+		let tornadoCount = 5
 		let fallDuration = 7.
 		let fallHeight = 1000.
-		let rotSpeed = (80).asAngleDegrees()
+		let rotSpeed = 80 .asAngleDegrees()
 
 		boss..show()
 		..setFlyHeight(boss.getFlyHeight() + fallHeight, 0)
@@ -237,6 +247,7 @@ public class Level_6 extends ScaledLevel
 			let a = (360 / tornadoCount * i).asAngleDegrees()
 			let p = boss.getPos().polarOffset(a, TORNADO_AOE)
 			let fx = addEffect(TORNADO_FX, p)
+			..setYaw(GetRandomReal(-180, 180).asAngleDegrees())
 			..setScale(TORNADO_FX_SCALE)
 			effects.add(fx)
 			doPeriodicallyTimed(ANIMATION_PERIOD, fallDuration) (cbFall) ->
@@ -263,22 +274,29 @@ public class Level_6 extends ScaledLevel
 		..setMana(0)
 
 		doPeriodically(TORNADO_CD) (cb) ->
-			for u in customHeroes
-				if u.isAlive()
-					enumGroup.add(u)
-			let p = enumGroup.getRandom().getPos()
-			enumGroup.clear()
-			let ray = ray2d(boss.getPos(), boss.getPos().normalizedPointerTo(p))
-			let result = ray.castToCircle(battlefieldCenter, BATTLEFIELD_RADIUS).first
-			if result.intersects
-				castTornado(result.point)
+			if not storming
+				for u in customHeroes
+					if u.isAlive()
+						enumGroup.add(u)
+				let p = enumGroup.getRandom().getPos()
+				enumGroup.clear()
+				let ray = ray2d(boss.getPos(), boss.getPos().normalizedPointerTo(p))
+				let result = ray.castToCircle(battlefieldCenter, BATTLEFIELD_RADIUS).first
+				if result.intersects
+					boss..pauseEx()
+					..setFacing(boss.getPos().angleTo(result.point))
+					..setAnimation(TORNADO_CAST_ANIM)
+					..queueAnimation(TORNADO_CAST_ANIM)
+					doAfter(TORNADO_BIRTH_DELAY) -> 
+						boss.unpauseEx()
+					castTornado(result.point, TORNADO_BIRTH_DELAY)
 
 		startGuardianSpawn()
 
 		doPeriodically(THUNDER_CLAP_CD) (cb) ->
 			for u in guardians
 				for hero in customHeroes
-					if hero.isInRange(u.getPos(), THUNDER_CLAP_AOE)
+					if hero.isInRange(u.getPos(), THUNDER_CLAP_AOE) and hero.isAlive() and not hero.isType(UNIT_TYPE_MAGIC_IMMUNE)
 						enumGroup.add(u)
 			if not enumGroup.isEmpty()
 				let u = enumGroup.getRandom()
@@ -310,17 +328,12 @@ public class Level_6 extends ScaledLevel
 				destroy cb
 				destroy cbAreaFx
 			
-	private function castTornado(vec2 target)
-		boss..pauseEx()
-		..setFacing(boss.getPos().angleTo(target))
-		..setAnimation(TORNADO_CAST_ANIM)
-		..queueAnimation(TORNADO_CAST_ANIM)
+	private function castTornado(vec2 target, real castTime)
 		let bossPos = boss.getPos()
 		let fx = addEffect(TORNADO_FX, bossPos)
 		..setScale(TORNADO_FX_SCALE)
 		effects.add(fx)
-		doAfter(TORNADO_BIRTH_DELAY) -> 
-			boss.unpauseEx()
+		doAfter(castTime) -> 
 			doPeriodicallyTimed(ANIMATION_PERIOD, bossPos.distanceTo(target) / TORNADO_SPEED) (cb) ->
 				let p = bossPos.lerp(target, cb.progress())
 				fx.setPos(p)
@@ -339,10 +352,37 @@ public class Level_6 extends ScaledLevel
 									boss.damageTarget(u, TORNADO_DAMAGE, false, false, TORNADO_ATTACK_TYPE, TORNADO_DAMAGE_TYPE, TORNADO_WEAPON_TYPE)
 									flashEffect(TORNADO_DAMAGE_FX, u, TORNADO_DAMAGE_FX_ATTACH)
 
+	private function startStorm()
+		boss.pauseEx()
+		let p = boss.getPos()
+		boss..setFacing(p.angleTo(battlefieldCenter))
+		..setAnimation("walk")
+		doPeriodicallyTimed(ANIMATION_PERIOD, p.distanceTo(battlefieldCenter) / boss.getMoveSpeed() * 2) (cb) ->
+			boss.setPos(p.lerp(battlefieldCenter, cb.progress()))
+			if cb.isLast()
+				boss..setAnimation("stand channel")
+				..setFacing(270 .asAngleDegrees())
+				let fx = addEffect(TORNADO_FX, boss.getPos())
+				..setScale(TORNADO_FX_SCALE)
+				effects.add(fx)
+				doPeriodicallyTimed(STORM_TORNADO_INTERVAL, STROM_DURATION) (cb) ->
+					boss.setMana(boss.getMaxMana() - boss.getMaxMana() * cb.progress())
+					for u in customHeroes
+						if u.isAlive() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE)
+							let ray = ray2d(boss.getPos(), boss.getPos().normalizedPointerTo(u.getPos()))
+							let result = ray.castToCircle(battlefieldCenter, BATTLEFIELD_RADIUS).first
+							castTornado(result.point, 0)
+					if cb.isLast()
+						boss..unpauseEx()
+						..setMana(0)
+						effects.remove(fx)
+						fx.destr()
+						storming = false
+
 	private function clear()
 		clearTimers()
-		for e in effects
-			e.destr()
+		while not effects.isEmpty()
+			effects.pop().destr()
 		for d in pathBlockers
 			d.kill()
 		for u in customHeroes
@@ -350,7 +390,6 @@ public class Level_6 extends ScaledLevel
 			u.getOwner().resetToGameCamera(0)
 		for u in guardians
 			u.kill()
-		boss = null
 							
 	override function onFinish()
 		clear()
@@ -358,7 +397,33 @@ public class Level_6 extends ScaledLevel
 		for u in customHeroes
 			vision[u.getOwner().getId()].stop()
 			blackMask[u.getOwner().getId()].stop()
+		startDeathScene()
+		boss = null
 
+	private function startDeathScene()
+		let rotSpeed = 565 .asAngleDegrees()
+		let pos = boss.getPos()
+		doPeriodicallyTimed(0.25, 8) (cb) ->
+			addEffect(Objects.orcLargeDeathExplode, pos)
+			..setYaw(GetRandomReal(-180, 180).asAngleDegrees())
+			..destr()
+			if cb.isLast()
+				doPeriodicallyTimed(0.5, 5) (cb) ->
+					let count = 6
+					let random = GetRandomReal(0, 360 / count)
+					for i = 1 to count
+						let a = (360 / count * i + random).asAngleDegrees()
+						let fx = addEffect(TORNADO_FX, pos)
+						..setYaw(GetRandomReal(-180, 180).asAngleDegrees())
+						..setScale(TORNADO_FX_SCALE)
+						effects.add(fx)
+						doPeriodicallyTimed(ANIMATION_PERIOD, 5) (cb) ->
+							let p = pos.polarOffset(a + rotSpeed * cb.progress(), BATTLEFIELD_RADIUS * cb.progress())
+							fx.setPos(p)
+							if cb.isLast()
+								effects.remove(fx)
+								fx.destr()
+						
 	override function onReset()
 		clear()
 		for u from guardians
@@ -367,3 +432,4 @@ public class Level_6 extends ScaledLevel
 			vision[u.getOwner().getId()].stop()
 			blackMask[u.getOwner().getId()]..start()
 			..stop()
+		boss = null
