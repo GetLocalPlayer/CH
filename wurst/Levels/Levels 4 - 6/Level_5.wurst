@@ -182,14 +182,17 @@ public class Level_5 extends ScaledLevel
 				setUnit(normal.next(), smallSpawnRect.randomPoint())
 
 		doAfter(FIRST_SPAWN_DELAY) -> 	
+			doPeriodicallyTimed(1, SPAWN_INTERVAL * NORMAL_COUNT) (cb) ->
+				flashEffect(SPAWN_FX, spawnRectTop.randomPoint())
 			doPeriodicallyCounted(SPAWN_INTERVAL, NORMAL_COUNT) cb ->
 				let u = normal.next()
 				setUnit(u, spawnRectTop.randomPoint())
 				flashEffect(SPAWN_FX, u.getPos())
-			doPeriodicallyCounted(GetRandomReal(SPAWN_INTERVAL, NORMAL_COUNT * SPAWN_INTERVAL), ELITE_COUNT) cb ->
-				let u = elite.next()
-				setUnit(u, spawnRectTop.randomPoint())
-				flashEffect(SPAWN_FX, u.getPos())
+			for i = 1 to ELITE_COUNT
+				doAfter(GetRandomReal(SPAWN_INTERVAL, NORMAL_COUNT * SPAWN_INTERVAL)) ->
+					let u = elite.next()
+					setUnit(u, spawnRectTop.randomPoint())
+					flashEffect(SPAWN_FX, u.getPos())
 		
 		for i = 1 to extraElite.size()
 			let u = extraElite.get(i - 1)
@@ -201,6 +204,8 @@ public class Level_5 extends ScaledLevel
 			..show()
 
 	private function startBottomSpawn()
+		doPeriodicallyTimed(1, SPAWN_INTERVAL * NORMAL_COUNT) (cb) ->
+			flashEffect(SPAWN_FX, spawnRectBot.randomPoint())
 		doPeriodicallyCounted(SPAWN_INTERVAL, NORMAL_COUNT) cb ->
 			let u = normal.next()
 			setUnit(u, spawnRectBot.randomPoint())

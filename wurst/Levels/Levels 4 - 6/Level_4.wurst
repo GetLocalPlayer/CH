@@ -1,4 +1,5 @@
 package Level_4
+import Assets
 import OrderIds
 import LinkedList
 import ClosureForGroups
@@ -18,6 +19,8 @@ constant SPAWN_INTERVAL = 2.
 constant RANDOM_TREE_SHAKING_INTERVAL = 0.05
 constant WAVES = 2
 constant DELAY = 4.
+
+constant SAND_SPAWN_FX = Objects.impaleTargetDust
 
 constant FAKE_PORTAL_FX = LEVEL_PORTAL_FX
 constant FAKE_PORTAL_FX_SCALE = LEVEL_PORTAL_FX_SCALE
@@ -85,9 +88,14 @@ public class Level_4 extends ScaledLevel
 					..unpause()
 					..setPos(spawnRect.randomPoint())		
 					..show()
+					flashEffect(SAND_SPAWN_FX, u.getPos())
 					enumGroup.remove(u)
 					if enumGroup.isEmpty()
 						destroy cb
+						
+				doPeriodically(1) (cb) ->
+					flashEffect(SAND_SPAWN_FX, spawnRect.randomPoint())
+
 				doPeriodically(RANDOM_TREE_SHAKING_INTERVAL) (cb) ->
 					forDestructablesInRect(treeShakingRect) (destructable d) ->
 						enumDestructables.add(d)
