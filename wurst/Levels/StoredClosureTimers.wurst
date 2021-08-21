@@ -81,6 +81,11 @@ public module MStoredClosureTimers
 		cb.start(getTimer(), timeToWait, 1)
 		return cb
 
+	protected function nullTimer(StoredCallbackSingle cb)
+		singleList.add(cb)
+		cb.list = singleList
+		doAfter(0, cb)
+
 	protected function doPeriodically(real timeToWait, StoredCallbackPeriodic cb) returns StoredCallbackPeriodic
 		periodicList.add(cb)
 		cb.list = periodicList

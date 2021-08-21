@@ -69,7 +69,7 @@ constant real THUNDER_CLAP_DAMAGE = 100
 constant real THUNDER_CLAP_AOE = 200
 constant real THUNDER_CLAP_CD = 9
 constant real THUNDER_CLAP_SLOW = 0.3
-constant real THUNDER_CLAP_DURATION = 2
+constant real THUNDER_CLAP_DURATION = 3.
 constant THUNDER_CLAP_ICON = Icons.bTNCrushingWave
 constant THUNDER_CLAP_FX = Objects.nagaDeath
 constant THUNDER_CLAP_FX_OFFSET = vec3(0, 0, -40)
@@ -79,13 +79,15 @@ constant real THUNDER_CLAP_FX_SCALE = 1.75
 function buildThunderClap()
 	let buffDef = new BuffDefinition(BUFF_ID_GEN.next(), BuffIds.thunderClap)
 	..setIcon(THUNDER_CLAP_ICON)
-	new AbilityDefinitionThunderClapCreep(THUNDER_CLAP_ID)
+	new AbilityDefinitionMountainKingThunderClap(THUNDER_CLAP_ID)
+	..setHeroAbility(false)
+	..setLevels(1)
 	..setIconNormal(THUNDER_CLAP_ICON)
 	..setArtCaster("")
 	..setCooldown(1, 999999)
 	..setManaCost(1, 0)
 	..setAreaofEffect(1, THUNDER_CLAP_AOE)
-	..setDamage(1, THUNDER_CLAP_DAMAGE)
+	..setAOEDamage(1, THUNDER_CLAP_DAMAGE)
 	..setDurationHero(1, THUNDER_CLAP_DURATION)
 	..setDurationNormal(1, THUNDER_CLAP_DURATION)
 	..setAttackSpeedReduction(1, 0)
@@ -287,7 +289,7 @@ public class Level_6 extends ScaledLevel
 				let u = guardians.getRandom()
 				u..setPos(u.getPos())
 				..endAbilityCooldown(THUNDER_CLAP_ID)
-				..issueImmediateOrderById(OrderIds.creepthunderclap)
+				..issueImmediateOrderById(OrderIds.thunderclap)
 			enumGroup.clear()
 
 	private function startGuardianSpawn()
