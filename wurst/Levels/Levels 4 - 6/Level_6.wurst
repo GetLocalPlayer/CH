@@ -57,8 +57,8 @@ init
 	Preload(TORNADO_FX)
 	Preload(TORNADO_DAMAGE_FX)
 
-constant real STORM_TORNADO_INTERVAL = 1.8
-constant real STROM_DURATION = 12
+constant real STORM_TORNADO_INTERVAL = 2.5
+constant real STROM_DURATION = 13
 
 constant GUARDIAN_ID = 'n001'
 constant GUARDIAN_SPAWN_FX = Objects.impaleTargetDust
@@ -193,7 +193,7 @@ public class Level_6 extends ScaledLevel
 					..setFadepoint(SPLASH_LIGHTNING_FADEPOINT)
 					flashEffect(SPLASH_HIT_FX, u, SPLASH_HIT_FX_ATTACH)
 					attacker.addMana(manaRestored)
-				if attacker.getMana().ceil() >= attacker.getMaxMana().toInt()
+				if attacker.getMana().ceil() >= attacker.getMaxMana().toInt() and not storming
 					attacker.setMana(attacker.getMaxMana())
 					startStorm()
 	
@@ -353,9 +353,10 @@ public class Level_6 extends ScaledLevel
 									flashEffect(TORNADO_DAMAGE_FX, u, TORNADO_DAMAGE_FX_ATTACH)
 
 	private function startStorm()
-		boss.pauseEx()
+		storming = true
 		let p = boss.getPos()
-		boss..setFacing(p.angleTo(battlefieldCenter))
+		boss..pauseEx()
+		..setFacing(p.angleTo(battlefieldCenter))
 		..setAnimation("walk")
 		doPeriodicallyTimed(ANIMATION_PERIOD, p.distanceTo(battlefieldCenter) / boss.getMoveSpeed() * 2) (cb) ->
 			boss.setPos(p.lerp(battlefieldCenter, cb.progress()))
