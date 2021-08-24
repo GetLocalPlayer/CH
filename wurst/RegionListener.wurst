@@ -1,0 +1,71 @@
+package RegionListener
+import HashMap
+import LinkedList
+
+
+abstract public class RegionListener
+	private region r = null
+
+	private static let trgOnEnter = CreateTrigger()
+	private static let trgOnLeave = CreateTrigger()
+
+	private static let mapOnEnter = new HashMap<region, LinkedList<RegionListener>>
+	private static let mapOnLeave = new HashMap<region, LinkedList<RegionListener>>
+
+	abstract function run(unit u)
+
+	ondestroy
+		if mapOnEnter.has(r)
+			let list = mapOnEnter.get(r)
+			list.remove(this)
+			if list.isEmpty()
+				destroy list
+				mapOnEnter.remove(r)
+		if mapOnLeave.has(r)
+			let list = mapOnLeave.get(r)
+			list.remove(this)
+			if list.isEmpty()
+				destroy list
+				mapOnLeave.remove(r)
+
+	static function onEnter(region r, RegionListener cb) returns RegionListener
+		trgOnEnter.registerEnterRegion(r, null)
+		if mapOnEnter.has(r)	
+			mapOnEnter.get(r).add(cb)
+		else
+			mapOnEnter.put(r, asList<RegionListener>(cb))
+		cb.r = r
+		return cb
+
+	static function onEnter(rect r, RegionListener cb) returns RegionListener
+		let reg = CreateRegion()
+		..addRect(r)
+		return onEnter(reg, cb)			
+
+	static function onLeave(region r, RegionListener cb) returns RegionListener
+		trgOnLeave.registerLeaveRegion(r, null)
+		if mapOnLeave.has(r)
+			mapOnLeave.get(r).add(cb)
+		else
+			mapOnLeave.put(r, asList<RegionListener>(cb))
+		cb.r = r
+		return cb
+
+	static function onLeave(rect r, RegionListener cb) returns RegionListener
+		let reg = CreateRegion()
+		..addRect(r)
+		return onLeave(reg, cb)
+
+	protected static function initTriggers()
+		trgOnEnter.addAction() ->
+			let r = EventData.getTriggerRegion()
+			for cb in mapOnEnter.get(r)
+				cb.run(EventData.getTriggerUnit())
+
+		trgOnLeave.addAction() ->
+			let r = EventData.getTriggerRegion()
+			for cb in mapOnLeave.get(r)
+				cb.run(EventData.getTriggerUnit())
+
+init
+	RegionListener.initTriggers()

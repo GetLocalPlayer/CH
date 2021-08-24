@@ -220,6 +220,9 @@ public abstract class Level
 	function isInProgress() returns bool
 		return started and not finished and not initializing
 
+	function isFinished() returns bool
+		return finished
+
 	protected function getAliveEnemies(int wave) returns group
 		return not finished and started and wave <= maxWaves and wave > 0 ? aliveEnemies.get(wave - 1) : null
 
@@ -245,6 +248,11 @@ public abstract class Level
 				start()
 
 	private function onCustomHeroDeath(unit u)
+		if isInProgress()
+			for hero in customHeroes
+				if hero.isAlive()
+					return
+			reset()
 		if not finished and not started and not initializing and not readyHeroes.has(u)
 			if canStart()
 				start()
@@ -307,7 +315,6 @@ public abstract class Level
 			for level in levels
 				if level.isInProgress() and level.deadEnemies.get(level.waveCount - 1).has(u)
 					level.onEnemyRevived(u)
-
 	
 init
 	Level.staticInit()

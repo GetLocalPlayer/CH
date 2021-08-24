@@ -3,8 +3,8 @@ projectName: "Create Hero"
 dependencies:
 - "https://github.com/wurstscript/wurstStdlib2"
 buildMapData:
-  name: "CH |cffff0000PAIN|r 19.08.21"
-  fileName: "CH PAIN 19.08.21"
+  name: "CH |cffff0000PAIN|r 23.08.21"
+  fileName: "CH PAIN 23.08.21"
   author: "GetLocalPlayer"
   playerCount: 2-8
   scenarioData:

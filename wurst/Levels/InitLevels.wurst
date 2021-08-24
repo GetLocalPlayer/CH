@@ -1,11 +1,10 @@
 package InitLevels
 import LinkedList
-import HashMap
-import Portal
 import InitCustomHero
 import ChatCommand
 import TestMode
 import Base
+import RegionListener
 
 import Level
 
@@ -82,29 +81,27 @@ init
 	addEffect(PORTAL_FX, BASE_EXIT.getCenter())
 	..setScale(PORTAL_FX_SCALE)
 
-	let enteringIndex = new HashMap<unit, int>
-	let portals = new HashMap<unit, Portal>
-
-	for u in customHeroes
-		enteringIndex.put(u, 0)
-
-		let p = new Portal(BASE_EXIT.getCenter(), PORTAL_AOE, (enteringUnit) -> enteringUnit == u)
-		p..setDestination(levels.get(0).getEntrance())
-		..onEnter() (unit enteringUnit, vec2 target) ->
-			addEffect(PORTAL_FX_AREA, enteringUnit.getPos())
-			..setScale(PORTAL_FX_AREA_SCALE)
-			..destr()
-			addEffect(PORTAL_FX_TARGET, target)
-			..setScale(PORTAL_FX_TARGET_SCALE)
-			..destr()
-			var index = enteringIndex.get(u)
-			index = index == levels.size() - 1 ? 0 : index + 1
-			enteringIndex.put(u, index)
-			p.setDestination(levels.get(index).getEntrance())
-			u.getOwner().panCameraToTimed(target, 0)
-		portals.put(u, p)
-
 	TestMode.onEnable() -> 
 		initTestMode()
+
+	RegionListener.onEnter(BASE_EXIT.getCenter().withRadiusRect(PORTAL_AOE)) (unit u) ->
+		if customHeroes.has(u)
+			var i = 0
+			while i < levels.size() and levels.get(i).isFinished()
+				i++
+			if i < levels.size()
+				let entrance = levels.get(i).getEntrance()
+				let p = entrance.randomPoint()
+				addEffect(PORTAL_FX_AREA, u.getPos())
+				..setScale(PORTAL_FX_AREA_SCALE)
+				..destr()
+				addEffect(PORTAL_FX_TARGET, p)
+				..setScale(PORTAL_FX_TARGET_SCALE)
+				..destr()
+				u..setXY(p)
+				..issueImmediateOrder("stop")
+				u.getOwner().panCamToTimed(u, 0) 
+
+	
 				
 		
