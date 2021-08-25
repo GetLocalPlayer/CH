@@ -252,13 +252,18 @@ public abstract class Level
 			for hero in customHeroes
 				if hero.isAlive()
 					return
-			reset()
+			reset() 
 		if not finished and not started and not initializing and not readyHeroes.has(u)
 			if canStart()
 				start()
 
 	private function onPlayerLeave(player p)
-		if not finished and not started
+		if isInProgress()
+			for u in customHeroes
+				if u.getOwner() != p and u.isAlive()
+					return
+			reset()
+		if not finished and not started and not initializing
 			let u = p.getCustomHero()
 			readyHeroes.remove(u)
 			if canStart()
