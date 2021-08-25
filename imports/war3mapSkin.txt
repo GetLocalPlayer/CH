@@ -1,6 +1,7 @@
 [CustomSkin]
 LumberIcon=SkillPoints.blp
 ToolTipLumberIcon=TooltipSkillPoints.blp
+SupplyIcon=ResourceSupply
 
 [Errors]
 Notancient=TRIGSTR_5082
@@ -23,5 +24,6 @@ QUESTSMAIN="Titres:"
 QUESTSOPTIONAL="Made with:"
 UPPER_BUTTON_QUEST_TIP="Information (|Cfffed312F9|R)"
 UPPER_BUTTON_QUEST_UBER="Here you can find a bit more information about the map."
-
+COLON_FOOD="Attempts"
+RESOURCE_UBERTIP_SUPPLY="The amount of additional attempts you can make to finish a level. Successfully finishing a level you're gaining one attempt."
 

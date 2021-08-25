@@ -1,20 +1,35 @@
 package Defeat
 import ClosureEvents
+import ClosureTimers
 import InitCustomHero
 import ChatCommand
 import TestMode
 import Base
+import RegionListener
 
 
-constant REVIVE = "revive"
+constant REVIVE_COMMAND = "revive" // test mode
+constant real REVIVE_DELAY = 5
+constant int MAX_FOOD_USED = 2
 
 
 init
 	TestMode.onEnable() -> 
-		ChatCommand.register(REVIVE) (string subcommand) ->
+		ChatCommand.register(REVIVE_COMMAND) (string subcommand) ->
 			for u in customHeroes
 				if not u.isAlive()
 					u.revive(baseEntranceRect.randomPoint(), true)
+
+	for i = 0 to bj_MAX_PLAYER_SLOTS - 1
+		players[i]..setState(PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_FOOD_USED)
+		..setState(PLAYER_STATE_RESOURCE_FOOD_USED, 0)
+
+	RegionListener.onEnter(baseRect) (unit u) ->
+		if customHeroes.has(u)
+			let p = u.getOwner()
+			let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
+			if food < MAX_FOOD_USED
+				p.setState(PLAYER_STATE_RESOURCE_FOOD_USED, food + 1)
 
 	EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
 		let dyingUnit = EventData.getDyingUnit()
@@ -24,22 +39,47 @@ init
 				if not u.isAlive()
 					i--
 			if i == 0
-				if TestMode.isEnabled()
-					print("Defeat!")
-				else
+				doAfter(REVIVE_DELAY) ->
 					for u in customHeroes
-						CustomDefeatBJ(u.getOwner(), "Defeat!")
-
+						let p = u.getOwner()
+						let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
+						if food == 0
+							if TestMode.isEnabled()
+								print("Defeat!")
+							else
+								CustomDefeatBJ(p, "Defeat!")
+						else
+							u.revive(baseEntranceRect.randomPoint(), true)
+							// Minus 2 because 1 point of food will
+							// be given on base entering.
+							p..setState(PLAYER_STATE_RESOURCE_FOOD_USED, food - 2)
+							..panCamToTimed(u, 0)
+							..clearSelection()
+							..select(u)
 
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
-		let p = EventData.getTriggerPlayer()
-		var i = customHeroes.size() - 1
-		for u in customHeroes
-			if u.getOwner() != p and not u.isAlive()
+		let heroes = CreateGroup()
+		..add(customHeroes)
+		..remove(EventData.getTriggerPlayer().getCustomHero())
+		var i = heroes.size()
+		for u in heroes
+			if not u.isAlive()
 				i--
 		if i == 0
-			if TestMode.isEnabled()
-				print("Defeat!")
-			else
+			doAfter(REVIVE_DELAY) ->
 				for u in customHeroes
-					CustomDefeatBJ(u.getOwner(), "Defeat!")
+					let p = u.getOwner()
+					let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
+					if food == 0
+						if TestMode.isEnabled()
+							print("Defeat!")
+						else
+							CustomDefeatBJ(p, "Defeat!")
+					else
+						u.revive(baseEntranceRect.randomPoint(), true)
+						// Minus 2 because 1 point of food will
+						// be given on base entering.
+						p..setState(PLAYER_STATE_RESOURCE_FOOD_USED, food - 2)
+						..panCamToTimed(u, 0)
+						..clearSelection()
+						..select(u)
