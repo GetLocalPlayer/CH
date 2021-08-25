@@ -9,7 +9,7 @@ import ItemTooltipGenerator
 import ItemAbilityPreset
 
 
-constant int GOLD_COST = 60
+constant int GOLD_COST = 45
 constant CLASSIFICATION = "Charged"
 constant NAME = "Mana Stone"
 constant ICON = Icons.bTNManaStone
