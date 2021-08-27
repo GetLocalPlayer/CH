@@ -18,7 +18,7 @@ public class DefenderSpaulders
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "Defender Spaulders"
 	static constant ICON = Icons.bTNImprovedMoonArmor
-	static constant int GOLD_COST = WandOfNeutralization.GOLD_COST + CursedArmor.GOLD_COST
+	static constant int GOLD_COST = CursedArmor.GOLD_COST
 	static constant int STRENGTH = 5
 	static constant int DEFENSE = 5
 	static constant int ID = compiletime(ITEM_ID_GEN.next())
@@ -62,8 +62,7 @@ public class DefenderSpauldersRecipe
 
 	protected static let tooltipGenerator = DefenderSpaulders.tooltipGenerator.copy()
 		..setName(NAME)
-		..addRecipeRequirement(CursedArmor.NAME, CursedArmor.GOLD_COST)
-		..addRecipeRequirement(WandOfNeutralization.NAME, WandOfNeutralization.GOLD_COST)
+		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedArmor.NAME, WandOfNeutralization.NAME), CursedArmor.GOLD_COST)
 
 	@compiletime protected static function build()
 		let def = new ItemDefinition(ALIAS_ID, 'afac')
@@ -104,7 +103,6 @@ init
 				case CursedArmor.ID
 					targetItem.remove()
 					let u = EventData.getTriggerUnit()
-					u.getItemById(WandOfNeutralization.ID).remove()
 					u.addItemById(DefenderSpaulders.ID)
 					..setPlayer(p, true)
 					..setCharges(charges)
@@ -114,5 +112,4 @@ init
 					createItem(DefenderSpaulders.ID, pos)
 					..setPlayer(p, true)
 					..setCharges(charges)
-					EventData.getTriggerUnit().getItemById(WandOfNeutralization.ID).remove()
 					flashEffect(ITEM_COMBINE_EFFECT, pos)

@@ -10,7 +10,7 @@ import ClosureEvents
 
 
 public class WandOfNeutralization
-	static constant int GOLD_COST = 350
+	static constant int GOLD_COST = 475
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "Wand of Neutralization"
 	static constant ICON = Icons.bTNWandOfNeutralization

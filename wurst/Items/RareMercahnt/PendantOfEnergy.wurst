@@ -18,7 +18,7 @@ public class PendantOfEnergy
 	static constant CLASSIFICATION = "Permanent"
 	static constant NAME = "Pendant of Energy"
 	static constant ICON = Icons.bTNPendantOfEnergy
-	static constant int GOLD_COST = WandOfNeutralization.GOLD_COST + CursedTalisman.GOLD_COST
+	static constant int GOLD_COST = CursedTalisman.GOLD_COST
 	static constant int INTELLIGENCE = 5
 	static constant int RESTORED_MANA = (CursedTalisman.RESTORED_MANA * 1.5).toInt()
 	static constant int ABIL_ID = compiletime(CursedTalisman.ABIL_ID)
@@ -65,8 +65,7 @@ public class PendantOfEnergyRecipe
 
 	protected static let tooltipGenerator = PendantOfEnergy.tooltipGenerator.copy()
 		..setName(NAME)
-		..addRecipeRequirement(CursedTalisman.NAME, CursedTalisman.GOLD_COST)
-		..addRecipeRequirement(WandOfNeutralization.NAME, WandOfNeutralization.GOLD_COST)
+		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedTalisman.NAME, WandOfNeutralization.NAME), CursedTalisman.GOLD_COST)
 
 	@compiletime protected static function build()
 		let def = new ItemDefinition(ALIAS_ID, 'afac')
@@ -107,7 +106,6 @@ init
 				case CursedTalisman.ID
 					targetItem.remove()
 					let u = EventData.getTriggerUnit()
-					u.getItemById(WandOfNeutralization.ID).remove()
 					u.addItemById(PendantOfEnergy.ID)
 					..setPlayer(p, true)
 					..setCharges(charges)
@@ -117,7 +115,6 @@ init
 					createItem(PendantOfEnergy.ID, pos)
 					..setPlayer(p, true)
 					..setCharges(charges)
-					EventData.getTriggerUnit().getItemById(WandOfNeutralization.ID).remove()
 					flashEffect(ITEM_COMBINE_EFFECT, pos)
 
 init
