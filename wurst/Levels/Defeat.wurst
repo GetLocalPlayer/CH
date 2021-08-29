@@ -10,7 +10,6 @@ import RegionListener
 
 constant REVIVE_COMMAND = "revive" // test mode
 constant real REVIVE_DELAY = 5
-constant int MAX_FOOD_USED = 2
 
 
 init
@@ -21,24 +20,23 @@ init
 					u.revive(baseEntranceRect.randomPoint(), true)
 
 	for i = 0 to bj_MAX_PLAYER_SLOTS - 1
-		players[i]..setState(PLAYER_STATE_RESOURCE_FOOD_CAP, MAX_FOOD_USED)
-		..setState(PLAYER_STATE_RESOURCE_FOOD_USED, 0)
+		players[i].setState(PLAYER_STATE_RESOURCE_FOOD_USED, 0)
 
 	RegionListener.onEnter(baseRect) (unit u) ->
 		if customHeroes.has(u)
 			let p = u.getOwner()
 			let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
-			if food < MAX_FOOD_USED
-				p.setState(PLAYER_STATE_RESOURCE_FOOD_USED, food + 1)
+			p.setState(PLAYER_STATE_RESOURCE_FOOD_USED, food + 1)
 
 	EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
 		let dyingUnit = EventData.getDyingUnit()
 		if customHeroes.has(dyingUnit)
-			var i = customHeroes.size()
+			var over = true
 			for u in customHeroes
-				if not u.isAlive()
-					i--
-			if i == 0
+				if u.isAlive()
+					over = false
+					break
+			if over
 				doAfter(REVIVE_DELAY) ->
 					for u in customHeroes
 						let p = u.getOwner()
@@ -58,14 +56,12 @@ init
 							..select(u)
 
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
-		let heroes = CreateGroup()
-		..add(customHeroes)
-		..remove(EventData.getTriggerPlayer().getCustomHero())
-		var i = heroes.size()
-		for u in heroes
-			if not u.isAlive()
-				i--
-		if i == 0
+		var over = true
+		for u in customHeroes
+			if u.getOwner() !=  EventData.getTriggerPlayer() and u.isAlive()
+				over = false
+				break
+		if over
 			doAfter(REVIVE_DELAY) ->
 				for u in customHeroes
 					let p = u.getOwner()
