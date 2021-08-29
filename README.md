@@ -57,6 +57,7 @@ Command | Short | Purpose
 -RemoveTestGhouls | -rtg N | kills N random ghouls
 -SetTestGhoulHitPoints N | -stghp N | sets ghouls' amount of hit points to N
 -SetTestGhoulArmor N | -stga N | sets ghouls' armor value to N
+-SetTestGhoulDamage N | -stgd N | sets ghouls' attack damage value to N
 
 ### Resources
 

@@ -20,8 +20,8 @@ public class ThunderClap
 
 	static constant TARGETS_ALLOWED = "air,ground,organic,enemy"
 	static constant AOE = 300.
-	static constant DURATION = 2.
-	static constant COOLDOWN = 5.
+	static constant DURATION = 4.
+	static constant COOLDOWN = 6.
 	static constant MOVEMENT_SPEED_REDUCTION = 0.5
 	static constant ATTACK_SPEED_REDUCTION = 0.5
 	static constant MANACOST = [85, 90, 95, 100, 105]
