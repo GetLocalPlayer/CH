@@ -7,7 +7,6 @@ import AbilityObjEditing
 import AbilityTooltipGenerator
 import DestroyerShop
 import HotkeyFactory
-import ClosureEvents
 
 
 public class BreathOfFire
