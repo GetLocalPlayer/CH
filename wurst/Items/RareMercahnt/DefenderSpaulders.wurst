@@ -62,7 +62,7 @@ public class DefenderSpauldersRecipe
 
 	protected static let tooltipGenerator = DefenderSpaulders.tooltipGenerator.copy()
 		..setName(NAME)
-		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedArmor.NAME, WandOfNeutralization.NAME), CursedArmor.GOLD_COST)
+		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedArmor.NAME, WandOfNeutralization.NAME), 0)
 
 	@compiletime protected static function build()
 		let def = new ItemDefinition(ALIAS_ID, 'afac')

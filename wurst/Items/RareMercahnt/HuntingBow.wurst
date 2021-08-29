@@ -61,7 +61,7 @@ public class HuntingBowRecipe
 
 	protected static let tooltipGenerator = HuntingBow.tooltipGenerator.copy()
 		..setName(NAME)
-		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedBow.NAME, WandOfNeutralization.NAME), CursedBow.GOLD_COST)
+		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedBow.NAME, WandOfNeutralization.NAME), 0)
 
 	@compiletime protected static function build()
 		let def = new ItemDefinition(ALIAS_ID, 'afac')

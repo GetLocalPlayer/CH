@@ -121,7 +121,7 @@ public class ItemTooltipGenerator implements TooltipGenerator
 				if cost > 0
 					requirementsList += "{0} - {1}|r".format(REQUIREMENTS_COST_COLOR, cost.toString())
 				if count > 1
-					requirementsList += " ({0})".format(count.toString())
+					requirementsList += " (x{0})".format(count.toString())
 			result = "{0}|n{1}|n".format(result, requirementsList)
 		// Comment
 		if comment.isNotBlank()

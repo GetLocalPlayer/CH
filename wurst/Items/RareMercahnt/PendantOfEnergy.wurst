@@ -65,7 +65,7 @@ public class PendantOfEnergyRecipe
 
 	protected static let tooltipGenerator = PendantOfEnergy.tooltipGenerator.copy()
 		..setName(NAME)
-		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedTalisman.NAME, WandOfNeutralization.NAME), CursedTalisman.GOLD_COST)
+		..addRecipeRequirement("Remove the curse from {0} with {1}".format(CursedTalisman.NAME, WandOfNeutralization.NAME), 0)
 
 	@compiletime protected static function build()
 		let def = new ItemDefinition(ALIAS_ID, 'afac')
