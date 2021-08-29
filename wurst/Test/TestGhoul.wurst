@@ -18,14 +18,19 @@ constant COMMAND_SET_HP = "SetTestGhoulHitPoints"
 constant SHORT_COMMAND_SET_HP = "stghp"
 constant COMMAND_SET_ARMOR = "SetTestGhoulArmor"
 constant SHORT_COMMAND_SET_ARMOR = "stga"
+constant COMMAND_SET_DAMAGE = "SetTestGhoulDamage"
+constant SHORT_COMMAND_SET_DAMAGE = "stgd"
 constant SPAWN_RECT = gg_rct_TestGhoul
 constant UNIT_ID = compiletime(UNIT_ID_GEN.next())
 constant MAX_LIFE = 5000
 constant ARMOR = 0.0
+constant ATTACK_POWER = 10
 
 
 @compiletime function build()
 	new UnitDefinition(UNIT_ID, UnitIds.ghoul)
+	..setAttack1DamageBase(ATTACK_POWER)
+	..setAttack2DamageBase(ATTACK_POWER)
 	..setHitPointsMaximumBase(MAX_LIFE)
 	..setManaMaximum(5000)
 	..setSpeedBase(0)
@@ -37,6 +42,7 @@ constant ARMOR = 0.0
 
 var maxLife = MAX_LIFE
 var armor = ARMOR
+var attackPower = ATTACK_POWER
 
 function initTestMode()
 	let ghouls = CreateGroup()
@@ -54,6 +60,8 @@ function initTestMode()
 			..setMaxHP(maxLife)
 			..setLife(maxLife.toReal())
 			..setArmor(armor)
+			..setBaseDamage(attackPower, 0)
+			..setBaseDamage(attackPower, 1)
 			ghouls.add(u)
 		destroy list
 
@@ -82,14 +90,25 @@ function initTestMode()
 	ChatCommand.register(SHORT_COMMAND_SET_HP, cb)
 
 	cb = ChatCommand.register(COMMAND_SET_ARMOR) (string subcommand) ->
-		let list = subcommand.split(" ")
-		armor = list.get(0).toReal()
-		for u in ghouls
-			u.setArmor(armor)
-		destroy list
+		if subcommand != ""
+			let list = subcommand.split(" ")
+			armor = list.get(0).toReal()
+			for u in ghouls
+				u.setArmor(armor)
+			destroy list
 		
 	ChatCommand.register(SHORT_COMMAND_SET_ARMOR, cb)
 
+	cb = ChatCommand.register(COMMAND_SET_DAMAGE) (string subcommand) ->
+		if subcommand != ""
+			let list = subcommand.split(" ")
+			attackPower = list.get(0).toInt()
+			for u in ghouls
+				u.setBaseDamage(attackPower, 0)
+				u.setBaseDamage(attackPower, 1)
+			destroy list
+
+	ChatCommand.register(SHORT_COMMAND_SET_DAMAGE, cb)
 
 init
 	TestMode.onEnable() -> 
