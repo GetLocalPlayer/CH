@@ -6,7 +6,7 @@ import AbilityTooltipGenerator
 import AssassinShop
 
 
-class CriticalStire
+class CriticalStrike
 	static constant SHOP_COST = 1
 	static constant LEVELS = 5
 	static constant ICON = Icons.pASBTNCriticalStrike

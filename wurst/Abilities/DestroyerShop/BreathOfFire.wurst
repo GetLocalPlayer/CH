@@ -20,9 +20,10 @@ public class BreathOfFire
 	static constant BUFF_EFFECT = Abilities.breathOfFireDamage
 	static constant real array DAMAGE = [65, 110, 155, 200, 245]
 	static constant real array DAMAGE_PER_SECOND = [7, 14, 21, 28, 35]
+	static constant real DISTANCE = 800
 	static constant real FINAL_AOE = 300
 	static constant real AOE = 125.
-	static constant real CAST_RANGE = 375.
+	static constant real CAST_RANGE = 99999
 	static constant real DURATION = 10.
 	static constant real COOLDOWN = 10.
 	static constant int MANACOST = 70
@@ -47,10 +48,11 @@ public class BreathOfFire
 		..presetManaCost((lvl) -> MANACOST)
 		..presetCooldown((lvl) -> COOLDOWN)
 		..presetDurationNormal((lvl) -> DURATION)
-		..presetCastRange((lvl) -> CAST_RANGE)
 		..presetDamage((lvl) -> DAMAGE[lvl - 1])
 		..presetDamagePerSecond((lvl) -> DAMAGE_PER_SECOND[lvl - 1])
+		..presetDistance((int lvl) -> DISTANCE) 
 		..tooltipStopListen()
+		..presetCastRange((lvl) -> CAST_RANGE)
 		..presetAreaofEffect((lvl) -> AOE)
 		..presetFinalArea((lvl) -> FINAL_AOE)
 		..presetDurationHero((lvl) -> DURATION)

@@ -1,4 +1,5 @@
 package BaseRestoration
+import ClosureForGroups
 import Base
 import ChatCommand
 import TestMode
@@ -11,26 +12,25 @@ constant SHORT_COMMAND_ON = "ebr"
 constant RESTORATION_INTERVAL = 0.2
 
 
-function healBase()
-	ENUM_GROUP.enumUnitsInRect(baseRect, Filter(() -> GetFilterUnit().isType(UNIT_TYPE_HERO) and GetFilterUnit().isAlive()))
-	for u in ENUM_GROUP
-		u.setLife(u.getMaxHP())
-		u.setMana(u.getMaxMana())
-	ENUM_GROUP.clear()
-		
+function heal()
+	forUnitsInRect(baseRect) (unit u) ->
+		if u.isType(UNIT_TYPE_HERO) and u.isAlive()
+			u.setLife(u.getMaxHP())
+			u.setMana(u.getMaxMana())
 
 init
 	let t = CreateTimer()
-	..startPeriodic(RESTORATION_INTERVAL, function healBase)
+	..startPeriodic(RESTORATION_INTERVAL, function heal)		
 	
 	TestMode.onEnable() -> 
 		var cb = ChatCommand.register(COMMAND_OFF) (string subcommand) ->
+			t.pause()
 			print("Restoration at the base has been disabled")
 
 		ChatCommand.register(SHORT_COMMAND_OFF, cb)
 
 		cb = ChatCommand.register(COMMAND_ON) subcommand ->
-			t.startPeriodic(RESTORATION_INTERVAL, function healBase)
+			t.startPeriodic(RESTORATION_INTERVAL, function heal)
 			print("Restoration at the base has been enabled")
 			
 		ChatCommand.register(SHORT_COMMAND_ON, cb)

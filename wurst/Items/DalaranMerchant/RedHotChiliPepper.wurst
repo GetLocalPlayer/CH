@@ -1,0 +1,189 @@
+package RedHotChiliPepper
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+import BuffObjEditing
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import DalaranMerchant
+import Spear
+import SobiMask
+
+import LavaSpawn
+import BreathOfFire
+import ItemCombine
+import LinkedList
+import ClosureEvents
+import Preloader
+import DummyCaster
+import OrderIds
+
+
+
+public class RedHotChiliPepper
+	static constant CLASSIFICATION = "Permanent"
+	static constant ICON = "ReplaceableTextures\\CommandButtons\\BTNRedHotChiliPepper.blp"
+	static constant NAME = "Red Hot Chili Pepper"
+	static constant real CRITICAL_STRIKE_FACTOR = 5
+
+	static constant int GOLD_COST = SobiMask.GOLD_COST * 2 + Spear.GOLD_COST * 2 + RedHotChiliPepperRecipe.GOLD_COST
+	static constant int DAMAGE = Spear.ATTACK_DAMAGE * 2 + 4
+	static constant real MANA_REG = SobiMask.MANA_REG_RATE * 3
+
+	static constant real DAMAGE_FACTOR = 1
+	static constant real AOE = 200
+	static constant ATTACK_TYPE = ATTACK_TYPE_NORMAL
+	static constant DAMAGE_TYPE = DAMAGE_TYPE_FIRE
+	static constant WEAPON_TYPE = WEAPON_TYPE_WHOKNOWS
+	static constant FX = Abilities.fireLordDeathExplode
+	static constant real FX_SCALE = 1
+
+	static constant PASSIVE_DESC = "\"{0}\" gains critical {1}% damage on each attack against targets, affected by the wearer's \"{2}\"."
+		.format(LavaSpawn.NAME, (CRITICAL_STRIKE_FACTOR * 100).ceil().toString(), BreathOfFire.NAME)
+
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	private static constant CRITICAL_STRIKE_ID = compiletime(ABIL_ID_GEN.next())
+	private static constant BOF_MIMIC_ID = compiletime(ABIL_ID_GEN.next())
+	private static constant BOF_MIMIC_BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	private static constant BOF_MIMIC_BUFF_DESC = "More vulnerable for Lava Spawn."
+
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..addPassiveEffect(PASSIVE_DESC)
+			
+	@compiletime protected static function build()
+		let dmgDef = buildAttackDamageBonus(NAME, ICON, DAMAGE, tooltipGenerator)
+		let manaRegDef = buildManaRegenerationBonus(NAME, ICON, MANA_REG, tooltipGenerator)
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities(commaList(dmgDef.getNewId(), manaRegDef.getNewId()))
+
+		new AbilityDefinitionBladeMasterCriticalStrike(CRITICAL_STRIKE_ID)
+		..setLevels(1)
+		..setHeroAbility(false)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..setChancetoCriticalStrike(1, 100)
+		..setDamageMultiplier(1, CRITICAL_STRIKE_FACTOR) 
+
+		new AbilityDefinitionBrewmasterBreathofFire(BOF_MIMIC_ID)
+		..setLevels(1)
+		..setIconNormal(ICON)
+		..setHeroAbility(false)
+		..setDummyAbility()
+		..setDistance(1, BreathOfFire.DISTANCE)
+		..setAreaofEffect(1, BreathOfFire.AOE)
+		..setFinalArea(1, BreathOfFire.FINAL_AOE)
+		..setTargetsAllowed(1, BreathOfFire.TARGETS_ALLOWED)
+		..setDurationHero(1, BreathOfFire.DURATION)
+		..setDurationNormal(1, BreathOfFire.DURATION)
+		..setMissileArt("")
+		..setDamage(1, 0)
+		..setDamagePerSecond(1, 1)
+		..setBuffs(1, BOF_MIMIC_BUFF_ID.toRawCode())
+
+		new BuffDefinition(BOF_MIMIC_BUFF_ID, BuffIds.breathofFire)
+		..setName(1, NAME)
+		..setIcon(ICON)
+		..setTooltipNormal(1, NAME)
+		..setTooltipNormalExtended(1, BOF_MIMIC_BUFF_DESC)
+		..setArtTarget(1, "")
+		
+	protected static function onInit()
+		new ItemCombine(ID, asList<int>(SobiMask.ID, SobiMask.ID, Spear.ID, Spear.ID, RedHotChiliPepperRecipe.ID))
+
+		preloadAbility(CRITICAL_STRIKE_ID)
+		preloadAbility(BOF_MIMIC_ID)
+
+		EventListener.onPointCast(BreathOfFire.ID) (unit caster, vec2 target) ->
+			if caster.hasItemById(ID)
+				new DummyCaster()
+				..origin(caster.getPos())
+				..delay(BreathOfFire.DURATION * 2)
+				..owner(caster.getOwner())
+				..castPoint(BOF_MIMIC_ID, 1, OrderIds.breathoffire, target)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DAMAGING) ->
+			let u = EventData.getEventDamageSource()
+			if u.hasAbility(BOF_MIMIC_ID)
+				EventData.setDamage(0)
+		
+		EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) ->
+			let target = EventData.getTriggerUnit()
+			let attacker = EventData.getAttackerUnit()
+			if attacker.getTypeId() == LavaSpawn.UNIT_ID 
+				if target.hasAbility(BOF_MIMIC_BUFF_ID)
+					attacker..addAbility(CRITICAL_STRIKE_ID)
+					..hideAbility(CRITICAL_STRIKE_ID, true)
+				else 
+					attacker.removeAbility(CRITICAL_STRIKE_ID)
+
+
+public class RedHotChiliPepperRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(RedHotChiliPepper.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant int SHOP_X = 3
+	static constant int SHOP_Y = 2
+	static constant int GOLD_COST = 400
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = RedHotChiliPepper.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(Spear.NAME, Spear.GOLD_COST)
+		..addRecipeRequirement(Spear.NAME, Spear.GOLD_COST)
+		..addRecipeRequirement(SobiMask.NAME, SobiMask.GOLD_COST)
+		..addRecipeRequirement(SobiMask.NAME, SobiMask.GOLD_COST)
+		..addRecipeRequirement("Recipe", GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? RedHotChiliPepper.ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				dalaranMerchant.addItemSold(def.getNewId())
+
+
+init
+	RedHotChiliPepper.onInit()
