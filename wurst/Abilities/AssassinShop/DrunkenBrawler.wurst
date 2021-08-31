@@ -13,7 +13,7 @@ class DrunkenBrawler
 	static constant NAME = "Drunken Brawler"
 	static constant DESCRIPTION = "Gives a chance to dodge an attack and a chance to deal increased damage on hit."
 	static constant real DAMAGE_MULTIPLIER = 1.65
-	static constant real CHANCE_TO_EVADE = 0.1
+	static constant real CHANCE_TO_EVADE = 0.15
 	static constant real array CHANCE_TO_CRITICAL_STRIKE = [25, 30, 35, 40, 45]
 	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
 
