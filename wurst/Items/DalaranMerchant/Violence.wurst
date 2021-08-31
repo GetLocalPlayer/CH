@@ -1,0 +1,174 @@
+package Violence
+import Assets
+import ItemObjEditing
+import ChannelAbilityPreset
+
+import ItemTooltipGenerator
+import ItemAbilityPreset
+import ItemAlias
+import DalaranMerchant
+import BlacksmithHammer
+import LionsRing
+import BrassKnuckles
+
+import DrunkenBrawler
+import CriticalStrike
+import ItemCombine
+import LinkedList
+import ClosureEvents
+import ClosureTimers
+
+
+public class Violence
+	static constant CLASSIFICATION = "Permanent"
+	static constant ICON = "ReplaceableTextures\\CommandButtons\\BTNViolence.blp"
+	static constant NAME = "Violence"
+
+	static constant int GOLD_COST = BlacksmithHammer.GOLD_COST  + LionsRing.GOLD_COST + BrassKnuckles.GOLD_COST
+
+	static constant real ATTACK_RATE = BrassKnuckles.ATTACK_RATE
+	static constant int ATTACK_DAMAGE = BrassKnuckles.ATTACK_DAMAGE + 4
+	static constant int STRENGTH = BlacksmithHammer.STRENGTH
+	static constant int AGILITY = LionsRing.AGILITY
+	static constant ABIL_ID = BrassKnuckles.ABIL_ID
+
+	static constant PASSIVE_DESC = "\"{0}\" and \"{1}\" increse their critical strike chance from the wearer's agility and critical damage from the wearer's strength."
+		.format(DrunkenBrawler.NAME, CriticalStrike.NAME)
+
+	static constant ID = compiletime(ITEM_ID_GEN.next())
+	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
+		..addPassiveEffect(PASSIVE_DESC)
+		..addPassiveEffect(BrassKnuckles.PASSIVE_DESC)
+		..setActiveEffect(BrassKnuckles.ACTIVE_DESC)
+		..setComment("A legendary weapon. In some stories also known as \"The Answer\".")
+			
+	@compiletime protected static function build()
+		let adDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
+		let asDef = buildAttackSpeedBonus(NAME, ICON, ATTACK_RATE, tooltipGenerator)
+		let attrDef = buildAttributeBonus(NAME, ICON, STRENGTH, AGILITY, 0, tooltipGenerator)
+
+		ItemAlias.build(ID, ALIAS_ID)(ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(1)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(true)
+			..setCooldownGroup(ABIL_ID.toRawCode())
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setGoldCost(GOLD_COST)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(ICON)
+			tooltipGenerator.applyToDef(def)
+			if not isAlias
+				def.setAbilities(commaList(ABIL_ID, adDef.getNewId(), asDef.getNewId(), attrDef.getNewId()))
+
+		
+	protected static function onInit()
+		new ItemCombine(ID, asList<int>(BrassKnuckles.ID, BlacksmithHammer.ID, LionsRing.ID))
+
+		EventListener.add(EVENT_PLAYER_UNIT_ATTACKED) -> 
+			let attacker = EventData.getAttackerUnit()
+			if attacker.hasItemById(ID)
+				if attacker.hasAbility(DrunkenBrawler.ID)
+					let lvlIndex = attacker.getAbilityLevel(DrunkenBrawler.ID) - 1
+					let multiplier = DrunkenBrawler.DAMAGE_MULTIPLIER + attacker.getStr(true) / 100
+					let chance = DrunkenBrawler.CHANCE_TO_CRITICAL_STRIKE[lvlIndex] + attacker.getAgi(true)
+					let abi = attacker.getAbility(DrunkenBrawler.ID)
+					..setField(ABILITY_RLF_DAMAGE_MULTIPLIER_OCR2, lvlIndex, multiplier)
+					..setField(ABILITY_RLF_CHANCE_TO_CRITICAL_STRIKE, lvlIndex, chance)
+					..setField(ABILITY_IF_LEVELS, DrunkenBrawler.LEVELS + 1)
+					attacker..setAbilityLevel(DrunkenBrawler.ID, lvlIndex + 2)
+					..setAbilityLevel(DrunkenBrawler.ID, lvlIndex + 1)
+					abi.setField(ABILITY_IF_LEVELS, DrunkenBrawler.LEVELS)
+				if attacker.hasAbility(CriticalStrike.ID)
+					let lvlIndex = attacker.getAbilityLevel(CriticalStrike.ID) - 1
+					let multiplier = CriticalStrike.DAMAGE_MULTIPLIER[lvlIndex] + attacker.getStr(true) / 100
+					let chance = CriticalStrike.CHANCE + attacker.getAgi(true)
+					let abi = attacker.getAbility(CriticalStrike.ID)
+					..setField(ABILITY_RLF_DAMAGE_MULTIPLIER_OCR2, lvlIndex, multiplier)
+					..setField(ABILITY_RLF_CHANCE_TO_CRITICAL_STRIKE, lvlIndex, chance)
+					..setField(ABILITY_IF_LEVELS, CriticalStrike.LEVELS + 1)
+					attacker..setAbilityLevel(CriticalStrike.ID, lvlIndex + 2)
+					..setAbilityLevel(CriticalStrike.ID, lvlIndex + 1)
+					abi.setField(ABILITY_IF_LEVELS, CriticalStrike.LEVELS)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
+			if EventData.getManipulatedItem().getTypeId() == ID	
+				let u = EventData.getTriggerUnit()
+				nullTimer() ->
+					if not u.hasItemById(ID)
+						if u.hasAbility(DrunkenBrawler.ID)
+							let abi = u.getAbility(DrunkenBrawler.ID)
+							for i = 0 to abi.getField(ABILITY_IF_LEVELS) - 1
+								abi..setField(ABILITY_RLF_DAMAGE_MULTIPLIER_OCR2, i, DrunkenBrawler.DAMAGE_MULTIPLIER)
+								..setField(ABILITY_RLF_CHANCE_TO_CRITICAL_STRIKE, i, DrunkenBrawler.CHANCE_TO_CRITICAL_STRIKE[i])
+							abi.setField(ABILITY_IF_LEVELS, DrunkenBrawler.LEVELS + 1)
+							u..setAbilityLevel(DrunkenBrawler.ID, u.getAbilityLevel(DrunkenBrawler.ID) + 1)
+							..setAbilityLevel(DrunkenBrawler.ID, u.getAbilityLevel(DrunkenBrawler.ID) - 1)
+							abi.setField(ABILITY_IF_LEVELS, DrunkenBrawler.LEVELS)
+						if u.hasAbility(CriticalStrike.ID)
+							let abi = u.getAbility(CriticalStrike.ID)
+							for i = 0 to abi.getField(ABILITY_IF_LEVELS) - 1
+								abi..setField(ABILITY_RLF_DAMAGE_MULTIPLIER_OCR2, i, CriticalStrike.DAMAGE_MULTIPLIER[i])
+								..setField(ABILITY_RLF_CHANCE_TO_CRITICAL_STRIKE, i, CriticalStrike.CHANCE)
+							abi.setField(ABILITY_IF_LEVELS, CriticalStrike.LEVELS + 1)
+							u..setAbilityLevel(CriticalStrike.ID, u.getAbilityLevel(CriticalStrike.ID) + 1)
+							..setAbilityLevel(CriticalStrike.ID, u.getAbilityLevel(CriticalStrike.ID) - 1)
+							abi.setField(ABILITY_IF_LEVELS, CriticalStrike.LEVELS)
+
+
+public class ViolenceRecipe
+	static constant CLASSIFICATION = "Permanent"
+	static constant NAME = "{0} Recipe".format(Violence.NAME)
+	static constant ICON = Icons.bTNSnazzyScrollGreen
+	static constant int SHOP_X = 3
+	static constant int SHOP_Y = 0
+	static constant int GOLD_COST = 0
+	static constant int ID = compiletime(ITEM_ID_GEN.next())
+	static constant int ALIAS_ID = compiletime(ITEM_ID_GEN.next())
+
+	protected static let tooltipGenerator = Violence.tooltipGenerator.copy()
+		..setName(NAME)
+		..addRecipeRequirement(BrassKnuckles.NAME, BrassKnuckles.GOLD_COST)
+		..addRecipeRequirement(BlacksmithHammer.NAME, BlacksmithHammer.GOLD_COST)
+		..addRecipeRequirement(LionsRing.NAME, LionsRing.GOLD_COST)
+		..setComment("")
+
+	@compiletime protected static function build()
+		ItemAlias.build(ID, ALIAS_ID) (ItemDefinition def, boolean isAlias) ->
+			def..setLevel(1)
+			..setLevelUnclassified(1)
+			..setLumberCost(0)
+			..setHitPoints(999999)
+			..setNumberofCharges(0)
+			..setStockMaximum(0)
+			..setStockReplenishInterval(1)
+			..setStockStartDelay(1)
+			..setCanBeDropped(true)
+			..setPerishable(false)
+			..setActivelyUsed(false)
+			..setCanBeSoldByMerchants(true)
+			..setCanBeSoldToMerchants(true)
+			..setAbilities("")
+			..setGoldCost(GOLD_COST)
+			..setButtonPositionX(SHOP_X)
+			..setButtonPositionY(SHOP_Y)
+			..setClassification(CLASSIFICATION)
+			..setInterfaceIcon(isAlias ? Violence.ICON : ICON)
+			tooltipGenerator..setName(NAME)
+			..applyToDef(def, true)
+			if isAlias
+				dalaranMerchant.addItemSold(def.getNewId())
+
+
+init
+	Violence.onInit()

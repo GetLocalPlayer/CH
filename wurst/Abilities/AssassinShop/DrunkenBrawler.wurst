@@ -12,17 +12,17 @@ class DrunkenBrawler
 	static constant ICON = Icons.pASBTNDrunkenDodge
 	static constant NAME = "Drunken Brawler"
 	static constant DESCRIPTION = "Gives a chance to dodge an attack and a chance to deal increased damage on hit."
-	static constant DAMAGE_MULTIPLIER = 1.65
-	static constant CHANCE_TO_EVADE = 0.1
-	static constant CHANCE_TO_CRITICAL_STRIKE = [25, 30, 35, 40, 45]
+	static constant real DAMAGE_MULTIPLIER = 1.65
+	static constant real CHANCE_TO_EVADE = 0.1
+	static constant real array CHANCE_TO_CRITICAL_STRIKE = [25, 30, 35, 40, 45]
 	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
 
-	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+	static constant ID = compiletime(ABIL_ID_GEN.next())
 
 
 	@compiletime private static function build()
 		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
-		new AbilityDefinitionBrewmasterDrunkenBrawler(ABIL_ID)
+		new AbilityDefinitionBrewmasterDrunkenBrawler(ID)
 		..setIconNormal(ICON)
 		..setHeroAbility(true)
 		..setRequirements("")
@@ -33,11 +33,11 @@ class DrunkenBrawler
 		..setLevels(LEVELS)
 		..addTooltipProperty("Chance to", (int lvl) -> "")
 		..addTooltipProperty("- dodge", (int lvl) -> (CHANCE_TO_EVADE * 100).toInt().toString() + "%")
-		..addTooltipProperty("- increase damage", (int lvl) ->  CHANCE_TO_CRITICAL_STRIKE[lvl - 1].toString() +"%")
+		..addTooltipProperty("- increase damage", (int lvl) ->  CHANCE_TO_CRITICAL_STRIKE[lvl - 1].toInt().toString() +"%")
 		..addTooltipProperty("Damage increased to", (int lvl) -> (DAMAGE_MULTIPLIER * 100).toInt().toString() + "%")
 		..tooltipStopListen()
 		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
-		..presetChancetoCriticalStrike((int lvl) -> CHANCE_TO_CRITICAL_STRIKE[lvl - 1].toReal())
+		..presetChancetoCriticalStrike((int lvl) -> CHANCE_TO_CRITICAL_STRIKE[lvl - 1])
 		..presetChancetoEvade((int lvl) -> CHANCE_TO_EVADE)
 		..presetDamageMultiplier((int lvl) -> DAMAGE_MULTIPLIER) 
-		assassinShopDef.addAbilitySold(ABIL_ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+		assassinShopDef.addAbilitySold(ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)

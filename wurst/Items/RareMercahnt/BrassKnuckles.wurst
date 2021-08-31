@@ -32,10 +32,13 @@ public class BrassKnuckles
 	static constant ID = compiletime(ITEM_ID_GEN.next())
 	static constant ALIAS_ID = compiletime(ITEM_ID_GEN.next())
 	static constant ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+	static constant PASSIVE_DESC = "Increases the owner's attack damage depending on its strength, agility, or intelligence value."
+	static constant ACTIVE_DESC = "Switches the stat that's used as the source of the bonus attack damage."
 	
 	protected static let tooltipGenerator = new ItemTooltipGenerator(NAME, "", GOLD_COST, "")
-		..addPassiveEffect("Increases the owner's attack damage depending on its strength, agility, or intelligence value.")
-		..setActiveEffect("Switches the stat that's used as the source of the bonus attack damage.")
+		..addPassiveEffect(PASSIVE_DESC)
+		..setActiveEffect(ACTIVE_DESC)
 		..setComment("Do u now da wae?")
 			
 	@compiletime protected static function build()
@@ -138,21 +141,18 @@ function unit.getAttribute(Attribute attr, bool includeBonus) returns int
 
 let whiteBonus = new HashMap<unit, int>
 let usedAttr = new HashMap<unit, Attribute>
-let maxPower = 9
-let greenBonusIds = compiletime(new LinkedList<int>)
 let damageMasks = compiletime(new LinkedList<int>)
+let greenBonusId = compiletime(ABIL_ID_GEN.next())
 
 @compiletime
 function buildGreenBonus()
-	for i = 0 to maxPower
-		let damage = 2 .pow(i)
-		let def = new AbilityDefinitionAttackBonus(ABIL_ID_GEN.next())
-		..setIconNormal(BrassKnuckles.ICON)
-		..setName("{0} +{1}".format(BrassKnuckles.NAME, damage.toString()))
-		..setItemAbility(false)
-		..setAttackBonus(1, damage)
-		greenBonusIds.add(def.getNewId())
-		damageMasks.add(damage)
+	new AbilityDefinitionAttackBonusPlus1(greenBonusId)
+	..setLevels(2)
+	..setIconNormal(BrassKnuckles.ICON)
+	..setName(BrassKnuckles.NAME)
+	..setItemAbility(false)
+	..setAttackBonus(1, 0)
+	..setAttackBonus(2, 0)
 
 /* Basic attack damage changes aren't memorized for
 different forms of a unit. That means, if a unit changes
@@ -187,32 +187,27 @@ function updateDamage(unit u)
 	if whiteDamage != whiteAttr
 		u.setBaseDamage(u.getBaseDamage(0) + (whiteAttr - whiteDamage), 0)
 		whiteBonus.put(u, whiteAttr)
-	for i = 0 to maxPower
-		let id = greenBonusIds.get(i)
-		let mask = damageMasks.get(i)
-		if greenAttr.bitAnd(mask) != 0
-			u.addAbility(id)
-		else
-			u.removeAbility(id)
+	u.addPermanentAbility(greenBonusId)
+	u.getAbility(greenBonusId)
+	..setField(ABILITY_ILF_ATTACK_BONUS, 0, greenAttr)
+	u..setAbilityLevel(greenBonusId, 2)
+	..setAbilityLevel(greenBonusId, 1)
 
 
 function clearDamage(unit u)
 	if whiteBonus.has(u)
 		u.setBaseDamage(u.getBaseDamage(0) - whiteBonus.get(u), 0)
 	whiteBonus.remove(u)
-	u.removeAbility(markerId)
-	for id in greenBonusIds
-		u.removeAbility(id)
-
+	u..removeAbility(markerId)
+	..removeAbility(greenBonusId)
 
 let owners = CreateGroup()
 let updateTimer = getTimer()
-let updateInterval = 1.
+let updateInterval = ANIMATION_PERIOD // I use such a small period only because very few units will use the item
 
 
 init
-	for id in greenBonusIds
-		preloadAbility(id)
+	preloadAbility(greenBonusId)
 
 	let updateCb = updateTimer.doPeriodically(updateInterval) (CallbackPeriodic cb) ->
 		for u in owners
@@ -226,29 +221,23 @@ init
 
 	EventListener.add(EVENT_PLAYER_UNIT_PICKUP_ITEM) ->
 		let u = EventData.getTriggerUnit()
-		if u.isType(UNIT_TYPE_HERO)
-			let itemId = EventData.getManipulatedItem().getTypeId()
-			if itemId == BrassKnuckles.ID and not owners.has(u)
-				if owners.isEmpty()
-					updateTimer.doPeriodically(updateInterval, updateCb)
-				owners.add(u)
-			if u.hasItemById(BrassKnuckles.ID)
-				updateDamage(u)
+		if u.isType(UNIT_TYPE_HERO) and u.hasAbility(BrassKnuckles.ABIL_ID)
+			if owners.isEmpty()
+				updateTimer.doPeriodically(updateInterval, updateCb)
+			owners.add(u)
+			updateDamage(u)
 
 	EventListener.add(EVENT_PLAYER_UNIT_DROP_ITEM) ->
 		let u = EventData.getTriggerUnit()
-		let itemId = EventData.getManipulatedItem().getTypeId()
-		if itemId == BrassKnuckles.ID
+		if u.isType(UNIT_TYPE_HERO)
 			nullTimer() -> 
-				if not u.hasItemById(BrassKnuckles.ID) and owners.has(u)
+				if u.hasAbility(BrassKnuckles.ABIL_ID)
+					updateDamage(u)
+				else if owners.has(u)
 					owners.remove(u)
 					if owners.isEmpty()
 						updateTimer.pause()
 					clearDamage(u)
-		else if u.isType(UNIT_TYPE_HERO)
-			nullTimer() ->
-				if u.hasItemById(BrassKnuckles.ID)
-					updateDamage(u)
 
 	EventListener.onCast(BrassKnuckles.ABIL_ID) (unit caster) ->
 		let s = usedAttr.get(caster)

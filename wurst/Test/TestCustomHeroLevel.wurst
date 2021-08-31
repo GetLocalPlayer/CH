@@ -11,7 +11,7 @@ constant SHORT_COMMAND = "shl"
 
 init
 	TestMode.onEnable() -> 
-		ChatCommand.register(COMMAND) (string subcommand) ->
+		let cb = ChatCommand.register(COMMAND) (string subcommand) ->
 			let p = EventData.getTriggerPlayer()
 			let list = subcommand.split(" ")
 			if list.size() > 0
@@ -22,3 +22,5 @@ init
 				let exp = list.get(1).toInt()
 				p.getCustomHero().addXp(exp, true)
 			destroy list
+
+		ChatCommand.register(SHORT_COMMAND, cb)
