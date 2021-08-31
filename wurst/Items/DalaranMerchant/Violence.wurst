@@ -42,7 +42,7 @@ public class Violence
 		..addPassiveEffect(PASSIVE_DESC)
 		..addPassiveEffect(BrassKnuckles.PASSIVE_DESC)
 		..setActiveEffect(BrassKnuckles.ACTIVE_DESC)
-		..setComment("A legendary weapon. In some stories also known as \"The Answer\".")
+		..setComment("A legendary weapon. In some tales also known as \"The Answer\".")
 			
 	@compiletime protected static function build()
 		let adDef = buildAttackDamageBonus(NAME, ICON, ATTACK_DAMAGE, tooltipGenerator)
