@@ -1,0 +1,128 @@
+package Pandemy
+import Assets
+import BuffObjEditing
+import ChannelAbilityPreset
+import AbilityTooltipGenerator
+import CurseMasterShop
+import HotkeyFactory
+
+import OrderIds
+import ClosureEvents
+import ClosureForGroups
+import ClosureTimers
+import HashMap
+import DummyCaster
+import Preloader
+
+
+class Pandemy
+	static constant int SHOP_COST = 1
+	static constant int LEVELS = 5
+	static constant HOTKEY = getHotkey()
+	static constant ICON = Icons.bTNOrbOfCorruption
+	static constant NAME = "Pandemy"
+	static constant DESCRIPTION = "A disease that deals periodic damage to the target every second. When the effect expires, the disease hops on the nearest, to the target, enemy that is not currently diseased."
+	static constant BUFF_DESCRIPTION = "This unit is deseased and takes periodic damage."
+	static constant FX = "Units\\Undead\\PlagueCloud\\PlagueCloudtarget.mdl"
+	static constant FX_ATTACH = "chest"
+
+	static constant real array DAMAGE = [15, 20, 25, 30, 35]
+	static constant real CAST_RANGE = 500.
+	static constant real AOE = 200
+	static constant real array DURATION = [10, 10, 10, 10, 10]
+	static constant real array COOLDOWN = [7, 7, 7, 7, 7]
+	static constant int array MANACOST = [90, 105, 120, 135, 150]
+	static constant TARGETS_ALLOWED = "ground,air,organic,enemies"
+
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	
+	// I'm just using "Unholy Frenzy" spell on the target since it deals 
+	// magic damage with NORMAL attack type and DEATH damage type,
+	// just what I need.
+	private static constant DUMMY_ABIL_ID = compiletime(ABIL_ID_GEN.next())
+
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		new ChannelAbilityPreset(ID, LEVELS, true, tooltipGen)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..presetHotkey(HOTKEY)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..addTooltipProperty("Damage", (int lvl) -> DAMAGE[lvl - 1])
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
+		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..presetAreaofEffect((lvl) -> AOE)
+		..presetCastRange((int lvl) -> CAST_RANGE)
+		..tooltipStopListen()
+		..presetOption(Option.VISIBLE, true)
+		..presetTargetTypes(Targettype.UNIT)
+		..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED)
+		curseMasterShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+
+		new AbilityDefinitionUnholyFrenzy(DUMMY_ABIL_ID)
+		..setLevels(LEVELS)
+		..setIconNormal(ICON)
+		..setName(NAME)
+		..setDummyAbility()
+		..presetAttackSpeedBonus((int lvl) -> 0)
+		..presetDamageperSecond((int lvl) -> DAMAGE[lvl - 1])
+		..presetDurationHero((int lvl) -> DURATION[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+		..presetTargetsAllowed((int lvl) -> TARGETS_ALLOWED)
+
+		new BuffDefinition(BUFF_ID, BuffIds.unholyFrenzy)
+		..setIcon(ICON)
+		..setArtTarget(1, FX)
+		..setTargetAttachmentPoint0(1, FX_ATTACH)
+		
+			
+
+	protected static function onInit()
+		preloadAbility(DUMMY_ABIL_ID)
+
+		EventListener.onTargetCast(ID) (unit caster, unit target) ->
+			let lvl = caster.getAbilityLevel(ID)
+			new DummyCaster()
+			..origin(caster.getPos())
+			..owner(caster.getOwner())
+			..delay(DURATION[lvl - 1] + 1)
+			..castTarget(DUMMY_ABIL_ID, lvl, OrderIds.unholyfrenzy, target)
+			
+		let enumGroup = CreateGroup()
+		let affected = new HashMap<unit, CallbackSingle>
+
+		EventListener.onTargetCast(DUMMY_ABIL_ID) (unit caster, unit target) ->
+			let lvl = caster.getAbilityLevel(DUMMY_ABIL_ID)
+			if affected.has(target)
+				destroy affected.getAndRemove(target)
+			let cb = doAfter(DURATION[lvl - 1]) -> 
+				if target.isAlive()
+					affected.remove(target)
+					let p = target.getPos()
+					forUnitsInRange(p, AOE, true) (unit u) ->
+						if u != target and u.isAlive() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isEnemyOf(caster)
+							enumGroup.add(u)
+					if not enumGroup.isEmpty()
+						var newTarget = enumGroup.next()
+						for u from enumGroup
+							if u.getPos().distanceToSq(p) < newTarget.getPos().distanceToSq(p)
+								newTarget = u
+						new DummyCaster()
+						..origin(caster.getPos())
+						..owner(caster.getOwner())
+						..castTarget(DUMMY_ABIL_ID, lvl, OrderIds.unholyfrenzy, newTarget)
+			affected.put(target, cb)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let u = EventData.getDyingUnit()
+			if affected.has(u)
+				destroy affected.getAndRemove(u)
+		
+
+init
+	Pandemy.onInit()
