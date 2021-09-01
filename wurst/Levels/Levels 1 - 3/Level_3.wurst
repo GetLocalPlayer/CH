@@ -205,7 +205,8 @@ public class Level_3 extends ScaledLevel
 							d.kill()
 							killedDestructables.add(d)
 					doAfter(LEAP_END_DELAY) -> 
-						boss.unpauseEx()
+						boss..unpauseEx()
+						..setPos(boss.getPos())
 
 	private function startFight()
 		boss..setInvulnerable(false)
