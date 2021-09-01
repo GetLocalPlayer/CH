@@ -12,6 +12,9 @@ constant REVIVE_COMMAND = "revive" // test mode
 constant real REVIVE_DELAY = 5
 
 
+CallbackSingle delayedCb = null
+
+
 init
 	TestMode.onEnable() -> 
 		ChatCommand.register(REVIVE_COMMAND) (string subcommand) ->
@@ -36,8 +39,8 @@ init
 				if u.isAlive()
 					over = false
 					break
-			if over
-				doAfter(REVIVE_DELAY) ->
+			if over and delayedCb == null
+				delayedCb = doAfter(REVIVE_DELAY) ->
 					for u in customHeroes
 						let p = u.getOwner()
 						let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
@@ -54,6 +57,7 @@ init
 							..panCamToTimed(u, 0)
 							..clearSelection()
 							..select(u)
+					delayedCb = null
 
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
 		var over = true
@@ -61,8 +65,8 @@ init
 			if u.getOwner() !=  EventData.getTriggerPlayer() and u.isAlive()
 				over = false
 				break
-		if over
-			doAfter(REVIVE_DELAY) ->
+		if over and delayedCb == null
+			delayedCb = doAfter(REVIVE_DELAY) ->
 				for u in customHeroes
 					let p = u.getOwner()
 					let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
@@ -79,3 +83,4 @@ init
 						..panCamToTimed(u, 0)
 						..clearSelection()
 						..select(u)
+				delayedCb = null
