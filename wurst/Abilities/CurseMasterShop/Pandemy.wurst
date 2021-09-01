@@ -105,7 +105,7 @@ class Pandemy
 					affected.remove(target)
 					let p = target.getPos()
 					forUnitsInRange(p, AOE, true) (unit u) ->
-						if u != target and u.isAlive() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isEnemyOf(caster)
+						if u != target and u.isAlive() and not u.isType(UNIT_TYPE_MAGIC_IMMUNE) and u.isEnemyOf(caster) and not affected.has(u)
 							enumGroup.add(u)
 					if not enumGroup.isEmpty()
 						var newTarget = enumGroup.next()
