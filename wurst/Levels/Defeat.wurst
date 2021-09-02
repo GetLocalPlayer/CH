@@ -12,6 +12,25 @@ constant REVIVE_COMMAND = "revive" // test mode
 constant real REVIVE_DELAY = 5
 
 
+function defeatOrRevive()
+	for u in customHeroes
+		let p = u.getOwner()
+		let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
+		if food == 0
+			if TestMode.isEnabled()
+				print("Defeat!")
+			else
+				CustomDefeatBJ(p, "Defeat!")
+		else
+			u.revive(baseEntranceRect.randomPoint(), true)
+			// Minus 2 because 1 point of food will
+			// be given on base entering.
+			p..setState(PLAYER_STATE_RESOURCE_FOOD_USED, food - 2)
+			..panCamToTimed(u, 0)
+			..clearSelection()
+			..select(u)
+
+
 CallbackSingle delayedCb = null
 
 
@@ -41,22 +60,7 @@ init
 					break
 			if over and delayedCb == null
 				delayedCb = doAfter(REVIVE_DELAY) ->
-					for u in customHeroes
-						let p = u.getOwner()
-						let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
-						if food == 0
-							if TestMode.isEnabled()
-								print("Defeat!")
-							else
-								CustomDefeatBJ(p, "Defeat!")
-						else
-							u.revive(baseEntranceRect.randomPoint(), true)
-							// Minus 2 because 1 point of food will
-							// be given on base entering.
-							p..setState(PLAYER_STATE_RESOURCE_FOOD_USED, food - 2)
-							..panCamToTimed(u, 0)
-							..clearSelection()
-							..select(u)
+					defeatOrRevive()
 					delayedCb = null
 
 	EventListener.add(EVENT_PLAYER_LEAVE) ->
@@ -67,20 +71,5 @@ init
 				break
 		if over and delayedCb == null
 			delayedCb = doAfter(REVIVE_DELAY) ->
-				for u in customHeroes
-					let p = u.getOwner()
-					let food = p.getState(PLAYER_STATE_RESOURCE_FOOD_USED)
-					if food == 0
-						if TestMode.isEnabled()
-							print("Defeat!")
-						else
-							CustomDefeatBJ(p, "Defeat!")
-					else
-						u.revive(baseEntranceRect.randomPoint(), true)
-						// Minus 2 because 1 point of food will
-						// be given on base entering.
-						p..setState(PLAYER_STATE_RESOURCE_FOOD_USED, food - 2)
-						..panCamToTimed(u, 0)
-						..clearSelection()
-						..select(u)
+				defeatOrRevive()
 				delayedCb = null
