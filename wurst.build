@@ -1,11 +1,21 @@
 ---
-projectName: "Create Hero Pain"
+projectName: Create Hero Pain
 dependencies:
-- "https://github.com/wurstscript/wurstStdlib2"
+- https://github.com/wurstscript/wurstStdlib2
 buildMapData:
-  name: "CH |cffff0000PAIN|r 2.09.21"
-  fileName: "CH PAIN 2.09.21"
-  author: "GetLocalPlayer"
+  name: CH |cffff0000PAIN|r 2.09.21
+  fileName: CH PAIN 2.09.21
+  author: GetLocalPlayer
   playerCount: 2-8
   scenarioData:
     description: Team survival.
+    loadingScreen:
+      model: LoadingScreen.mdx
+      title: 2.09.21
+      subTitle: Create Hero |cffff0000PAIN|r
+      text: | 
+        Custom hero team survival.
+        
+        Follow your role.
+        Be a team.
+        Know the pain.
