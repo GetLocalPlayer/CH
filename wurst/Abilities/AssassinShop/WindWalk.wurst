@@ -1,0 +1,44 @@
+package WindWalk
+import Assets
+import ObjectIdGenerator
+import AbilityObjEditing
+import AbilityTooltipGenerator
+import AssassinShop
+
+
+class WindWalk
+	static constant SHOP_COST = 1
+	static constant LEVELS = 5
+	static constant ICON = Icons.bTNWindWalkOn
+	static constant NAME = "Wind Walk"
+	static constant DESCRIPTION = "Makes the hero temporarely invisible. The hero's attack that breaks invisibility will deal additional damage."
+	static constant real array DAMAGE = [150, 200, 250, 300, 400]
+	static constant real array TRANSITION_TIME = [0.6, 0.6, 0.6, 0.6, 0.6]
+	static constant real array COOLDOWN = [15, 15, 15, 15, 15]
+	static constant real array DURATION = [10, 10, 10, 10, 10]
+	static constant real array MANACOST = [75, 80, 85, 90, 95]
+	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
+
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+
+	@compiletime private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		new AbilityDefinitionBladeMasterWindWalk(ID)
+		..setIconNormal(ICON)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setName(NAME)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..addTooltipProperty("Backstab Damage", (int lvl) -> DAMAGE[lvl - 1])
+		..presetTransitionTime((int lvl) -> TRANSITION_TIME[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..tooltipStopListen()
+		..presetBackstabDamage1((int lvl) -> DAMAGE[lvl - 1])
+		..presetDurationHero((int lvl) -> DURATION[lvl - 1])
+		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
+		..presetBackstabDamage((int lvl) -> true)
+		assassinShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)

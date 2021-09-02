@@ -228,6 +228,7 @@ public class Level_6 extends ScaledLevel
 					boss.shareVision(u.getOwner())
 					u.pause()
 					u.getOwner().setCameraTargetControllerNoZ(boss, ZERO2, false)
+					u.shareVision(boss.getOwner())
 				startSpawnScene()
 
 	private function startSpawnScene()
@@ -389,6 +390,7 @@ public class Level_6 extends ScaledLevel
 		for u in customHeroes
 			u.unpause()
 			u.getOwner().resetToGameCamera(0)
+			u.shareVision(boss.getOwner(), false)
 		for u in guardians
 			u.kill()
 							
