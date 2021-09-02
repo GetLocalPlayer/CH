@@ -1,0 +1,30 @@
+package UsedMaterialInfo
+import Quest
+import HashMap
+import public Info // Just to fill info first
+
+
+@configurable constant NAME_COLOR = "ff00ff00"
+@configurable constant AUTHOR_NAME_COLOR = "ffffcc00"
+@configurable constant DESCRIPTION_COLOR = "ffffffff"
+
+
+public abstract class UsedMaterialInfo
+	private static let q = new Quest(true)
+		..setTitle("Used Material")
+		..setIcon("ReplaceableTextures\\WorldEditUI\\Editor-MultipleDoodads.blp")
+	private static let map = new IterableMap<string, string>
+
+	static function add(string name, string author, string description)
+		if not map.has(name)
+			let s = "\"|c{0}{1}|r\" by |c{2}{3}|r".format(NAME_COLOR, name, AUTHOR_NAME_COLOR, (author == null or author == "" ? "(author unknown)" : author))
+				+ (description != null and description != "" ? "\n|c{0}{1}|r".format(DESCRIPTION_COLOR, description) : "")
+			map.put(name, s)
+			var result = ""
+			for key in map
+				result += map.get(key) + "\n\n"
+			result = result.substring(0, result.length() - 2)
+			q.setDescription(result)
+
+	static function add(string name, string author)
+		add(name, author, "")

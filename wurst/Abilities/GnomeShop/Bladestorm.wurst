@@ -11,6 +11,9 @@ import ClosureEvents
 import ClosureTimers
 import HashMap
 import EffectUtils
+import Preloader
+
+import UsedMaterialInfo
 
 
 class Bladestorm
@@ -59,6 +62,11 @@ class Bladestorm
 		new AbilityDefinitionCargoHoldBurrow(DISARM_ID)
 
 	protected static function onInit()
+		Preload(FX)
+		preloadAbility(DISARM_ID)
+
+		UsedMaterialInfo.add("Bladestorm effect", "Donut 3.5 and Waldbaer")
+
 		let callbacks = new HashMap<unit, CallbackCounted>
 		let effects = new HashMap<unit, effect>
 
