@@ -1,0 +1,87 @@
+package Bladestorm
+import Assets
+import ObjectIds
+import BuffObjEditing
+import ObjectIdGenerator
+import AbilityObjEditing
+import AbilityTooltipGenerator
+import GnomeShop
+
+import ClosureEvents
+import ClosureTimers
+import HashMap
+import EffectUtils
+
+
+class Bladestorm
+	static constant SHOP_COST = 1
+	static constant LEVELS = 5
+	static constant ICON = Icons.bTNWhirlwind
+	static constant NAME = "Bladestorm"
+	static constant DESCRIPTION = "Causes a bladestorm of destructive force around the hero, rendering him immune to magic and dealing damage to nearby enemy units.|nDuring the bladestorm the hero cannot attack."
+	static constant FX = "Abilities\\Bladestorm.mdx"
+	static constant real array DAMAGE = [40, 50, 60, 70, 80]
+	static constant real array COOLDOWN = [20, 20, 20, 20, 20]
+	static constant real array DURATION = [8, 8, 8, 8, 8]
+	static constant int array MANACOST = [100, 110, 120, 130, 140]
+	static constant real AOE = 200
+	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
+
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
+	private static constant DISARM_ID = compiletime(ABIL_ID_GEN.next())
+
+	@compiletime private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
+		new AbilityDefinitionBladeMasterBladestorm(ID)
+		..setIconNormal(ICON)
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setName(NAME)
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..setLevels(LEVELS)
+		..presetDamagePerSecond((int lvl) -> DAMAGE[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
+		..presetAreaofEffect((int lvl) -> AOE)
+		..tooltipStopListen()
+		..presetDurationHero((int lvl) -> DURATION[lvl - 1])
+		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+
+		new BuffDefinition(BUFF_ID, BuffIds.bladestormCaster)
+
+		gnomeShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+
+		new AbilityDefinitionCargoHoldBurrow(DISARM_ID)
+
+	protected static function onInit()
+		let callbacks = new HashMap<unit, CallbackCounted>
+		let effects = new HashMap<unit, effect>
+
+		EventListener.onCast(ID) caster ->
+			let fx = addEffect(FX, caster.getPos3Real())
+			let lvl = caster.getAbilityLevel(ID)
+			let cb = doPeriodicallyTimed(ANIMATION_PERIOD, DURATION[lvl - 1]) (CallbackCounted cb) ->
+				fx.setPos(caster.getPos3Real())
+				if cb.isLast()
+					callbacks.remove(caster)
+					effects.getAndRemove(caster).destrHidden()
+					caster.removeAbility(DISARM_ID)
+			callbacks.put(caster, cb)
+			effects.put(caster, fx)
+			caster.addAbility(DISARM_ID)
+
+		EventListener.add(EVENT_PLAYER_UNIT_DEATH) ->
+			let u = EventData.getDyingUnit()
+			if callbacks.has(u)
+				destroy callbacks.getAndRemove(u)
+				effects.getAndRemove(u).destrHidden()
+				u.removeAbility(DISARM_ID)
+
+
+init
+	Bladestorm.onInit()

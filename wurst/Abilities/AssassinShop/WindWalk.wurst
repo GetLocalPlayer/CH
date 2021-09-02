@@ -1,7 +1,9 @@
 package WindWalk
 import Assets
+import ObjectIds
 import ObjectIdGenerator
 import AbilityObjEditing
+import BuffObjEditing
 import AbilityTooltipGenerator
 import AssassinShop
 
@@ -16,10 +18,11 @@ class WindWalk
 	static constant real array TRANSITION_TIME = [0.6, 0.6, 0.6, 0.6, 0.6]
 	static constant real array COOLDOWN = [15, 15, 15, 15, 15]
 	static constant real array DURATION = [10, 10, 10, 10, 10]
-	static constant real array MANACOST = [75, 80, 85, 90, 95]
+	static constant int array MANACOST = [75, 80, 85, 90, 95]
 	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
 
 	static constant ID = compiletime(ABIL_ID_GEN.next())
+	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
 
 	@compiletime private static function build()
 		let tooltipGen = new AbilityTooltipGenerator(NAME, DESCRIPTION)
@@ -36,9 +39,14 @@ class WindWalk
 		..presetTransitionTime((int lvl) -> TRANSITION_TIME[lvl - 1])
 		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
 		..presetCooldown((int lvl) -> COOLDOWN[lvl - 1])
+		..presetManaCost((int lvl) -> MANACOST[lvl - 1])
 		..tooltipStopListen()
 		..presetBackstabDamage1((int lvl) -> DAMAGE[lvl - 1])
 		..presetDurationHero((int lvl) -> DURATION[lvl - 1])
 		..presetTargetsAllowed(lvl -> TARGETS_ALLOWED)
 		..presetBackstabDamage((int lvl) -> true)
+		..presetBuffs((int lvl) -> BUFF_ID.toRawCode())
+
+		new BuffDefinition(BUFF_ID, BuffIds.bladestormCaster)
+
 		assassinShopDef.addAbilitySold(ID, false, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
