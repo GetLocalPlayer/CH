@@ -28,7 +28,7 @@ class Bladestorm
 	static constant real array DURATION = [8, 8, 8, 8, 8]
 	static constant int array MANACOST = [100, 110, 120, 130, 140]
 	static constant real AOE = 200
-	static constant TARGETS_ALLOWED = "air,ground,enemy,neutral,ally,friend"
+	static constant TARGETS_ALLOWED = "air,ground,enemy"
 
 	static constant ID = compiletime(ABIL_ID_GEN.next())
 	static constant BUFF_ID = compiletime(BUFF_ID_GEN.next())
