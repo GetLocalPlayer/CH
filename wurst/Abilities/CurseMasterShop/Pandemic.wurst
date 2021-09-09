@@ -1,4 +1,4 @@
-package Pandemy
+package Pandemic
 import Assets
 import BuffObjEditing
 import ChannelAbilityPreset
@@ -15,12 +15,12 @@ import DummyCaster
 import Preloader
 
 
-class Pandemy
+class Pandemic
 	static constant int SHOP_COST = 1
 	static constant int LEVELS = 5
 	static constant HOTKEY = getHotkey()
 	static constant ICON = Icons.bTNOrbOfCorruption
-	static constant NAME = "Pandemy"
+	static constant NAME = "Pandemic"
 	static constant DESCRIPTION = "A disease that deals periodic damage to the target every second. When the effect expires, the disease hops on the nearest, to the target, enemy that is not currently diseased."
 	static constant BUFF_DESCRIPTION = "This unit is deseased and takes periodic damage."
 	static constant FX = "Units\\Undead\\PlagueCloud\\PlagueCloudtarget.mdl"
@@ -125,4 +125,4 @@ class Pandemy
 		
 
 init
-	Pandemy.onInit()
+	Pandemic.onInit()
