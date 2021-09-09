@@ -3,15 +3,15 @@ projectName: Create Hero Pain
 dependencies:
 - https://github.com/wurstscript/wurstStdlib2
 buildMapData:
-  name: CH |cffff0000PAIN|r 5.09.21
-  fileName: CH PAIN 5.09.21
+  name: CH |cffff0000PAIN|r 9.09.21
+  fileName: CH PAIN 9.09.21
   author: GetLocalPlayer
   playerCount: 2-8
   scenarioData:
-    description: Team survival.
+    description: A purely PvE team-survival.
     loadingScreen:
       model: LoadingScreen.mdx
-      title: 5.09.21
+      title: 9.09.21
       subTitle: Create Hero |cffff0000PAIN|r
       text: | 
         Custom hero team survival.
