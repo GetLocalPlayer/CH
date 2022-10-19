@@ -178,7 +178,6 @@ public class Level_5 extends ScaledLevel
 				killedDestructables.add(d)
 
 			for i = 1 to SMALL_COUNT
-				normal.next()
 				setUnit(normal.next(), smallSpawnRect.randomPoint())
 
 		doAfter(FIRST_SPAWN_DELAY) -> 	
