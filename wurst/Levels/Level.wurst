@@ -11,7 +11,7 @@ import Portal
 
 
 /**
-	`Level` is an abstract class that defince a primitive level
+	`Level` is an abstract class that defines a primitive level
 	behaviour.
 
 	A level is started when every alive customHero enters the
@@ -22,18 +22,24 @@ import Portal
 		onInit()
 			// called before the very first wave is run
 		onRun(int waveNumber)
-			// called on each wave
+			// called right oafter `onInit` for first wave
+			//
+			// Argument `waveNumber` is the number of the wave (not index), which
+			// means that at least value `1` for the only existing wave will
+			// be passed.
+			//
+			// Next wave will be called right after the last enemy of the current
+			// wave is dead.
 		onFinish()
-			// called when all enemies added via `addEnemy` are died
+			// called when all enemies of all waves, added via `addEnemy`, are dead
 		onReset()
 			// called when level is reset, used to clear the level and set everything again
 
-	A level is over when all enemies are dead. Any enemy must be
-	registered via `addEnemy(unit u)`, create all enemy units
-	involved into a level and hide/show them in the level progress.
-	This function can be called only in `onInit()` method. Registered
-	enemies are also used in bar.
-	The progress bar is using the enemies health to define what 
+	A level ends when all enemies of all waves are dead.
+	Every enemy must be created during initialization in `onInit` method
+	and registered via `addEnemy(unit u, int wave)`. A wave ends when
+	last registered via `addEnemy` unit for this wave dies. 
+	The progress bar uses the enemies health to define what 
 	part of the bar is coresponding to the enemy's death.
 */
 
