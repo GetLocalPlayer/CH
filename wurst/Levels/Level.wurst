@@ -243,7 +243,7 @@ public abstract class Level
 	protected function addEnemy(unit u, int wave) returns bool
 		if not initializing
 			error("`addEnemy(unit)` can be called only during level initialization.")
-		if wave > maxWaves
+		if wave > maxWaves and wave > 0
 			error("This level can have only {0} waves, but {1} given!".format(maxWaves.toString(), wave.toString()))
 		return u.isAlive() ? aliveEnemies.get(wave - 1).add(u) > 0 : deadEnemies.get(wave - 1).add(u) > 0
 
@@ -270,8 +270,9 @@ public abstract class Level
 					return
 			reset()
 		if not finished and not started and not initializing
-			let u = p.getCustomHero()
-			readyHeroes.remove(u)
+			for u in readyHeroes
+				if u.getOwner() == p
+					readyHeroes.remove(u)
 			if canStart()
 				start()
 
