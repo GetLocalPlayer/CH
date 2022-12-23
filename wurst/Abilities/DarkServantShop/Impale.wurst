@@ -1,0 +1,134 @@
+package Impale
+import ClosureForGroups
+import ClosureTimers
+import AbilityTooltipGenerator
+import Assets
+import LinkedList
+import HashMap
+import CurseMasterShop
+import AttackModifier
+
+
+public class Impale
+	static constant int SHOP_COST = 1
+	static constant int LEVELS = 5
+	static constant ICON = "ReplaceableTextures\\CommandButtons\\PASImpale.blp"
+	static constant NAME = "Impile"
+	static constant DESC = "|cffffaf00Ranged|r|nThe hero's attack hits mark the targets.|n|n|cffffaf00Melee|r|nSpawns a wave of spikes that travels from one marked target to another, dealing physical damage to every enemy on its path that depens on the damage dealt to the primary target.|n|n[|cffff0000Attack Modifier|r]"
+	static constant DAMAGE_TYPE = DAMAGE_TYPE_NORMAL
+	static constant ATTACK_TYPE = ATTACK_TYPE_MELEE
+	//static constant real MAX_DISTANCE = 1000 // max range from the hero to eject
+	static constant real AOE = 100
+	static constant real STEP_DISTANCE = 70
+	static constant real STEP_DELAY = 0.3
+	static constant real array DAMAGE_FACTOR = [0.5, 0.5, 0.5, 0.5, 0.5]
+	static constant int array MAX_TARGETS = [4, 5, 6, 7, 8]
+	static constant real array DURATION = [30, 30, 30, 30, 30]
+	static constant SPIKE_EFFECT = Abilities.impaleHitTarget
+	static constant real SPIKE_EFFECT_SCALE = 0.85
+	static constant MARK_EFFECT = Abilities.curseTarget
+	static constant MARK_EFFECT_ATTACH = "overhead"
+	static constant MARK_COLLOR_FOR_NON_CASTER = colorA(80, 80, 80, 80)
+	static constant ID = compiletime(ABIL_ID_GEN.next())
+
+	@compiletime
+	private static function build()
+		let tooltipGen = new AbilityTooltipGenerator(NAME, DESC)
+		new AttackModifier(ID, LEVELS, tooltipGen)
+		..setIconNormal(ICON)
+		..setArtTarget("")
+		..setHeroAbility(true)
+		..setRequirements("")
+		..setRace(Race.Human)
+		..setName(NAME)		
+		..registerTooltipGenerator(tooltipGen)
+		..tooltipStartListen()
+		..addTooltipProperty("Target damage as spike damage", (int lvl) -> (DAMAGE_FACTOR[lvl - 1] * 100.).toInt().toString() + "%")
+		..addTooltipProperty("Max targets", (int lvl) -> MAX_TARGETS[lvl - 1])
+		..presetDurationNormal((int lvl) -> DURATION[lvl - 1])
+		..tooltipStopListen()
+		curseMasterShopDef.addAbilitySold(ID, true, ICON, NAME, tooltipGen.getTooltipLearnExtended(), SHOP_COST)
+
+	static class SpikeWaveData
+		unit caster
+		LinkedList<unit> targets
+		LinkedList<effect> effects
+		LinkedList<CallbackSingle> targetTimers
+
+
+	protected static function onInit()
+		let casterSpike = new HashMap<unit, SpikeWaveData>
+
+		AttackModifier.onHit(ID) (unit caster, unit target, int level) ->
+			var returnValue = false
+			if EventData.getDamageAttackType() == ATTACK_TYPE_PIERCE
+				SpikeWaveData spike
+				if not casterSpike.has(caster)
+					spike = new SpikeWaveData
+					spike.caster = caster
+					spike.targets = new LinkedList<unit>
+					spike.effects = new LinkedList<effect>
+					spike.targetTimers = new LinkedList<CallbackSingle>
+					casterSpike.put(caster, spike)
+				else
+					spike = casterSpike.get(caster)
+				if not spike.targets.has(target)
+					spike.targets.add(target)
+					let fx = addEffect(MARK_EFFECT, target, MARK_EFFECT_ATTACH)
+					fx.setColor(localPlayer == caster.getOwner() ? COLOR_WHITE : MARK_COLLOR_FOR_NON_CASTER)
+					spike.effects.add(fx)
+					let maxTar = MAX_TARGETS[caster.getAbilityLevel(ID) - 1]
+					if spike.targets.size() > maxTar
+						spike.targets.dequeue()
+						spike.effects.dequeue().destr()
+						destroy spike.targetTimers.dequeue()
+				else
+					let i = spike.targets.indexOf(target)
+					spike.targets.add(spike.targets.removeAt(i))
+					spike.effects.add(spike.effects.removeAt(i))
+					destroy spike.targetTimers.removeAt(i)
+				let targetTimer = doAfter(DURATION[caster.getAbilityLevel(ID) - 1]) -> 
+					let i = spike.targets.indexOf(target)
+					spike.targets.removeAt(i)
+					spike.effects.removeAt(i).destr()
+					spike.targetTimers.removeAt(i)
+				spike.targetTimers.add(targetTimer)
+				returnValue = true
+			else if EventData.getDamageAttackType() == ATTACK_TYPE_MELEE
+				if casterSpike.has(caster)
+					let spike = casterSpike.getAndRemove(caster)
+					let damage = EventData.getEventDamage() * DAMAGE_FACTOR[caster.getAbilityLevel(ID) - 1]
+					for e in spike.effects
+						e.setColor(MARK_COLLOR_FOR_NON_CASTER)
+					var pos = caster.getPos()
+					let affectedUnits = CreateGroup()
+					doPeriodically(STEP_DELAY) (CallbackPeriodic cb) ->
+						if not spike.targets.isEmpty()
+							let tar = spike.targets.getFirst()
+							pos = pos.moveTowards(tar.getPos(), STEP_DISTANCE)
+							addEffect(SPIKE_EFFECT, pos)
+							..setScale(SPIKE_EFFECT_SCALE)
+							..destr()
+							forUnitsInRange(pos, AOE, true) (unit u) ->
+								if not affectedUnits.has(u) and u.isEnemyOf(caster) and u.isAlive() and not u.isInvulnerable()
+									caster.damageTarget(u, damage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE_WHOKNOWS)
+									affectedUnits.add(u)
+							if affectedUnits.has(tar)
+								affectedUnits.clear()
+								let i = spike.targets.indexOf(tar)
+								spike.targets.removeAt(i)
+								spike.effects.removeAt(i).destr()
+								destroy spike.targetTimers.removeAt(i)
+						else
+							destroy spike.targets
+							destroy spike.effects
+							destroy spike.targetTimers
+							destroy cb
+							destroy spike
+							affectedUnits.destr()
+					returnValue = true
+			return returnValue
+
+
+init
+	Impale.onInit()

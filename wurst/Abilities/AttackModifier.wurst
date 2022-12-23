@@ -1,5 +1,5 @@
 package AttackModifier
-import ChannelAbilityPreset
+import public ChannelAbilityPreset
 
 import LinkedList
 import LinkedListModule
