@@ -8,6 +8,7 @@ import ClosureEvents
 import StringUtils
 import ChatCommand
 import TestMode
+import InitCustomHero
 
 
 constant COMMAND_CREATE = "CreateTestGhoul"
@@ -55,8 +56,16 @@ function initTestMode()
 	var cb = ChatCommand.register(COMMAND_CREATE) (string subcommand) ->
 		let list = subcommand.split(" ")
 		let count = list.get(0).toInt()
+		var atHero = list.get(0).toLowerCase() == "h"
+		if not atHero and list.size() > 1
+			atHero = list.get(1).toLowerCase() == "h"
 		for i = 1 to count > 0 ? count : 1
-			let u = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ID, SPAWN_RECT.randomPoint(), GetRandomInt(0, 359).toReal().asAngleDegrees())
+			vec2 pos
+			if atHero and EventData.getTriggerPlayer().getCustomHero() != null
+				pos = EventData.getTriggerPlayer().getCustomHero().getPos()
+			else
+				pos = SPAWN_RECT.randomPoint()
+			let u = createUnit(players[PLAYER_NEUTRAL_AGGRESSIVE], UNIT_ID, pos, GetRandomInt(0, 359).toReal().asAngleDegrees())
 			..setMaxHP(maxLife)
 			..setLife(maxLife.toReal())
 			..setArmor(armor)

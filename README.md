@@ -53,7 +53,7 @@ Creates N enemy ghouls in TestGhoul rect that can be used to test abilities and 
 
 Command | Short | Purpose
 --- | --- | ---
--CreateTestGhoul N | -ctg N | creates N enemy ghouls (N can be ommited)
+-CreateTestGhoul N @h| -ctg N h| creates enemy ghouls, where N is your number of ghouls and `h` is a flag that will make the ghouls be created at the hero's position. Both, the number of ghouls and flag `h` can be omitted.
 -RemoveTestGhouls | -rtg N | kills N random ghouls
 -SetTestGhoulHitPoints N | -stghp N | sets ghouls' amount of hit points to N
 -SetTestGhoulArmor N | -stga N | sets ghouls' armor value to N
