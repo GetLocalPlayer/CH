@@ -1,4 +1,4 @@
-package HeroList
+package BuildCustomHeroes
 import ObjectIdGenerator
 import ClosureTimers
 import ClosureEvents
