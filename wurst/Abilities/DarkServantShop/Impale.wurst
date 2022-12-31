@@ -113,6 +113,9 @@ public class Impale
 								if not affectedUnits.has(u) and u.isEnemyOf(caster) and u.isAlive() and not u.isInvulnerable()
 									caster.damageTarget(u, damage, false, false, ATTACK_TYPE, DAMAGE_TYPE, WEAPON_TYPE_WHOKNOWS)
 									affectedUnits.add(u)
+								// in case the target was not damaged by any reason
+								if u == tar
+									affectedUnits.add(u)
 							if affectedUnits.has(tar)
 								affectedUnits.clear()
 								let i = spike.targets.indexOf(tar)
