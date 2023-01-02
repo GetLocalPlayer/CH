@@ -15,7 +15,7 @@ import PlayerCustomHero
 import Preloader
 
 
-public class HeroCorpse
+public class PlayerHeroCorpse
 	static constant int GOLD_COST = 200
 	static constant CLASSIFICATION = "Artifact" // Must be artifact or they won't be able to be picked up by other players
 	static constant NAME = "Hero Corpse"
@@ -138,4 +138,4 @@ public class HeroCorpse
 					
 
 init
-	HeroCorpse.onInit()
+	PlayerHeroCorpse.onInit()

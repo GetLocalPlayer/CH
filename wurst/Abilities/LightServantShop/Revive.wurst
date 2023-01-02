@@ -76,7 +76,7 @@ public class Revive
 			let level = caster.getAbilityLevel(ID)
 			var count = REVIVED[level - 1]
 			doPeriodicallyCounted(ANIMATION_PERIOD, (CAST_RANGE / SPEED / ANIMATION_PERIOD).toInt()) (CallbackCounted cb) ->
-				EnumItemsInRect(boundRect, Filter(() -> GetFilterItem().getTypeId() == HeroCorpse.ALIAS_ID)) ->
+				EnumItemsInRect(boundRect, Filter(() -> GetFilterItem().getTypeId() == PlayerHeroCorpse.ALIAS_ID)) ->
 					enumItems.add(GetEnumItem())
 				for corpse in enumItems
 					if corpse.getPos().distanceToSq(_pos) <= AOE.squared()
@@ -94,7 +94,7 @@ public class Revive
 				forUnitsInRange(_pos, AOE, true) (unit u) ->
 					if count > 0
 						for i in u.inventory()
-							if i.getTypeId() == HeroCorpse.ID 
+							if i.getTypeId() == PlayerHeroCorpse.ID 
 								let corpse = i
 								let hero = corpse.getPlayer().getCustomHero()
 								corpse.remove()
