@@ -2,7 +2,7 @@ package DisableCustomHeroAttack
 import Assets
 import ChatCommand
 import TestMode
-import InitCustomHero
+import PlayerCustomHero
 
 
 constant COMMAND_DISABLE = "DisableAttack"

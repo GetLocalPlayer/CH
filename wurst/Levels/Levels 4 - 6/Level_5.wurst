@@ -10,7 +10,7 @@ import ClosureEvents
 import ForceProperties
 import StoredClosureTimers
 import ScaledLevel
-import InitCustomHero
+import PlayerCustomHero
 import Preloader
 
 constant NORMAL_ID = 'n00I'

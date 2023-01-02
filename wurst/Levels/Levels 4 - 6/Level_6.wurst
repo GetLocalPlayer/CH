@@ -18,7 +18,7 @@ import ForceProperties
 import StoredClosureTimers
 import ScaledLevel
 import LigthingEx
-import InitCustomHero
+import PlayerCustomHero
 
 
 constant BOSS_ID = 'n012'

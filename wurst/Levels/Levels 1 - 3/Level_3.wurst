@@ -13,7 +13,7 @@ import Interpolation
 import OrderIds
 import SoundUtils
 import ForceProperties
-import InitCustomHero
+import PlayerCustomHero
 import ScaledLevel
 import StoredClosureTimers
 

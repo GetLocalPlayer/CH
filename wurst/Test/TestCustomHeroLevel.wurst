@@ -1,5 +1,5 @@
 package TestCustomHeroLevel
-import InitCustomHero
+import PlayerCustomHero
 import StringUtils
 import ChatCommand
 import TestMode

@@ -1,7 +1,7 @@
 package Defeat
 import ClosureEvents
 import ClosureTimers
-import InitCustomHero
+import PlayerCustomHero
 import ChatCommand
 import TestMode
 import Base

@@ -24,6 +24,8 @@ class Statistic
 	private static real totalDamage = 0
 	private static int totalKills = 0
 
+	private construct()
+
 	/** Returns the player's number (not index!) in the statistic multiboard.
 	Returns 0 if there's no such player in the statistic. */
 	static function getPlayerNumber(player p) returns int

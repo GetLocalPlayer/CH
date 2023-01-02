@@ -11,7 +11,7 @@ import ClosureEvents
 import ClosureTimers
 import ClosureForGroups
 import MapBounds
-import InitCustomHero
+import PlayerCustomHero
 import Preloader
 
 

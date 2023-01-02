@@ -8,7 +8,7 @@ import ClosureEvents
 import StringUtils
 import ChatCommand
 import TestMode
-import InitCustomHero
+import PlayerCustomHero
 
 
 constant COMMAND_CREATE = "CreateTestGhoul"

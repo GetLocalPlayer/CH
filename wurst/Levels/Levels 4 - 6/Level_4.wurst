@@ -6,7 +6,7 @@ import ClosureForGroups
 import ForceProperties
 import StoredClosureTimers
 import ScaledLevel
-import InitCustomHero
+import PlayerCustomHero
 
 
 constant NORMAL_ID = 'n00H'

@@ -1,6 +1,6 @@
 package InitLevels
 import LinkedList
-import InitCustomHero
+import PlayerCustomHero
 import ChatCommand
 import TestMode
 import Base

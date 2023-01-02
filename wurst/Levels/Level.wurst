@@ -3,7 +3,7 @@ import Assets
 import LinkedList
 import ClosureEvents
 import HashMap
-import InitCustomHero
+import PlayerCustomHero
 import ErrorHandling
 import Base
 import ProgressBar

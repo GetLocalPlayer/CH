@@ -1,9 +1,15 @@
-package InitCustomHero
+package PlayerCustomHero
 import LinkedList
+import ClosureEvents
+import UnitIds
+import UnitObjEditing
+import ObjectIdGenerator
 import CustomHero
 import BootsOfSalvation
 import Base
-import ClosureEvents
+import Statistic
+import ChatCommand
+
 
 
 public unit array playerCustomHero
@@ -18,6 +24,19 @@ constant STARTING_GOLD = 300
 constant STARTING_LUMBER = 3
 constant STARTING_SKILL_POINTS = 15
 constant SPAWN_RECT = baseEntranceRect
+
+
+/* Drops a player replacing it with a sheep under it's control:
+-drop X
+Where X is the number of a player in the statistic board. */
+constant COMMAND_DROP = "drop"
+constant SHEEP_ID = compiletime(UNIT_ID_GEN.next())
+
+
+@compiletime function buildSheep()
+	new UnitDefinition(SHEEP_ID, UnitIds.sheep)
+	..setHitPointsMaximumBase(5000)
+	..setHitPointsRegenerationRate(5000)
 
 
 init
@@ -43,3 +62,5 @@ init
 		customHeroes.remove(p.getCustomHero())
 		p.getCustomHero().remove()
 		playerCustomHero[p.getId()] = null
+
+	

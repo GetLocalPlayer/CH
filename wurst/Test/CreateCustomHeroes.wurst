@@ -3,7 +3,7 @@ import HashMap
 import CustomHero
 import ChatCommand
 import TestMode
-import InitCustomHero
+import PlayerCustomHero
 
 
 constant CREATE_ALL = "CreateAllCustomHeroes"

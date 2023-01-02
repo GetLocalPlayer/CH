@@ -11,7 +11,7 @@ import ClosureTimers
 import MapBounds
 import LinkedList
 import HeroCorpse
-import InitCustomHero
+import PlayerCustomHero
 
 
 public class Revive
