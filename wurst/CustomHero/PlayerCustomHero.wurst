@@ -12,7 +12,7 @@ import ChatCommand
 
 
 
-public unit array playerCustomHero
+unit array playerCustomHero
 
 public function player.getCustomHero() returns unit
 	return playerCustomHero[this.getId()]

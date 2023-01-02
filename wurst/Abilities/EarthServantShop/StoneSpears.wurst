@@ -1,6 +1,4 @@
 package StoneSpears
-import ObjectIdGenerator
-import AbilityObjEditing
 import AbilityTooltipGenerator
 import EarthServantShop
 import AttackModifier

@@ -1,4 +1,4 @@
-package HeroCorpse
+package PlayerHeroCorpse
 import Assets
 import ObjectIds
 import ObjectIdGenerator

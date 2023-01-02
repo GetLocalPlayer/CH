@@ -10,7 +10,7 @@ import ClosureEvents
 import ClosureTimers
 import MapBounds
 import LinkedList
-import HeroCorpse
+import PlayerHeroCorpse
 import PlayerCustomHero
 
 
