@@ -5,3 +5,4 @@ wurst.dependencies
 /excluded
 /wurst/war3map.j
 /tmp
+.vscode/wbschema.json
